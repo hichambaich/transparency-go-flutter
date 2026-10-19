@@ -12,7 +12,7 @@ class TransparencyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Transparency Go',
+      title: 'SmartWallet',
       theme: ThemeData(
         brightness: Brightness.dark,
         scaffoldBackgroundColor: const Color(0xFF080d14),
@@ -78,8 +78,9 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               const Text('❄️', style: TextStyle(fontSize: 60)),
               const SizedBox(height: 10),
-              const Text('TRANSPARENCY GO', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF00d9ff))),
-              const Text('SaaS Edition (Flutter)', style: TextStyle(color: Colors.grey)),
+              const Text('SMARTWALLET', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF00d9ff), letterSpacing: 2.0)),
+              const SizedBox(height: 4),
+              const Text('by smart solutions.py', style: TextStyle(color: Colors.grey, fontSize: 12, fontStyle: FontStyle.italic)),
               const SizedBox(height: 40),
               TextField(
                 controller: _emailController,
