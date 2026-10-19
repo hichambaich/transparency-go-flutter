@@ -24,22 +24,13 @@ jobs:
       - name: Create Android files
         run: flutter create --project-name transparency_go . --platforms android
 
-      # تحديث الإصدارات لتتوافق مع Flutter 3.24.0
+      # التعديل الجديد باستخدام الفاصل | لتجنب أخطاء sed
       - name: Update Gradle, AGP, and Kotlin Versions
         run: |
-          # تحديث إصدار Kotlin إلى 2.0.10
-          sed -i 's/ext.kotlin_version = .*/ext.kotlin_version = "2.0.10"/' android/build.gradle
-          
-          # تحديث إصدار Android Gradle Plugin إلى 8.5.0
-          sed -i 's/com.android.application" version .*/com.android.application" version "8.5.0"/' android/settings.gradle
-          
-          # تحديث إصدار Gradle إلى 8.7
-          sed -i 's/distributionUrl=.*/distributionUrl=https\\://services.gradle.org/distributions/gradle-8.7-all.zip/' android/gradle/wrapper/gradle-wrapper.properties
-          
-          # تحديث SDKs
-          sed -i 's/compileSdkVersion .*/compileSdkVersion 34/' android/app/build.gradle
-          sed -i 's/targetSdkVersion .*/targetSdkVersion 34/' android/app/build.gradle
-          sed -i 's/minSdkVersion .*/minSdkVersion 21/' android/app/build.gradle
+          sed -i 's|id "org.jetbrains.kotlin.android" version .*|id "org.jetbrains.kotlin.android" version "2.0.10"|' android/settings.gradle
+          sed -i 's|id "com.android.application" version .*|id "com.android.application" version "8.5.0"|' android/settings.gradle
+          sed -i 's|distributionUrl=.*|distributionUrl=https\\://services.gradle.org/distributions/gradle-8.7-all.zip|' android/gradle/wrapper/gradle-wrapper.properties
+          if [ -f "android/build.gradle" ]; then sed -i 's|ext.kotlin_version = .*|ext.kotlin_version = "2.0.10"|' android/build.gradle; fi
 
       - name: Install dependencies
         run: flutter pub get
