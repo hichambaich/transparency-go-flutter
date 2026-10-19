@@ -18,8 +18,8 @@ jobs:
           channel: 'stable'
       - run: flutter pub get
       
-      # هذا هو السطر الجديد الذي سيولد ملفات الأندرويد المفقودة
-      - run: flutter create . --platforms android
+      # السطر المعدل: إجبار Flutter على استخدام اسم صحيح بدون شرطة
+      - run: flutter create --project-name transparency_go . --platforms android
       
       - run: flutter build apk --release
       - uses: softprops/action-gh-release@v2
