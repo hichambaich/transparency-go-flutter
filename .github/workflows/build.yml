@@ -17,6 +17,10 @@ jobs:
           flutter-version: '3.24.0'
           channel: 'stable'
       - run: flutter pub get
+      
+      # هذا هو السطر الجديد الذي سيولد ملفات الأندرويد المفقودة
+      - run: flutter create . --platforms android
+      
       - run: flutter build apk --release
       - uses: softprops/action-gh-release@v2
         with:
