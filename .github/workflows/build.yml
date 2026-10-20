@@ -4,7 +4,6 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
-# 👇 هذا هو السطر السحري الذي يحل المشكلة
 permissions:
   contents: write
 
@@ -32,7 +31,6 @@ jobs:
       - name: Force correct Gradle, AGP, and Kotlin versions
         run: |
           sed -i 's|distributionUrl=.*|distributionUrl=https\\://services.gradle.org/distributions/gradle-8.7-bin.zip|' android/gradle/wrapper/gradle-wrapper.properties
-          
           cat > android/settings.gradle << 'EOF'
           pluginManagement {
               def flutterSdkPath = {
@@ -56,6 +54,11 @@ jobs:
           }
           include ":app"
           EOF
+
+      # 👇 هذا السطر الجديد يسمح للتطبيق بالاتصال بـ HTTP
+      - name: Allow Cleartext Traffic
+        run: |
+          sed -i 's/<application/<application android:usesCleartextTraffic="true"/' android/app/src/main/AndroidManifest.xml
 
       - name: Install dependencies
         run: flutter pub get
