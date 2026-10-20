@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
 
-// --- الألوان الأساسية (مطابقة لـ Flet) ---
+// --- الألوان ---
 const Color bgColor = Color(0xFF080d14);
 const Color cardColor = Color(0xFF101722);
 const Color accentColor = Color(0xFF00d9ff);
@@ -29,6 +30,7 @@ class TransparencyApp extends StatelessWidget {
         scaffoldBackgroundColor: bgColor,
         primaryColor: accentColor,
         appBarTheme: const AppBarTheme(backgroundColor: bgColor, foregroundColor: accentColor),
+        drawerTheme: const DrawerThemeData(backgroundColor: cardColor),
       ),
       home: const LoginScreen(),
     );
@@ -40,7 +42,6 @@ class TransparencyApp extends StatelessWidget {
 // ==========================================
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
-
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
@@ -64,7 +65,7 @@ class _LoginScreenState extends State<LoginScreen> {
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', data['token']);
         await prefs.setString('username', data['username']);
-        if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const DashboardScreen()));
+        if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MainLayout()));
       } else {
         setState(() { _errorMsg = 'Invalid credentials'; });
       }
@@ -110,16 +111,109 @@ class _LoginScreenState extends State<LoginScreen> {
 }
 
 // ==========================================
-// 2. لوحة التحكم (Dashboard)
+// 2. الهيكل الرئيسي والقائمة الجانبية (Main Layout & Drawer)
 // ==========================================
-class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
-
+class MainLayout extends StatefulWidget {
+  const MainLayout({super.key});
   @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
+  State<MainLayout> createState() => _MainLayoutState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _MainLayoutState extends State<MainLayout> {
+  int _selectedIndex = 0;
+  String _username = '';
+
+  // الصفحات
+  final List<Widget> _pages = [
+    const DashboardTab(),
+    const HistoryTab(),
+    const AccountTab(),
+    const SettingsTab(),
+    const SupportTab(),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUsername();
+  }
+
+  Future<void> _loadUsername() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() { _username = prefs.getString('username') ?? 'User'; });
+  }
+
+  void _logout() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginScreen()));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(_selectedIndex == 0 ? 'Dashboard' : ['History', 'My Account', 'Settings', 'Support'][_selectedIndex - 1], style: const TextStyle(fontWeight: FontWeight.bold)),
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: const BoxDecoration(color: bgColor),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  const Text('❄️', style: TextStyle(fontSize: 40)),
+                  const SizedBox(height: 10),
+                  Text('Welcome, $_username', style: const TextStyle(color: accentColor, fontSize: 18, fontWeight: FontWeight.bold)),
+                ],
+              ),
+            ),
+            _buildDrawerItem(Icons.dashboard, 'Dashboard', 0),
+            _buildDrawerItem(Icons.receipt_long, 'History', 1),
+            _buildDrawerItem(Icons.person, 'My Account', 2),
+            _buildDrawerItem(Icons.settings, 'Settings', 3),
+            _buildDrawerItem(Icons.help_outline, 'Support', 4),
+            const Divider(color: borderColor),
+            ListTile(
+              leading: const Icon(Icons.logout, color: redColor),
+              title: const Text('Logout', style: TextStyle(color: redColor)),
+              onTap: _logout,
+            ),
+          ],
+        ),
+      ),
+      body: _pages[_selectedIndex],
+    );
+  }
+
+  Widget _buildDrawerItem(IconData icon, String title, int index) {
+    final isSelected = _selectedIndex == index;
+    return ListTile(
+      leading: Icon(icon, color: isSelected ? accentColor : textSecondary),
+      title: Text(title, style: TextStyle(color: isSelected ? accentColor : textPrimary)),
+      selected: isSelected,
+      selectedTileColor: bgColor,
+      onTap: () {
+        setState(() { _selectedIndex = index; });
+        Navigator.pop(context); // إغلاق القائمة
+      },
+    );
+  }
+}
+
+// ==========================================
+// 3. صفحة لوحة التحكم (Dashboard Tab)
+// ==========================================
+class DashboardTab extends StatefulWidget {
+  const DashboardTab({super.key});
+  @override
+  State<DashboardTab> createState() => _DashboardTabState();
+}
+
+class _DashboardTabState extends State<DashboardTab> {
   bool _isLoading = true;
   String _errorMsg = '';
   Map<String, dynamic> _data = {};
@@ -135,7 +229,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString('token');
-      if (token == null) { _logout(); return; }
+      if (token == null) return;
 
       final response = await http.get(
         Uri.parse('http://100.77.27.80:8553/api/dashboard'),
@@ -144,8 +238,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
       if (response.statusCode == 200) {
         setState(() { _data = jsonDecode(response.body); });
-      } else if (response.statusCode == 401) {
-        _logout();
       } else {
         setState(() { _errorMsg = 'Failed to load data'; });
       }
@@ -156,185 +248,326 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  void _logout() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
-    if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginScreen()));
-  }
-
-  // دالة مساعدة لتنسيق الألوان
-  Color _pnlColor(double val) => val >= 0 ? greenColor : redColor;
+  Color _pnlColor(dynamic val) => (val as num) >= 0 ? greenColor : redColor;
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    if (_errorMsg.isNotEmpty) return Scaffold(body: Center(child: Text(_errorMsg, style: const TextStyle(color: redColor))));
+    if (_isLoading) return const Center(child: CircularProgressIndicator());
+    if (_errorMsg.isNotEmpty) return Center(child: Text(_errorMsg, style: const TextStyle(color: redColor)));
 
-    // استخراج البيانات
     final capital = _data['capital'] ?? {};
     final stats = _data['stats'] ?? {};
     final risk = _data['risk'] ?? {};
     final List positions = _data['positions'] ?? [];
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dashboard', style: TextStyle(fontWeight: FontWeight.bold)),
-        actions: [
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _fetchData),
-          IconButton(icon: const Icon(Icons.logout, color: redColor), onPressed: _logout),
+    return RefreshIndicator(
+      onRefresh: _fetchData,
+      child: ListView(
+        padding: const EdgeInsets.all(16.0),
+        children: [
+          _buildCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Exchange & Balances', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 12),
+                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                  const Text('Total Capital', style: TextStyle(color: textSecondary)),
+                  Text('\$${capital['total']}', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: accentColor)),
+                ]),
+                const SizedBox(height: 8),
+                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                  const Text('Free Balance', style: TextStyle(color: textSecondary)),
+                  Text('\$${capital['free']}', style: const TextStyle(fontSize: 16, color: textPrimary)),
+                ]),
+                const SizedBox(height: 8),
+                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                  const Text('ROI', style: TextStyle(color: textSecondary)),
+                  Text('${capital['roi_pct']}%', style: TextStyle(fontSize: 14, color: _pnlColor(capital['roi_pct'] ?? 0))),
+                ]),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(children: [
+            Expanded(child: _buildStatCard('Closed Trades', '${stats['closed_trades']}', Icons.receipt_long, accentColor)),
+            const SizedBox(width: 10),
+            Expanded(child: _buildStatCard('Profit Trades', '${stats['profit_trades']}', Icons.emoji_events, greenColor)),
+          ]),
+          const SizedBox(height: 10),
+          Row(children: [
+            Expanded(child: _buildStatCard('Win Rate', '${stats['win_rate']}%', Icons.percent, greenColor)),
+            const SizedBox(width: 10),
+            Expanded(child: _buildStatCard('Realized PnL', '\$${stats['realized_pnl']}', Icons.account_balance_wallet, _pnlColor(stats['realized_pnl'] ?? 0))),
+          ]),
+          const SizedBox(height: 16),
+          _buildCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                  const Text('Capital Exposure', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                  Text('${risk['exposure_pct']}%', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: greenColor)),
+                ]),
+                const SizedBox(height: 8),
+                LinearProgressIndicator(
+                  value: (risk['exposure_pct'] ?? 0) / 100,
+                  backgroundColor: borderColor,
+                  valueColor: const AlwaysStoppedAnimation<Color>(greenColor),
+                  minHeight: 6,
+                ),
+                const SizedBox(height: 8),
+                Text('Positions Value: \$${risk['positions_value']}', style: const TextStyle(fontSize: 12, color: textSecondary)),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          const Text('Open Positions', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: accentColor)),
+          const SizedBox(height: 10),
+          ...positions.map((p) {
+            return _buildCard(
+              child: Column(
+                children: [
+                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                    Text(p['symbol'], style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    Text('${(p['pnl'] as num) > 0 ? '+' : ''}${(p['pnl'] as num).toStringAsFixed(2)}%', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: _pnlColor(p['pnl']))),
+                  ]),
+                  const Divider(color: borderColor),
+                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                    Expanded(child: Text('Entry: \$${(p['entry'] as num).toStringAsFixed(4)}', style: const TextStyle(fontSize: 12, color: textSecondary))),
+                    Expanded(child: Text('Value: \$${(p['value'] as num).toStringAsFixed(2)}', style: const TextStyle(fontSize: 12, color: accentColor), textAlign: TextAlign.right)),
+                  ]),
+                ],
+              ),
+            );
+          }).toList(),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: _fetchData,
-        child: ListView(
-          padding: const EdgeInsets.all(16.0),
-          children: [
-            // --- بطاقة الرصيد ---
-            _buildCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Exchange & Balances', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('Total Capital', style: TextStyle(color: textSecondary)),
-                      Text('\$${capital['total']}', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: accentColor)),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('Free Balance', style: TextStyle(color: textSecondary)),
-                      Text('\$${capital['free']}', style: const TextStyle(fontSize: 16, color: textPrimary)),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('ROI', style: TextStyle(color: textSecondary)),
-                      Text('${capital['roi_pct']}%', style: TextStyle(fontSize: 14, color: _pnlColor(capital['roi_pct'] ?? 0))),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // --- إحصائيات (Stats Grid) ---
-            Row(
-              children: [
-                Expanded(child: _buildStatCard('Closed Trades', '${stats['closed_trades']}', Icons.receipt_long, accentColor)),
-                const SizedBox(width: 10),
-                Expanded(child: _buildStatCard('Profit Trades', '${stats['profit_trades']}', Icons.emoji_events, greenColor)),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(child: _buildStatCard('Win Rate', '${stats['win_rate']}%', Icons.percent, greenColor)),
-                const SizedBox(width: 10),
-                Expanded(child: _buildStatCard('Realized PnL', '\$${stats['realized_pnl']}', Icons.account_balance_wallet, _pnlColor(stats['realized_pnl'] ?? 0))),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // --- التعرض (Exposure) ---
-            _buildCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('Capital Exposure', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                      Text('${risk['exposure_pct']}%', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: greenColor)),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  LinearProgressIndicator(
-                    value: (risk['exposure_pct'] ?? 0) / 100,
-                    backgroundColor: borderColor,
-                    valueColor: const AlwaysStoppedAnimation<Color>(greenColor),
-                    minHeight: 6,
-                  ),
-                  const SizedBox(height: 8),
-                  Text('Positions Value: \$${risk['positions_value']}', style: const TextStyle(fontSize: 12, color: textSecondary)),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // --- المراكز (Positions) ---
-            const Text('Open Positions', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: accentColor)),
-            const SizedBox(height: 10),
-            ...positions.map((p) {
-              return _buildCard(
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(p['symbol'], style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                        Text('${p['pnl'] > 0 ? '+' : ''}${(p['pnl'] as double).toStringAsFixed(2)}%', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: _pnlColor(p['pnl']))),
-                      ],
-                    ),
-                    const Divider(color: borderColor),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(child: Text('Entry: \$${(p['entry'] as num).toStringAsFixed(4)}', style: const TextStyle(fontSize: 12, color: textSecondary))),
-                        Expanded(child: Text('Value: \$${(p['value'] as num).toStringAsFixed(2)}', style: const TextStyle(fontSize: 12, color: accentColor), textAlign: TextAlign.right)),
-                      ],
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
-          ],
-        ),
-      ),
     );
   }
+}
 
-  // --- Widgets مساعدة للتصميم ---
-  Widget _buildCard({required Widget child}) {
-    return Container(
+// ==========================================
+// 4. صفحة السجل (History Tab)
+// ==========================================
+class HistoryTab extends StatefulWidget {
+  const HistoryTab({super.key});
+  @override
+  State<HistoryTab> createState() => _HistoryTabState();
+}
+
+class _HistoryTabState extends State<HistoryTab> {
+  bool _isLoading = true;
+  List _trades = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchHistory();
+  }
+
+  Future<void> _fetchHistory() async {
+    setState(() { _isLoading = true; });
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('token');
+      final response = await http.get(
+        Uri.parse('http://100.77.27.80:8553/api/history'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (response.statusCode == 200) {
+        setState(() { _trades = jsonDecode(response.body)['trades'] ?? []; });
+      }
+    } catch (e) {
+      print(e);
+    } finally {
+      setState(() { _isLoading = false; });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) return const Center(child: CircularProgressIndicator());
+    if (_trades.isEmpty) return const Center(child: Text('No history found', style: TextStyle(color: textSecondary)));
+
+    return ListView.builder(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor),
-      ),
-      child: child,
-    );
-  }
-
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+      itemCount: _trades.length,
+      itemBuilder: (context, index) {
+        final t = _trades[index];
+        final pnl = (t['realized_profit_usdt'] ?? 0).toDouble();
+        final isWin = pnl >= 0;
+        return Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: cardColor,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: borderColor),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(icon, size: 16, color: textSecondary),
-              const SizedBox(width: 6),
-              Text(title, style: const TextStyle(fontSize: 12, color: textSecondary)),
+              Text(t['symbol'] ?? 'Unknown', style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text('${isWin ? '+' : ''}\$${pnl.toStringAsFixed(2)}', style: TextStyle(color: isWin ? greenColor : redColor, fontWeight: FontWeight.bold)),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
-        ],
-      ),
+        );
+      },
     );
   }
+}
+
+// ==========================================
+// 5. صفحة الحساب (Account Tab)
+// ==========================================
+class AccountTab extends StatefulWidget {
+  const AccountTab({super.key});
+  @override
+  State<AccountTab> createState() => _AccountTabState();
+}
+
+class _AccountTabState extends State<AccountTab> {
+  bool _isLoading = true;
+  Map<String, dynamic> _user = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchAccount();
+  }
+
+  Future<void> _fetchAccount() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('token');
+      final response = await http.get(
+        Uri.parse('http://100.77.27.80:8553/api/account'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (response.statusCode == 200) {
+        setState(() { _user = jsonDecode(response.body); });
+      }
+    } catch (e) {
+      print(e);
+    } finally {
+      setState(() { _isLoading = false; });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) return const Center(child: CircularProgressIndicator());
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        _buildCard(
+          child: Column(
+            children: [
+              const CircleAvatar(radius: 40, backgroundColor: accentColor, child: Icon(Icons.person, size: 50, color: bgColor)),
+              const SizedBox(height: 10),
+              Text(_user['username'] ?? 'User', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              Text(_user['email'] ?? 'email@example.com', style: const TextStyle(color: textSecondary)),
+            ],
+          ),
+        )
+      ],
+    );
+  }
+}
+
+// ==========================================
+// 6. صفحة الإعدادات (Settings Tab) - واجهة فقط
+// ==========================================
+class SettingsTab extends StatelessWidget {
+  const SettingsTab({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        _buildCard(
+          child: Column(
+            children: [
+              SwitchListTile(
+                title: const Text('Dark Mode'),
+                value: true,
+                activeColor: accentColor,
+                onChanged: (val) {},
+              ),
+              const Divider(color: borderColor),
+              SwitchListTile(
+                title: const Text('Notifications'),
+                value: true,
+                activeColor: accentColor,
+                onChanged: (val) {},
+              ),
+            ],
+          ),
+        )
+      ],
+    );
+  }
+}
+
+// ==========================================
+// 7. صفحة الدعم (Support Tab) - واجهة فقط
+// ==========================================
+class SupportTab extends StatelessWidget {
+  const SupportTab({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        _buildCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Contact Support', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: accentColor)),
+              const SizedBox(height: 10),
+              const ListTile(leading: Icon(Icons.email), title: Text('transparancygo@gmail.com')),
+              const ListTile(leading: Icon(Icons.telegram), title: Text('@TransparencyGoSupport_bot')),
+            ],
+          ),
+        )
+      ],
+    );
+  }
+}
+
+// --- Widgets مساعدة ---
+Widget _buildCard({required Widget child}) {
+  return Container(
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: cardColor,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: borderColor),
+    ),
+    child: child,
+  );
+}
+
+Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  return Container(
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: cardColor,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: borderColor),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(children: [
+          Icon(icon, size: 16, color: textSecondary),
+          const SizedBox(width: 6),
+          Text(title, style: const TextStyle(fontSize: 12, color: textSecondary)),
+        ]),
+        const SizedBox(height: 8),
+        Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
+      ],
+    ),
+  );
 }
