@@ -3,6 +3,11 @@ on:
   push:
     branches: [ main ]
   workflow_dispatch:
+
+# 👇 هذا هو السطر السحري الذي يحل المشكلة
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -24,13 +29,10 @@ jobs:
       - name: Create Android files
         run: flutter create --project-name transparency_go . --platforms android
 
-      # --- تثبيت الإصدارات المتوافقة مع Flutter 3.24.0 ---
       - name: Force correct Gradle, AGP, and Kotlin versions
         run: |
-          # تحديث إصدار Gradle
           sed -i 's|distributionUrl=.*|distributionUrl=https\\://services.gradle.org/distributions/gradle-8.7-bin.zip|' android/gradle/wrapper/gradle-wrapper.properties
           
-          # تحديث إصدارات AGP و Kotlin في settings.gradle
           cat > android/settings.gradle << 'EOF'
           pluginManagement {
               def flutterSdkPath = {
@@ -61,7 +63,6 @@ jobs:
       - name: Clean Build
         run: flutter clean
 
-      # --- الخيار الصحيح هو --verbose وليس --stacktrace ---
       - name: Build APK
         run: flutter build apk --release --split-per-abi --verbose
 
