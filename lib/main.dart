@@ -286,8 +286,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Entry: \$${p['entry']}', style: const TextStyle(fontSize: 12, color: textSecondary)),
-                        Text('Value: \$${p['value']}', style: const TextStyle(fontSize: 12, color: accentColor)),
+                        Expanded(child: Text('Entry: \$${(p['entry'] as num).toStringAsFixed(4)}', style: const TextStyle(fontSize: 12, color: textSecondary))),
+                        Expanded(child: Text('Value: \$${(p['value'] as num).toStringAsFixed(2)}', style: const TextStyle(fontSize: 12, color: accentColor), textAlign: TextAlign.right)),
                       ],
                     ),
                   ],
