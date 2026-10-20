@@ -55,10 +55,22 @@ jobs:
           include ":app"
           EOF
 
-      # 👇 هذا السطر الجديد يسمح للتطبيق بالاتصال بـ HTTP
-      - name: Allow Cleartext Traffic
+      # 👇 السحر كله هنا: إضافة إذن الإنترنت والسماح بـ HTTP
+      - name: Fix Android Manifest Permissions
         run: |
-          sed -i 's/<application/<application android:usesCleartextTraffic="true"/' android/app/src/main/AndroidManifest.xml
+          python -c "
+          path = 'android/app/src/main/AndroidManifest.xml'
+          with open(path, 'r') as f:
+              content = f.read()
+          
+          if 'android.permission.INTERNET' not in content:
+              content = content.replace('<application', '<uses-permission android:name=\"android.permission.INTERNET\" />\n    <application')
+          if 'usesCleartextTraffic' not in content:
+              content = content.replace('<application', '<application android:usesCleartextTraffic=\"true\"')
+              
+          with open(path, 'w') as f:
+              f.write(content)
+          "
 
       - name: Install dependencies
         run: flutter pub get
