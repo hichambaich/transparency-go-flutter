@@ -24,13 +24,13 @@ jobs:
       - name: Create Android files
         run: flutter create --project-name transparency_go . --platforms android
 
-      # --- الحل الجذري: كتابة ملفات Gradle يدوياً لضمان التوافق التام ---
+      # --- تثبيت الإصدارات المتوافقة مع Flutter 3.24.0 ---
       - name: Force correct Gradle, AGP, and Kotlin versions
         run: |
-          # 1. تحديث إصدار Gradle (استخدام bin.zip بدلاً من all.zip لتجنب مشاكل الحجم)
+          # تحديث إصدار Gradle
           sed -i 's|distributionUrl=.*|distributionUrl=https\\://services.gradle.org/distributions/gradle-8.7-bin.zip|' android/gradle/wrapper/gradle-wrapper.properties
           
-          # 2. تحديث إصدار AGP و Kotlin في ملف settings.gradle
+          # تحديث إصدارات AGP و Kotlin في settings.gradle
           cat > android/settings.gradle << 'EOF'
           pluginManagement {
               def flutterSdkPath = {
@@ -61,9 +61,9 @@ jobs:
       - name: Clean Build
         run: flutter clean
 
-      # --- إضافة --stacktrace للحصول على تفاصيل أكثر إذا فشل البناء ---
+      # --- الخيار الصحيح هو --verbose وليس --stacktrace ---
       - name: Build APK
-        run: flutter build apk --release --split-per-abi --stacktrace
+        run: flutter build apk --release --split-per-abi --verbose
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
