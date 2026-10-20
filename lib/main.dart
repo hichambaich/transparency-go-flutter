@@ -110,6 +110,239 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
+
+// ==========================================
+// صفحة ربط Binance
+// ==========================================
+class ConnectBinanceTab extends StatefulWidget {
+  const ConnectBinanceTab({super.key});
+  @override
+  State<ConnectBinanceTab> createState() => _ConnectBinanceTabState();
+}
+
+class _ConnectBinanceTabState extends State<ConnectBinanceTab> {
+  final _apiController = TextEditingController();
+  final _secretController = TextEditingController();
+  final _labelController = TextEditingController(text: 'Default');
+  bool _isLoading = false;
+  bool _isConnected = false;
+  String _maskedKey = '';
+  String _errorMsg = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _checkStatus();
+  }
+
+  Future<void> _checkStatus() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('token');
+      final res = await http.get(Uri.parse('http://100.77.27.80:8553/api/binance/status'), headers: {'Authorization': 'Bearer $token'});
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        setState(() {
+          _isConnected = data['connected'];
+          _maskedKey = data['masked'] ?? '';
+        });
+      }
+    } catch (e) {}
+  }
+
+  Future<void> _connect() async {
+    setState(() { _isLoading = true; _errorMsg = ''; });
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('token');
+      final res = await http.post(
+        Uri.parse('http://100.77.27.80:8553/api/binance/connect'),
+        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
+        body: jsonEncode({'api_key': _apiController.text.trim(), 'secret': _secretController.text.trim(), 'label': _labelController.text.trim()}),
+      );
+      if (res.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Connected Successfully!'), backgroundColor: greenColor));
+        _checkStatus();
+      } else {
+        setState(() { _errorMsg = jsonDecode(res.body)['detail']; });
+      }
+    } catch (e) {
+      setState(() { _errorMsg = 'Connection error'; });
+    } finally {
+      setState(() { _isLoading = false; });
+    }
+  }
+
+  Future<void> _disconnect() async {
+    setState(() { _isLoading = true; });
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('token');
+      await http.post(Uri.parse('http://100.77.27.80:8553/api/binance/disconnect'), headers: {'Authorization': 'Bearer $token'});
+      _checkStatus();
+    } catch (e) {}
+    setState(() { _isLoading = false; });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isConnected) {
+      return ListView(padding: const EdgeInsets.all(16), children: [
+        _buildCard(child: Column(children: [
+          const Icon(Icons.check_circle, color: greenColor, size: 60),
+          const SizedBox(height: 10),
+          const Text('Binance Connected', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 5),
+          Text('API Key: $_maskedKey', style: const TextStyle(color: textSecondary)),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: _isLoading ? null : _disconnect,
+            style: ElevatedButton.styleFrom(backgroundColor: redColor),
+            child: const Text('Disconnect', style: TextStyle(color: Colors.white)),
+          )
+        ]))
+      ]);
+    }
+    return ListView(padding: const EdgeInsets.all(16), children: [
+      _buildCard(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Text('Connect Binance API', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: accentColor)),
+        const SizedBox(height: 16),
+        TextField(controller: _apiController, decoration: const InputDecoration(labelText: 'API Key', border: OutlineInputBorder())),
+        const SizedBox(height: 10),
+        TextField(controller: _secretController, obscureText: true, decoration: const InputDecoration(labelText: 'Secret Key', border: OutlineInputBorder())),
+        const SizedBox(height: 10),
+        TextField(controller: _labelController, decoration: const InputDecoration(labelText: 'Label (optional)', border: OutlineInputBorder())),
+        const SizedBox(height: 20),
+        if (_errorMsg.isNotEmpty) Text(_errorMsg, style: const TextStyle(color: redColor)),
+        ElevatedButton(
+          onPressed: _isLoading ? null : _connect,
+          style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 45), backgroundColor: accentColor, foregroundColor: Colors.black),
+          child: _isLoading ? const CircularProgressIndicator() : const Text('Connect & Start Bot', style: TextStyle(fontWeight: FontWeight.bold)),
+        )
+      ]))
+    ]);
+  }
+}
+
+// ==========================================
+// صفحة حسابي (محدثة)
+// ==========================================
+class AccountTab extends StatefulWidget {
+  const AccountTab({super.key});
+  @override
+  State<AccountTab> createState() => _AccountTabState();
+}
+
+class _AccountTabState extends State<AccountTab> {
+  bool _isLoading = true;
+  Map<String, dynamic> _user = {};
+  final _oldPwd = TextEditingController();
+  final _newPwd = TextEditingController();
+  final _confirmPwd = TextEditingController();
+  String _msg = '';
+  Color _msgColor = redColor;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchAccount();
+  }
+
+  Future<void> _fetchAccount() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('token');
+      final response = await http.get(Uri.parse('http://100.77.27.80:8553/api/account'), headers: {'Authorization': 'Bearer $token'});
+      if (response.statusCode == 200) setState(() { _user = jsonDecode(response.body); });
+    } catch (e) {} finally { setState(() { _isLoading = false; }); }
+  }
+
+  Future<void> _changePassword() async {
+    if (_newPwd.text != _confirmPwd.text) {
+      setState(() { _msg = 'Passwords do not match'; _msgColor = redColor; });
+      return;
+    }
+    setState(() { _msg = 'Processing...'; _msgColor = textSecondary; });
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('token');
+      final res = await http.post(
+        Uri.parse('http://100.77.27.80:8553/api/account/change_password'),
+        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
+        body: jsonEncode({'current_password': _oldPwd.text, 'new_password': _newPwd.text}),
+      );
+      if (res.statusCode == 200) {
+        setState(() { _msg = 'Password changed successfully!'; _msgColor = greenColor; });
+        _oldPwd.clear(); _newPwd.clear(); _confirmPwd.clear();
+      } else {
+        setState(() { _msg = jsonDecode(res.body)['detail']; _msgColor = redColor; });
+      }
+    } catch (e) {
+      setState(() { _msg = 'Connection error'; _msgColor = redColor; });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) return const Center(child: CircularProgressIndicator());
+    return ListView(padding: const EdgeInsets.all(16), children: [
+      _buildCard(child: Column(children: [
+        const CircleAvatar(radius: 40, backgroundColor: accentColor, child: Icon(Icons.person, size: 50, color: bgColor)),
+        const SizedBox(height: 10),
+        Text(_user['username'] ?? 'User', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        Text(_user['email'] ?? 'email@example.com', style: const TextStyle(color: textSecondary)),
+      ])),
+      const SizedBox(height: 16),
+      _buildCard(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Text('Change Password', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: accentColor)),
+        const SizedBox(height: 16),
+        TextField(controller: _oldPwd, obscureText: true, decoration: const InputDecoration(labelText: 'Current Password', border: OutlineInputBorder())),
+        const SizedBox(height: 10),
+        TextField(controller: _newPwd, obscureText: true, decoration: const InputDecoration(labelText: 'New Password', border: OutlineInputBorder())),
+        const SizedBox(height: 10),
+        TextField(controller: _confirmPwd, obscureText: true, decoration: const InputDecoration(labelText: 'Confirm New Password', border: OutlineInputBorder())),
+        const SizedBox(height: 10),
+        Text(_msg, style: TextStyle(color: _msgColor, fontSize: 12)),
+        const SizedBox(height: 10),
+        ElevatedButton(
+          onPressed: _changePassword,
+          style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 45), backgroundColor: accentColor, foregroundColor: Colors.black),
+          child: const Text('Update Password', style: TextStyle(fontWeight: FontWeight.bold)),
+        )
+      ]))
+    ]);
+  }
+}
+
+// ==========================================
+// صفحة الإعدادات (محدثة)
+// ==========================================
+class SettingsTab extends StatefulWidget {
+  const SettingsTab({super.key});
+  @override
+  State<SettingsTab> createState() => _SettingsTabState();
+}
+
+class _SettingsTabState extends State<SettingsTab> {
+  bool _darkMode = true;
+  bool _notifications = true;
+  bool _isArabic = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(padding: const EdgeInsets.all(16), children: [
+      _buildCard(child: Column(children: [
+        SwitchListTile(title: const Text('Dark Mode'), value: _darkMode, activeColor: accentColor, onChanged: (val) => setState(() => _darkMode = val)),
+        const Divider(color: borderColor),
+        SwitchListTile(title: const Text('Notifications'), value: _notifications, activeColor: accentColor, onChanged: (val) => setState(() => _notifications = val)),
+        const Divider(color: borderColor),
+        SwitchListTile(title: const Text('العربية / English'), value: _isArabic, activeColor: accentColor, onChanged: (val) => setState(() => _isArabic = val)),
+      ]))
+    ]);
+  }
+}
+
+
 // ==========================================
 // 2. الهيكل الرئيسي والقائمة الجانبية (Main Layout & Drawer)
 // ==========================================
@@ -127,6 +360,7 @@ class _MainLayoutState extends State<MainLayout> {
   final List<Widget> _pages = [
     const DashboardTab(),
     const HistoryTab(),
+    const ConnectBinanceTab(),
     const AccountTab(),
     const SettingsTab(),
     const SupportTab(),
@@ -153,7 +387,7 @@ class _MainLayoutState extends State<MainLayout> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_selectedIndex == 0 ? 'Dashboard' : ['History', 'My Account', 'Settings', 'Support'][_selectedIndex - 1], style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(_selectedIndex == 0 ? 'Dashboard' : ['History', 'Connect Binance', 'My Account', 'Settings', 'Support'][_selectedIndex - 1], style: const TextStyle(fontWeight: FontWeight.bold)),
       ),
       drawer: Drawer(
         child: ListView(
@@ -173,9 +407,10 @@ class _MainLayoutState extends State<MainLayout> {
             ),
             _buildDrawerItem(Icons.dashboard, 'Dashboard', 0),
             _buildDrawerItem(Icons.receipt_long, 'History', 1),
-            _buildDrawerItem(Icons.person, 'My Account', 2),
-            _buildDrawerItem(Icons.settings, 'Settings', 3),
-            _buildDrawerItem(Icons.help_outline, 'Support', 4),
+            _buildDrawerItem(Icons.link, 'Connect Binance', 2),
+            _buildDrawerItem(Icons.person, 'My Account', 3),
+            _buildDrawerItem(Icons.settings, 'Settings', 4),
+            _buildDrawerItem(Icons.help_outline, 'Support', 5),
             const Divider(color: borderColor),
             ListTile(
               leading: const Icon(Icons.logout, color: redColor),
