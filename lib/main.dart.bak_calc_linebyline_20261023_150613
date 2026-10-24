@@ -1,0 +1,1962 @@
+import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
+import 'dart:convert';
+import 'dart:async';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'SmartWallet Go',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData.dark().copyWith(
+        scaffoldBackgroundColor: const Color(0xFF080d14),
+        primaryColor: const Color(0xFF00d9ff),
+      ),
+      home: const AuthGate(),
+    );
+  }
+}
+
+// ================= AUTH GATE =================
+class AuthGate extends StatefulWidget {
+  const AuthGate({super.key});
+  @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  bool _checking = true;
+  String? _token;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkToken();
+  }
+
+  Future<void> _checkToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _token = prefs.getString('auth_token');
+      _checking = false;
+    });
+  }
+
+  void _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('auth_token');
+    setState(() => _token = null);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_checking) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator(color: Color(0xFF00d9ff))));
+    }
+    if (_token != null) {
+      return DashboardScreen(token: _token!, onLogout: _logout);
+    }
+    return LoginScreen(onLoginSuccess: (token) {
+      setState(() => _token = token);
+    });
+  }
+}
+
+// ================= LOGIN SCREEN =================
+class LoginScreen extends StatefulWidget {
+  final Function(String) onLoginSuccess;
+  const LoginScreen({super.key, required this.onLoginSuccess});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final _emailCtrl = TextEditingController();
+  final _passCtrl = TextEditingController();
+  bool _isLoading = false;
+  String _error = '';
+  bool _rememberMe = true;
+
+  Future<void> _login() async {
+    setState(() { _isLoading = true; _error = ''; });
+    try {
+      final res = await http.post(
+        Uri.parse('http://100.77.27.80:8553/api/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': _emailCtrl.text.trim(), 'password': _passCtrl.text}),
+      );
+      final data = jsonDecode(res.body);
+      if (res.statusCode == 200) {
+        if (_rememberMe) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('auth_token', data['token']);
+        }
+        widget.onLoginSuccess(data['token']);
+      } else {
+        setState(() => _error = data['detail'] ?? 'Login failed');
+      }
+    } catch (e) {
+      setState(() => _error = 'Connection error');
+    }
+    setState(() => _isLoading = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF080d14),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.ac_unit, size: 60, color: Colors.white),
+              const SizedBox(height: 10),
+              const Text('SMARTWALLET GO', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF00d9ff))),
+              const SizedBox(height: 40),
+              TextField(controller: _emailCtrl, decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder())),
+              const SizedBox(height: 16),
+              TextField(controller: _passCtrl, obscureText: true, decoration: const InputDecoration(labelText: 'Password', border: OutlineInputBorder())),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(children: [
+                    Checkbox(value: _rememberMe, onChanged: (v) => setState(() => _rememberMe = v ?? true), activeColor: const Color(0xFF00d9ff)),
+                    const Text('Remember Me', style: TextStyle(fontSize: 12)),
+                  ]),
+                ],
+              ),
+              if (_error.isNotEmpty) Text(_error, style: const TextStyle(color: Colors.red)),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity, height: 50,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _login,
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00d9ff), foregroundColor: Colors.black),
+                  child: _isLoading ? const CircularProgressIndicator() : const Text('LOGIN', style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ================= DASHBOARD SCREEN =================
+class DashboardScreen extends StatefulWidget {
+  final String token;
+  final VoidCallback onLogout;
+  const DashboardScreen({super.key, required this.token, required this.onLogout});
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  bool _isLoading = true;
+  Map<String, dynamic> _data = {};
+  List<FlSpot> _spots = [];
+  List<DateTime> _spotTimestamps = [];
+  Timer? _pollingTimer;
+  String _errorMsg = '';
+  String _currentPeriod = '1d';
+
+  final Color cardBg = const Color(0xFF101722);
+  final Color borderColor = const Color(0xFF202d42);
+  final Color accent = const Color(0xFF00d9ff);
+  final Color green = const Color(0xFF10b981);
+  final Color red = const Color(0xFFef4444);
+  final Color gold = const Color(0xFFf0b90b);
+
+  final String bnbLogoUrl = "https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/bnb.png";
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchData();
+    _pollingTimer = Timer.periodic(const Duration(seconds: 3), (_) => _fetchData(isPolling: true));
+  }
+
+
+
+  
+  List<FlSpot> _buildDietzPoints(List<FlSpot> samples) {
+    // ملاحظة: لتطبيق Dietz بدقة، نحتاج إلى التدفقات النقدية. 
+    // في حال عدم توفرها، نعيد النقاط كما هي حالياً.
+    return samples; 
+  }
+
+
+  Map<String, double> _calculatePeriodChange() {
+    if (_spots.length < 2) return {'pct': 0.0, 'usd': 0.0};
+    
+    // البحث عن أول نقطة صالحة (محاكاة past_val في Flet)
+    double pastVal = _spots.first.y;
+    if (pastVal <= 0) return {'pct': 0.0, 'usd': 0.0};
+    
+    double currentVal = _spots.last.y;
+    
+    // بما أن الـ API يطبق Dietz، فإن التغير الصافي هو الفرق المباشر
+    double netChange = currentVal - pastVal;
+    double pct = (netChange / pastVal) * 100;
+    
+    return {'pct': pct, 'usd': netChange};
+  }
+
+  double get _minY {
+    if (_spots.isEmpty) return 0;
+    double minVal = _spots.map((s) => s.y).reduce((a, b) => a < b ? a : b);
+    double maxVal = _spots.map((s) => s.y).reduce((a, b) => a > b ? a : b);
+    if (maxVal - minVal < 0.0001) maxVal = minVal + 0.01;
+    double pad = (maxVal - minVal) * 0.05;
+    return minVal - pad;
+  }
+
+  double get _maxY {
+    if (_spots.isEmpty) return 1;
+    double minVal = _spots.map((s) => s.y).reduce((a, b) => a < b ? a : b);
+    double maxVal = _spots.map((s) => s.y).reduce((a, b) => a > b ? a : b);
+    if (maxVal - minVal < 0.0001) maxVal = minVal + 0.01;
+    double pad = (maxVal - minVal) * 0.05;
+    return maxVal + pad;
+  }
+
+  @override
+  void dispose() {
+    _pollingTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _fetchData({bool isPolling = false}) async {
+    if (!isPolling) setState(() { _isLoading = true; _errorMsg = ''; });
+
+    try {
+      final headers = {'Authorization': 'Bearer ${widget.token}'};
+      final resDash = await http.get(Uri.parse('http://100.77.27.80:8553/api/dashboard'), headers: headers);
+      if (resDash.statusCode == 401) {
+        setState(() { _errorMsg = "Session expired. Please log in again."; _isLoading = false; });
+        _pollingTimer?.cancel();
+        widget.onLogout();
+        return;
+      }
+      if (resDash.statusCode == 200) {
+        setState(() => _data = jsonDecode(resDash.body));
+      }
+
+      final resChart = await http.get(Uri.parse('http://100.77.27.80:8553/api/trend_history?period=$_currentPeriod'), headers: headers);
+      if (resChart.statusCode == 200) {
+        final pts = jsonDecode(resChart.body)['points'] as List;
+        List<FlSpot> newSpots = [];
+        List<DateTime> newTimestamps = [];
+        for (int i = 0; i < pts.length; i++) {
+          double v = double.tryParse(pts[i][1].toString()) ?? 0.0;
+          if (v.isFinite) {
+            newSpots.add(FlSpot(i.toDouble(), v));
+            
+            // Robust Timestamp Parsing
+            double ts = 0.0;
+            if (pts[i][0] is num) {
+              ts = (pts[i][0] as num).toDouble();
+            } else {
+              ts = double.tryParse(pts[i][0].toString()) ?? 0.0;
+            }
+
+            if (ts > 0) {
+              if (ts > 1e11) { // Milliseconds
+                newTimestamps.add(DateTime.fromMillisecondsSinceEpoch(ts.toInt()));
+              } else { // Seconds
+                newTimestamps.add(DateTime.fromMillisecondsSinceEpoch((ts * 1000).toInt()));
+              }
+            } else {
+              newTimestamps.add(DateTime.now()); // Fallback
+            }
+          }
+        }
+        
+        // API already handled clean spikes and dietz. Proceeding to Downsample.
+        // Downsample to max 80 points
+        if (newSpots.length > 80) {
+          int step = (newSpots.length / 80).ceil();
+          List<FlSpot> reduced = [];
+          List<DateTime> reducedTimes = [];
+          for (int i = 0; i < newSpots.length; i += step) {
+            reduced.add(newSpots[i]);
+            reducedTimes.add(newTimestamps[i]);
+          }
+          if (reduced.isNotEmpty && reduced.last.x != newSpots.last.x) {
+            reduced.add(newSpots.last);
+            reducedTimes.add(newTimestamps.last);
+          }
+          newSpots = reduced;
+          newTimestamps = reducedTimes;
+        }
+
+        // Flet Logic: 3. Dietz Adjustment (Placeholder for now)
+        newSpots = _buildDietzPoints(newSpots);
+
+        setState(() {
+          _spots = newSpots;
+          _spotTimestamps = newTimestamps;
+        });
+      }
+
+      if (!isPolling) setState(() => _isLoading = false);
+    } catch (e) {
+      if (!isPolling) setState(() { _errorMsg = 'Connection error: $e'; _isLoading = false; });
+    }
+  }
+
+  String formatPct(double val) => '${val >= 0 ? '+' : ''}${val.toStringAsFixed(2)}%';
+  String formatUsd(double val) => '${val >= 0 ? '+' : ''}\$${val.toStringAsFixed(2)}';
+
+  void _showPeriodPicker() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: cardBg,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Select Period', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 8, runSpacing: 8,
+                children: ['1h', '1d', '1w', '1mo', '1y'].map((p) {
+                  final isSel = _currentPeriod == p;
+                  return ChoiceChip(
+                    label: Text(p.toUpperCase(), style: TextStyle(color: isSel ? Colors.black : Colors.white)),
+                    selected: isSel, selectedColor: accent, backgroundColor: borderColor,
+                    onSelected: (val) {
+                      setState(() => _currentPeriod = p);
+                      Navigator.pop(context);
+                      _fetchData();
+                    },
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _openStatDetail(BuildContext context, String title) {
+    Navigator.push(context, MaterialPageRoute(builder: (c) => StatDetailScreen(title: title, data: _data, token: widget.token)));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(backgroundColor: Color(0xFF080d14), body: Center(child: CircularProgressIndicator(color: Color(0xFF00d9ff))));
+    }
+
+    if (_errorMsg.isNotEmpty) {
+      return Scaffold(
+        backgroundColor: const Color(0xFF080d14),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, color: Colors.red, size: 50),
+              const SizedBox(height: 16),
+              Text(_errorMsg, style: const TextStyle(color: Colors.white, fontSize: 16), textAlign: TextAlign.center),
+              const SizedBox(height: 16),
+              ElevatedButton(onPressed: widget.onLogout, child: const Text('Back to Login')),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final cap = _data['capital'] ?? {};
+    final stats = _data['stats'] ?? {};
+    final risk = _data['risk'] ?? {};
+    final events = _data['events'] ?? {};
+    final positions = _data['positions'] as List? ?? [];
+
+    final totalCapital = (cap['total'] ?? 0.0).toDouble();
+    final freeBalance = (cap['free'] ?? 0.0).toDouble();
+    final roi = (cap['roi_pct'] ?? 0.0).toDouble();
+    final bnbValue = (cap['bnb_value'] ?? 0.0).toDouble();
+    final refCapital = (cap['ref_capital'] ?? 0.0).toDouble();
+    final closedTrades = stats['closed_trades'] ?? 0;
+    final profitTrades = stats['profit_trades'] ?? 0;
+    final winRate = (stats['win_rate'] ?? 0.0).toDouble();
+    final realizedPnl = (stats['realized_pnl'] ?? 0.0).toDouble();
+    final realizedPnlPct = (stats['realized_pnl_pct'] ?? 0.0).toDouble();
+    final exposurePct = (risk['exposure_pct'] ?? 0.0).toDouble();
+    final posValue = (risk['positions_value'] ?? 0.0).toDouble();
+    final netEvents = (events['net'] ?? 0.0).toDouble();
+    final deposits = (events['deposits'] ?? 0.0).toDouble();
+    final withdrawals = (events['withdrawals'] ?? 0.0).toDouble();
+
+    Color expColor = green;
+    if (exposurePct >= 65) expColor = red;
+    else if (exposurePct >= 50) expColor = Colors.orange;
+    int expInt = exposurePct.toInt().clamp(1, 99);
+
+    Color trendColor = roi >= 0 ? green : red;
+    double changePct = roi;
+    double changeUsd = totalCapital - refCapital;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFF080d14),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Header with title and buttons
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+              color: const Color(0xFF080d14),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.ac_unit, size: 28, color: Colors.white),
+                      Text('SMARTWALLET GO', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      InkWell(
+                        onTap: () => _fetchData(),
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(6), border: Border.all(color: borderColor)),
+                          child: const Icon(Icons.refresh, color: Colors.white, size: 13),
+                        ),
+                      ),
+                      const SizedBox(width: 7),
+                      InkWell(
+                        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => MenuScreen(onLogout: widget.onLogout))),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                          decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(6), border: Border.all(color: borderColor)),
+                          child: const Row(
+                            children: [
+                              Icon(Icons.menu, color: Colors.white, size: 13),
+                              SizedBox(width: 3),
+                              Text('MENU', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 2),
+                children: [
+                  // ============ MAIN WRAPPER CARD ============
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0d141e),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: borderColor),
+                    ),
+                    child: Column(
+                      children: [
+                        // Exchange Header
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('Exchange & Balances', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+                            Row(
+                              children: [
+                                const Text('Performance', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                                const SizedBox(width: 4),
+                                InkWell(
+                                  onTap: _showPeriodPicker,
+                                  borderRadius: BorderRadius.circular(14),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(color: const Color(0xFF080d14), borderRadius: BorderRadius.circular(14), border: Border.all(color: borderColor)),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(Icons.sync, size: 11, color: Colors.white),
+                                        const SizedBox(width: 4),
+                                        Text(_currentPeriod.toUpperCase(), style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: trendColor)),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                InkWell(
+                                  onTap: () => _openStatDetail(context, 'Realized PnL'),
+                                  borderRadius: BorderRadius.circular(14),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(color: const Color(0xFF080d14), borderRadius: BorderRadius.circular(14), border: Border.all(color: borderColor)),
+                                    child: const Row(
+                                      children: [
+                                        Icon(Icons.insights, size: 12, color: Colors.white),
+                                        SizedBox(width: 4),
+                                        Text('Stats', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white)),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        // Two-column body
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              flex: 5,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  InkWell(
+                                    onTap: () => _openStatDetail(context, 'Capital'),
+                                    child: Row(children: [
+                                      const Text('TOTAL CAPITAL', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                                      const SizedBox(width: 6),
+                                      Text('ROI ${formatPct(roi)}', style: TextStyle(fontSize: 10, color: roi >= 0 ? green : red, fontWeight: FontWeight.bold)),
+                                      const SizedBox(width: 2),
+                                      const Icon(Icons.chevron_right, size: 12, color: Colors.grey),
+                                    ]),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      Text('${totalCapital.toStringAsFixed(2)}', style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white)),
+                                      const SizedBox(width: 6),
+                                      SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: Image(
+                                        image: NetworkImage('https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/usdt.png'),
+                                        errorBuilder: (c, o, s) => const Icon(Icons.circle, color: Color(0xFF26A17B), size: 18),
+                                      ),
+                                    ),
+                                      const SizedBox(width: 4),
+                                      const Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text('USDT', style: TextStyle(color: Color(0xFF10b981), fontWeight: FontWeight.bold, fontSize: 11)),
+                                          Text('Tether US', style: TextStyle(color: Colors.grey, fontSize: 8)),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 14),
+                                  Row(children: [
+                                    SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: Image(
+                                        image: NetworkImage(bnbLogoUrl),
+                                        errorBuilder: (c, o, s) => const Icon(Icons.circle, color: Color(0xFFf0b90b), size: 18),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    const Text('Binance', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFFf0b90b))),
+                                  ]),
+                                  const SizedBox(height: 2),
+                                  Row(
+                                    children: [
+                                      const Text('Balance ', style: TextStyle(fontSize: 11, color: Color(0xFFf0b90b), fontWeight: FontWeight.bold)),
+                                      Text('\$${freeBalance.toStringAsFixed(2)}', style: const TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.bold)),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Expanded(
+                              flex: 6,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(formatPct(changePct / 10), style: TextStyle(fontSize: 12, color: trendColor, fontWeight: FontWeight.bold)),
+                                  Text(formatUsd(changeUsd), style: TextStyle(fontSize: 10, color: trendColor)),
+                                  const SizedBox(height: 8),
+                                  SizedBox(
+                                    height: 50,
+                                    child: _spots.isEmpty
+                                        ? const Center(child: Text('Loading...', style: TextStyle(color: Colors.grey, fontSize: 10)))
+                                        : Stack(
+                                            children: [
+                                              Positioned.fill(top: 25, child: CustomPaint(painter: DashedLinePainter(color: Colors.grey.withOpacity(0.4)))),
+                                              LineChart(
+                                                LineChartData(
+                                                  clipData: const FlClipData.all(),
+                                                  gridData: const FlGridData(show: false),
+                                                  titlesData: const FlTitlesData(show: false),
+                                                  borderData: FlBorderData(show: false),
+                                                  minX: 0,
+                                                  maxX: (_spots.length - 1).toDouble() > 0 ? (_spots.length - 1).toDouble() : 1,
+                                                  minY: _minY,
+                                                  maxY: _maxY,
+                                                  lineBarsData: [
+                                                    LineChartBarData(
+                                                      preventCurveOverShooting: true,
+                                                      spots: _spots,
+                                                      isCurved: true,
+                                                      color: trendColor,
+                                                      barWidth: 2,
+                                                      dotData: const FlDotData(show: false),
+                                                      belowBarData: BarAreaData(show: false),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: _buildDynamicTimeMarkers(),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        // Divider
+                        const SizedBox(height: 6),
+                        const Divider(color: Color(0xFF202d42), height: 1),
+                        const SizedBox(height: 6),
+                        // Capital Events
+                        InkWell(
+                          onTap: () => _openStatDetail(context, 'Capital'),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Row(
+                              children: [
+                                Icon(Icons.account_balance, size: 16, color: accent),
+                                const SizedBox(width: 7),
+                                Expanded(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text('CAPITAL EVENTS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+                                      Text('Deposits \$${deposits.toStringAsFixed(2)} | Withdrawals \$${withdrawals.toStringAsFixed(2)} | Ref \$${refCapital.toStringAsFixed(2)}', style: const TextStyle(fontSize: 8, color: Colors.grey)),
+                                    ],
+                                  ),
+                                ),
+                                Text(formatUsd(netEvents), style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: netEvents >= 0 ? green : Colors.orange)),
+                                const SizedBox(width: 3),
+                                const Icon(Icons.chevron_right, color: Color(0xFF475569), size: 15),
+                              ],
+                            ),
+                          ),
+                        ),
+                        // Divider
+                        const SizedBox(height: 6),
+                        const Divider(color: Color(0xFF202d42), height: 1),
+                        const SizedBox(height: 6),
+                        // Stats Grid 2x2
+                        Row(
+                          children: [
+                            Expanded(child: _buildInnerCard('Closed Trades', '$closedTrades', Icons.receipt_long, Colors.grey, null, bnbLogoUrl, onTap: () => _openStatDetail(context, 'Closed Trades'))),
+                            const SizedBox(width: 7),
+                            Expanded(child: _buildInnerCard('Profit Trades', '$profitTrades', Icons.emoji_events, green, 'WinRate ${winRate.toStringAsFixed(1)}%', bnbLogoUrl, onTap: () => _openStatDetail(context, 'Profit Trades'))),
+                          ],
+                        ),
+                        const SizedBox(height: 7),
+                        Row(
+                          children: [
+                            Expanded(child: _buildInnerCard('BNB Fees Reserve', '\$${bnbValue.toStringAsFixed(2)}', null, gold, null, bnbLogoUrl, isBnbIcon: true, onTap: () => _openStatDetail(context, 'BNB Fees Reserve'))),
+                            const SizedBox(width: 7),
+                            Expanded(child: _buildInnerCard('Realized PnL', formatUsd(realizedPnl), Icons.account_balance_wallet, green, formatPct(realizedPnlPct), bnbLogoUrl, onTap: () => _openStatDetail(context, 'Capital'))),
+                          ],
+                        ),
+                        // Divider
+                        const SizedBox(height: 6),
+                        const Divider(color: Color(0xFF202d42), height: 1),
+                        const SizedBox(height: 6),
+                        // Exposure
+                        InkWell(
+                          onTap: () => _openStatDetail(context, 'Capital Exposure'),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(children: [
+                                      Icon(Icons.pie_chart_outline, size: 16, color: expColor),
+                                      const SizedBox(width: 5),
+                                      const Text('CAPITAL EXPOSURE', style: TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold)),
+                                    ]),
+                                    Row(children: [
+                                      Text('${exposurePct.toStringAsFixed(2)}%', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: expColor)),
+                                      const SizedBox(width: 3),
+                                      const Icon(Icons.chevron_right, color: Color(0xFF475569), size: 13),
+                                    ]),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Row(children: [
+                                  Expanded(flex: expInt, child: Container(height: 7, color: expColor)),
+                                  Expanded(
+                                    flex: 100 - expInt,
+                                    child: Container(
+                                      height: 7,
+                                      color: const Color(0xFF080d14),
+                                      child: CustomPaint(painter: StripedBarPainter(color: expColor)),
+                                    ),
+                                  ),
+                                ]),
+                                const SizedBox(height: 2),
+                                Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text('Positions Value: \$${posValue.toStringAsFixed(2)}/\$${totalCapital.toStringAsFixed(2)}', style: const TextStyle(fontSize: 9, color: Colors.grey)),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        // Divider
+                        const SizedBox(height: 6),
+                        const Divider(color: Color(0xFF202d42), height: 1),
+                        const SizedBox(height: 6),
+                        // All-Time + Cost (Row)
+                        Row(
+                          children: [
+                            Expanded(
+                              child: InkWell(
+                                onTap: () => _openStatDetail(context, 'All-Time PnL Range'),
+                                child: _buildInnerCardContent(
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        width: 22, height: 22,
+                                        decoration: BoxDecoration(border: Border.all(color: Colors.grey, width: 1), borderRadius: BorderRadius.circular(4)),
+                                        child: const Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                                          Text('July', style: TextStyle(fontSize: 5, color: Colors.grey, fontWeight: FontWeight.bold)),
+                                          Text('17', style: TextStyle(fontSize: 8, color: Colors.white, fontWeight: FontWeight.bold)),
+                                        ]),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Expanded(
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const Text('ALL-TIME PNL RANGE', style: TextStyle(fontSize: 8, color: Colors.grey)),
+                                            const SizedBox(height: 2),
+                                            Row(children: [
+                                              const Text('Min 0.41%', style: TextStyle(fontSize: 9, color: Colors.white)),
+                                              const SizedBox(width: 6),
+                                              Icon(Icons.south_east, size: 11, color: red),
+                                            ]),
+                                            const SizedBox(height: 2),
+                                            Row(children: [
+                                              const Text('Max 0.92%', style: TextStyle(fontSize: 9, color: Colors.white)),
+                                              const SizedBox(width: 6),
+                                              Icon(Icons.north_east, size: 11, color: green),
+                                            ]),
+                                          ],
+                                        ),
+                                      ),
+                                      const Icon(Icons.chevron_right, color: Color(0xFF475569), size: 14),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 7),
+                            Expanded(
+                              child: InkWell(
+                                onTap: () => _openStatDetail(context, 'Cost & Efficiency'),
+                                child: _buildInnerCardContent(
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Row(children: [
+                                              const Icon(Icons.savings, size: 16, color: Color(0xFF00d9ff)),
+                                              const SizedBox(width: 4),
+                                              const Text('COST & EFFICIENCY', style: TextStyle(fontSize: 8, color: Colors.grey)),
+                                            ]),
+                                            const SizedBox(height: 4),
+                                            Text('Fees Paid: \$1.06', style: TextStyle(fontSize: 9, color: gold)),
+                                            const SizedBox(height: 1),
+                                            Text('Avg/Hour: \$0.0141', style: TextStyle(fontSize: 9, color: green)),
+                                          ],
+                                        ),
+                                      ),
+                                      const Icon(Icons.chevron_right, color: Color(0xFF475569), size: 14),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 9),
+
+                  // ============ JOURNAL ============
+                  InkWell(
+                    onTap: () => _openStatDetail(context, 'Journal'),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
+                      decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(8), border: Border.all(color: borderColor)),
+                      child: Row(
+                        children: [
+                          Icon(Icons.article_outlined, size: 15, color: accent),
+                          const SizedBox(width: 7),
+                          Text('JOURNAL', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: accent)),
+                          const Spacer(),
+                          const Text('5', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                          const SizedBox(width: 5),
+                          Container(
+                            padding: const EdgeInsets.all(1),
+                            decoration: BoxDecoration(border: Border.all(color: Colors.grey), borderRadius: BorderRadius.circular(4)),
+                            child: const Icon(Icons.keyboard_double_arrow_down, size: 16, color: Colors.white),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 11),
+
+                  // ============ POSITIONS HEADER ============
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(children: [
+                        const Text('POSITIONS', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
+                        const SizedBox(width: 5),
+                        Text('${positions.length}/7', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white)),
+                      ]),
+                      const Row(children: [
+                        Icon(Icons.list_alt, size: 13, color: Colors.grey),
+                        SizedBox(width: 3),
+                        Text('Total Value: \$153.96', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                      ]),
+                    ],
+                  ),
+                  const SizedBox(height: 7),
+
+                  // ============ POSITIONS LIST ============
+                  if (positions.isEmpty)
+                    const Center(child: Padding(padding: EdgeInsets.all(20), child: Text('No open positions', style: TextStyle(color: Colors.grey))))
+                  else
+                    ...positions.map((p) => ExpandablePositionCard(p: p, cardBg: cardBg, borderColor: borderColor, green: green, red: red, accent: accent)).toList(),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+
+  List<Widget> _buildDynamicTimeMarkers() {
+    if (_currentPeriod == '1d' || _currentPeriod == '1h') {
+      return [
+        _buildTimeMarker('00:00'),
+        _buildTimeMarker('04:00'),
+        _buildTimeMarker('08:00'),
+        _buildTimeMarker('12:00'),
+        _buildTimeMarker('16:00'),
+        _buildTimeMarker('20:00'),
+      ];
+    } else {
+      // للفترات الأسبوعية والشهرية، نعتمد على التواريخ الفعلية
+      if (_spotTimestamps.isEmpty) return [];
+      int count = 5;
+      List<Widget> markers = [];
+      for (int i = 0; i < count; i++) {
+        int index = (i * (_spotTimestamps.length - 1) / (count - 1)).round();
+        if (index >= _spotTimestamps.length) index = _spotTimestamps.length - 1;
+        DateTime dt = _spotTimestamps[index];
+        markers.add(_buildTimeMarker('${dt.day.toString().padLeft(2, '0')}-${dt.month.toString().padLeft(2, '0')}'));
+      }
+      return markers;
+    }
+  }
+
+  Widget _buildTimeMarker(String text) {
+    return Column(
+      children: [
+        Container(width: 4, height: 4, decoration: const BoxDecoration(color: Color(0xFF00d9ff), shape: BoxShape.circle)),
+        const SizedBox(height: 2),
+        Text(text, style: const TextStyle(fontSize: 7, color: Colors.grey)),
+      ],
+    );
+  }
+
+  // ignore: unused_element
+  Widget _buildStatCard(String title, String value, IconData? icon, Color iconColor, String? subtitle, String bnbLogoUrl, {Color titleColor = Colors.grey, bool isBnbIcon = false, VoidCallback? onTap}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(9),
+      child: Container(
+        height: 68,
+        padding: const EdgeInsets.all(10.5),
+        decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(9), border: Border.all(color: borderColor)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                if (isBnbIcon)
+                  SizedBox(width: 16.25, height: 16.25, child: Image(image: NetworkImage(bnbLogoUrl), errorBuilder: (c,o,s) => Icon(Icons.diamond, size: 16.25, color: iconColor)))
+                else if (icon != null)
+                  Icon(icon, size: 16.25, color: iconColor),
+                const SizedBox(width: 6.25),
+                Text(title, style: TextStyle(fontSize: 10.5, color: titleColor)),
+              ],
+            ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(value, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.white)),
+                const Spacer(),
+                if (subtitle != null) Text(subtitle, style: TextStyle(fontSize: 9, color: green, fontWeight: FontWeight.bold)),
+                const SizedBox(width: 3),
+                const Icon(Icons.chevron_right, color: Color(0xFF475569), size: 16),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+  Widget _buildInnerCard(String title, String value, IconData? icon, Color iconColor, String? subtitle, String bnbLogoUrl, {bool isBnbIcon = false, VoidCallback? onTap}) {
+      return InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          height: 65,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: const Color(0xFF141b28),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: const Color(0xFF2a3446)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(title, style: const TextStyle(fontSize: 10, color: Color(0xFF94a3b8))),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  if (isBnbIcon)
+                    SizedBox(width: 16, height: 16, child: Image(image: NetworkImage(bnbLogoUrl), errorBuilder: (c,o,s) => Icon(Icons.diamond, size: 16, color: iconColor)))
+                  else if (icon != null)
+                    Icon(icon, size: 16, color: iconColor),
+                  const SizedBox(width: 6),
+                  Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                  const Spacer(),
+                  if (subtitle != null) Text(subtitle, style: const TextStyle(fontSize: 9, color: Color(0xFF10b981), fontWeight: FontWeight.bold)),
+                  const SizedBox(width: 4),
+                  const Icon(Icons.chevron_right, color: Color(0xFF475569), size: 16),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    Widget _buildInnerCardContent({required Widget child}) {
+    return Container(
+      height: 65,
+      padding: const EdgeInsets.all(9),
+      decoration: BoxDecoration(
+        color: const Color(0xFF141b28),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFF2a3446)),
+      ),
+      child: child,
+    );
+  }
+
+// ================= EXPANDABLE POSITION CARD =================
+class ExpandablePositionCard extends StatefulWidget {
+  final Map<String, dynamic> p;
+  final Color cardBg, borderColor, green, red, accent;
+
+  const ExpandablePositionCard({
+    super.key,
+    required this.p,
+    required this.cardBg,
+    required this.borderColor,
+    required this.green,
+    required this.red,
+    required this.accent,
+  });
+
+  @override
+  State<ExpandablePositionCard> createState() => _ExpandablePositionCardState();
+}
+
+class _ExpandablePositionCardState extends State<ExpandablePositionCard> {
+  bool _isExpanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = widget.p;
+    final sym = p['symbol'] ?? 'UNKNOWN';
+    final pnl = (p['pnl'] ?? 0.0).toDouble();
+    final c = pnl >= 0 ? widget.green : widget.red;
+    final dcaSteps = int.tryParse(p['dca_steps']?.toString() ?? '0') ?? 0;
+    final value = (p['value'] ?? 0.0).toDouble();
+    final entry = (p['entry'] ?? 0.0).toDouble();
+    final nextTpPct = 1.5;
+    final nextTpTarget = entry * (1 + nextTpPct / 100);
+    final nextDcaPct = -2.0;
+    final nextDcaTarget = entry * (1 + nextDcaPct / 100);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 9),
+      padding: const EdgeInsets.all(9),
+      decoration: BoxDecoration(
+        color: widget.cardBg,
+        borderRadius: BorderRadius.circular(8),
+        border: Border(
+          left: BorderSide(color: c, width: 3),
+          top: BorderSide(color: widget.borderColor),
+          right: BorderSide(color: widget.borderColor),
+          bottom: BorderSide(color: widget.borderColor),
+        ),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(children: [
+                CircleAvatar(radius: 11, backgroundColor: const Color(0xFF080d14), child: Text(sym.isNotEmpty ? sym[0] : '?', style: const TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold))),
+                const SizedBox(width: 7),
+                Text(sym, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white)),
+              ]),
+              Row(children: [
+                Text('Open $sym on Binance', style: TextStyle(fontSize: 9, color: widget.accent)),
+                const SizedBox(width: 5),
+                InkWell(
+                  onTap: () => setState(() => _isExpanded = !_isExpanded),
+                  child: Container(
+                    padding: const EdgeInsets.all(1),
+                    decoration: BoxDecoration(border: Border.all(color: Colors.grey), borderRadius: BorderRadius.circular(4)),
+                    child: Icon(_isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_double_arrow_down, size: 16, color: Colors.white),
+                  ),
+                ),
+              ]),
+            ],
+          ),
+          const SizedBox(height: 9),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const Text('PNL', style: TextStyle(fontSize: 9, color: Colors.grey)),
+                Text('${pnl >= 0 ? '+' : ''}${pnl.toStringAsFixed(2)}%', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: c)),
+              ]),
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const Text('DCA', style: TextStyle(fontSize: 9, color: Colors.grey)),
+                Text('$dcaSteps/20', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(height: 3),
+                SizedBox(width: 45, child: LinearProgressIndicator(value: dcaSteps / 20, backgroundColor: widget.borderColor, color: widget.accent, minHeight: 3)),
+              ]),
+              Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                const Text('Cost', style: TextStyle(fontSize: 9, color: Colors.grey)),
+                Text('\$${(value / (1 + pnl / 100)).toStringAsFixed(2)}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
+              ]),
+              Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                const Text('Value', style: TextStyle(fontSize: 9, color: Colors.grey)),
+                Text('\$${value.toStringAsFixed(2)}', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: widget.accent)),
+              ]),
+            ],
+          ),
+          if (_isExpanded) ...[
+            const Divider(color: Color(0xFF202d42), height: 20),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(color: const Color(0xFF080d14), borderRadius: BorderRadius.circular(6)),
+              child: Column(
+                children: [
+                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                    const Text('Next TP', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                    Text('+$nextTpPct% -> \$${nextTpTarget.toStringAsFixed(4)}', style: TextStyle(fontSize: 11, color: widget.green, fontWeight: FontWeight.bold)),
+                  ]),
+                  const SizedBox(height: 4),
+                  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                    const Text('Next DCA', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                    Text('$nextDcaPct% -> \$${nextDcaTarget.toStringAsFixed(4)}', style: TextStyle(fontSize: 11, color: Colors.orange, fontWeight: FontWeight.bold)),
+                  ]),
+                  const SizedBox(height: 8),
+                  Row(children: [
+                    const Icon(Icons.bar_chart, size: 14, color: Color(0xFF00d9ff)),
+                    const SizedBox(width: 4),
+                    Text('24h Details', style: TextStyle(fontSize: 10, color: widget.accent, fontWeight: FontWeight.bold)),
+                  ]),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class StripedBarPainter extends CustomPainter {
+  final Color color;
+  StripedBarPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.clipRect(Rect.fromLTWH(0, 0, size.width, size.height));
+    final paint = Paint()..color = color..strokeWidth = 2.5..style = PaintingStyle.stroke;
+    double spacing = 6.0;
+    for (double i = -size.height; i < size.width; i += spacing) {
+      canvas.drawLine(Offset(i, size.height), Offset(i + size.height, 0), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class DashedLinePainter extends CustomPainter {
+  final Color color;
+  DashedLinePainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = color..strokeWidth = 1..style = PaintingStyle.stroke;
+    const dashWidth = 5.0;
+    const dashSpace = 5.0;
+    double startX = 0;
+    while (startX < size.width) {
+      canvas.drawLine(Offset(startX, size.height), Offset(startX + dashWidth, size.height), paint);
+      startX += dashWidth + dashSpace;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// ================= STAT DETAIL SCREEN =================
+class StatDetailScreen extends StatefulWidget {
+  final String title;
+  final Map<String, dynamic> data;
+  final String token;
+
+  const StatDetailScreen({super.key, required this.title, required this.data, required this.token});
+
+  @override
+  State<StatDetailScreen> createState() => _StatDetailScreenState();
+}
+
+class _StatDetailScreenState extends State<StatDetailScreen> {
+  bool _isLoading = true;
+  Map<String, dynamic> _extraData = {};
+  List<dynamic> _trades = [];
+  String _errorMsg = '';
+
+  final Color cardBg = const Color(0xFF101722);
+  final Color borderColor = const Color(0xFF202d42);
+  final Color accent = const Color(0xFF00d9ff);
+  final Color green = const Color(0xFF10b981);
+  final Color red = const Color(0xFFef4444);
+  final Color gold = const Color(0xFFf0b90b);
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchData();
+  }
+
+  Future<void> _fetchData() async {
+    try {
+      final headers = {'Authorization': 'Bearer ${widget.token}'};
+
+      if (widget.title == 'Closed Trades' || widget.title == 'Profit Trades') {
+        final res = await http.get(Uri.parse('http://100.77.27.80:8553/api/history'), headers: headers);
+        if (res.statusCode == 200) {
+          final allTrades = jsonDecode(res.body)['trades'] ?? [];
+          setState(() {
+            if (widget.title == 'Profit Trades') {
+              _trades = allTrades.where((t) => (t['realized_profit_usdt'] ?? 0.0) > 0).toList();
+            } else {
+              _trades = allTrades;
+            }
+            _isLoading = false;
+          });
+        } else {
+          setState(() { _errorMsg = 'Failed to load trades'; _isLoading = false; });
+        }
+      } else if (widget.title == 'All-Time PnL Range') {
+        final res = await http.get(Uri.parse('http://100.77.27.80:8553/api/stats/pnl_range'), headers: headers);
+        if (res.statusCode == 200) {
+          setState(() { _extraData = jsonDecode(res.body); _isLoading = false; });
+        } else {
+          setState(() { _errorMsg = 'Failed'; _isLoading = false; });
+        }
+      } else if (widget.title == 'Cost & Efficiency') {
+        final res = await http.get(Uri.parse('http://100.77.27.80:8553/api/stats/fees'), headers: headers);
+        if (res.statusCode == 200) {
+          setState(() { _extraData = jsonDecode(res.body); _isLoading = false; });
+        } else {
+          setState(() { _errorMsg = 'Failed'; _isLoading = false; });
+        }
+      } else if (widget.title == 'BNB Fees Reserve') {
+        final res = await http.get(Uri.parse('http://100.77.27.80:8553/api/bnb/status'), headers: headers);
+        if (res.statusCode == 200) {
+          setState(() { _extraData = jsonDecode(res.body); _isLoading = false; });
+        } else {
+          setState(() { _errorMsg = 'Failed'; _isLoading = false; });
+        }
+      } else if (widget.title == 'Realized PnL') {
+        final res = await http.get(Uri.parse('http://100.77.27.80:8553/api/stats/realized'), headers: headers);
+        if (res.statusCode == 200) {
+          setState(() { _extraData = jsonDecode(res.body); _isLoading = false; });
+        } else {
+          setState(() { _errorMsg = 'Failed'; _isLoading = false; });
+        }
+      } else {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      setState(() { _errorMsg = 'Error: $e'; _isLoading = false; });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: const Color(0xFF080d14),
+        appBar: AppBar(backgroundColor: cardBg, leading: IconButton(icon: Icon(Icons.arrow_back, color: accent), onPressed: () => Navigator.pop(context)), title: Text(widget.title, style: TextStyle(color: accent))),
+        body: const Center(child: CircularProgressIndicator(color: Color(0xFF00d9ff))),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: const Color(0xFF080d14),
+      appBar: AppBar(
+        backgroundColor: cardBg,
+        elevation: 0,
+        leading: IconButton(icon: Icon(Icons.arrow_back, color: accent), onPressed: () => Navigator.pop(context)),
+        title: Text(widget.title, style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 18)),
+      ),
+      body: _errorMsg.isNotEmpty
+          ? Center(child: Text(_errorMsg, style: const TextStyle(color: Colors.red)))
+          : _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (widget.title == 'Closed Trades' || widget.title == 'Profit Trades') return _buildTradesList();
+    if (widget.title == 'All-Time PnL Range') return _buildPnlRange();
+    if (widget.title == 'Cost & Efficiency') return _buildFees();
+    if (widget.title == 'BNB Fees Reserve') return _buildBnb();
+    if (widget.title == 'Realized PnL') return _buildRealized();
+    if (widget.title == 'Capital') return _buildCapitalBreakdown();
+    if (widget.title == 'Capital Events') return _buildCapitalEvents();
+    if (widget.title == 'Capital Exposure') return _buildCapitalExposure();
+    if (widget.title == 'Journal') return _buildJournal();
+    return const Center(child: Text('No detailed data available.', style: TextStyle(color: Colors.grey)));
+  }
+
+  Widget _buildTradesList() {
+    if (_trades.isEmpty) return const Center(child: Text('No trades found', style: TextStyle(color: Colors.grey)));
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          margin: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(8), border: Border.all(color: borderColor)),
+          child: Text('${widget.title} (${_trades.length})', style: TextStyle(color: widget.title == 'Profit Trades' ? green : accent, fontWeight: FontWeight.bold, fontSize: 13)),
+        ),
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: _trades.length,
+            itemBuilder: (context, index) {
+              final t = _trades[index];
+              final sym = t['symbol'] ?? 'UNKNOWN';
+              final pnl = (t['realized_profit_usdt'] ?? 0.0).toDouble();
+              final time = t['last_action'] ?? 0;
+              final isWin = pnl >= 0;
+              String dateStr = '';
+              if (time > 0) {
+                final dt = DateTime.fromMillisecondsSinceEpoch((time * 1000).toInt());
+                dateStr = "${dt.day.toString().padLeft(2, '0')}-${dt.month.toString().padLeft(2, '0')}-${dt.year}:${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}:${dt.second.toString().padLeft(2, '0')}";
+              }
+              return InkWell(
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => TradeDetailScreen(trade: t, cardBg: cardBg, borderColor: borderColor, green: green, red: red, accent: accent))),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFF202d42), width: 1))),
+                  child: Row(
+                    children: [
+                      CircleAvatar(radius: 14, backgroundColor: const Color(0xFF080d14), child: Text(sym.isNotEmpty ? sym[0] : '?', style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.bold))),
+                      const SizedBox(width: 12),
+                      Expanded(flex: 2, child: Text(sym, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13))),
+                      Expanded(flex: 3, child: Text(dateStr, style: const TextStyle(color: Colors.grey, fontSize: 10))),
+                      Text('${isWin ? '+' : ''}${pnl.toStringAsFixed(2)} USDT', style: TextStyle(color: isWin ? green : red, fontWeight: FontWeight.bold, fontSize: 13)),
+                      const SizedBox(width: 8),
+                      const Icon(Icons.chevron_right, color: Color(0xFF475569), size: 18),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPnlRange() {
+    final minPct = (_extraData['min_pct'] ?? 0.0).toDouble();
+    final minSym = _extraData['min_sym'] ?? 'N/A';
+    final maxPct = (_extraData['max_pct'] ?? 0.0).toDouble();
+    final maxSym = _extraData['max_sym'] ?? 'N/A';
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: borderColor)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('ALL-TIME PNL RANGE', style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 14)),
+            const Divider(color: Color(0xFF202d42), height: 24),
+            InkWell(
+              onTap: () {
+                final trade = _extraData['min_trade'];
+                if (trade != null) Navigator.push(context, MaterialPageRoute(builder: (c) => TradeDetailScreen(trade: trade, cardBg: cardBg, borderColor: borderColor, green: green, red: red, accent: accent)));
+              },
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Minimum', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                  Row(children: [
+                    Text('${minPct >= 0 ? '+' : ''}${minPct.toStringAsFixed(2)}% ($minSym)', style: TextStyle(color: red, fontWeight: FontWeight.bold, fontSize: 13)),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.chevron_right, color: Color(0xFF475569), size: 16),
+                  ]),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            InkWell(
+              onTap: () {
+                final trade = _extraData['max_trade'];
+                if (trade != null) Navigator.push(context, MaterialPageRoute(builder: (c) => TradeDetailScreen(trade: trade, cardBg: cardBg, borderColor: borderColor, green: green, red: red, accent: accent)));
+              },
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Maximum', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                  Row(children: [
+                    Text('+${maxPct.toStringAsFixed(2)}% ($maxSym)', style: TextStyle(color: green, fontWeight: FontWeight.bold, fontSize: 13)),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.chevron_right, color: Color(0xFF475569), size: 16),
+                  ]),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFees() {
+    final fees = (_extraData['fees'] ?? 0.0).toDouble();
+    final avg = (_extraData['avg'] ?? 0.0).toDouble();
+    final List assets = _extraData['assets'] ?? [];
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: borderColor)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('COST & EFFICIENCY', style: TextStyle(color: gold, fontWeight: FontWeight.bold, fontSize: 14)),
+                const Divider(color: Color(0xFF202d42), height: 20),
+                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Fees Paid', style: TextStyle(color: Colors.grey, fontSize: 13)), Text('\$${fees.toStringAsFixed(2)}', style: TextStyle(color: gold, fontWeight: FontWeight.bold, fontSize: 13))]),
+                const SizedBox(height: 6),
+                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Avg/Hour', style: TextStyle(color: Colors.grey, fontSize: 13)), Text('\$${avg.toStringAsFixed(4)}', style: TextStyle(color: green, fontWeight: FontWeight.bold, fontSize: 13))]),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Align(alignment: Alignment.centerLeft, child: Text('${assets.length} assets - sorted by net (desc)', style: const TextStyle(color: Colors.grey, fontSize: 11))),
+          const SizedBox(height: 8),
+          ...assets.map((a) {
+            final sym = a['symbol'] ?? '?';
+            final net = (a['net'] ?? 0.0).toDouble();
+            final profit = (a['profit'] ?? 0.0).toDouble();
+            final fee = (a['fees'] ?? 0.0).toDouble();
+            final trades = a['trades'] ?? 0;
+            return Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(8), border: Border.all(color: borderColor)),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      CircleAvatar(radius: 12, backgroundColor: const Color(0xFF080d14), child: Text(sym.isNotEmpty ? sym[0] : '?', style: const TextStyle(fontSize: 10, color: Colors.white))),
+                      const SizedBox(width: 8),
+                      Text(sym, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      const SizedBox(width: 8),
+                      Text('$trades trades', style: const TextStyle(color: Colors.grey, fontSize: 10)),
+                      const Spacer(),
+                      Text('${net >= 0 ? '+' : ''}\$${net.toStringAsFixed(2)}', style: TextStyle(color: net >= 0 ? green : red, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(children: [
+                    Text('Profit ${profit >= 0 ? '+' : ''}\$${profit.toStringAsFixed(2)}', style: const TextStyle(color: Colors.grey, fontSize: 10)),
+                    const SizedBox(width: 16),
+                    Text('Fees -\$${fee.toStringAsFixed(2)}', style: const TextStyle(color: Colors.grey, fontSize: 10)),
+                  ]),
+                ],
+              ),
+            );
+          }).toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBnb() {
+    final status = _extraData['status'] ?? 'UNKNOWN';
+    final balance = (_extraData['balance'] ?? 0.0).toDouble();
+    final price = (_extraData['price'] ?? 0.0).toDouble();
+    final value = (_extraData['value'] ?? 0.0).toDouble();
+    final lastCheck = _extraData['last_check'] ?? 0;
+    String timeStr = 'N/A';
+    if (lastCheck > 0) {
+      final dt = DateTime.fromMillisecondsSinceEpoch((lastCheck * 1000).toInt());
+      timeStr = "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}:${dt.second.toString().padLeft(2, '0')}";
+    }
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: borderColor)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('BNB Fees Reserve', style: TextStyle(color: gold, fontWeight: FontWeight.bold, fontSize: 14)),
+            const Divider(color: Color(0xFF202d42), height: 20),
+            _buildDetailRow('Status', status, status == 'RUNNING' ? green : Colors.orange),
+            _buildDetailRow('Balance', '${balance.toStringAsFixed(8)} BNB', Colors.white),
+            _buildDetailRow('Price', '\$${price.toStringAsFixed(2)}', Colors.white),
+            _buildDetailRow('Value', '\$${value.toStringAsFixed(2)}', gold),
+            _buildDetailRow('Last check', timeStr, Colors.white),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRealized() {
+    final List breakdown = _extraData['breakdown'] ?? [];
+    final stats = widget.data['stats'] ?? {};
+    final totalProfit = (stats['realized_pnl'] ?? 0.0).toDouble();
+    final totalTrades = stats['closed_trades'] ?? 0;
+    final wins = stats['profit_trades'] ?? 0;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: borderColor)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                  Text('Realized PnL', style: TextStyle(color: green, fontWeight: FontWeight.bold, fontSize: 14)),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(color: const Color(0xFF080d14), borderRadius: BorderRadius.circular(14)),
+                    child: Row(children: [const Icon(Icons.sync, size: 10, color: Colors.grey), const SizedBox(width: 4), Text('1d', style: TextStyle(color: accent, fontSize: 10, fontWeight: FontWeight.bold))]),
+                  ),
+                ]),
+                const Divider(color: Color(0xFF202d42), height: 20),
+                _buildDetailRow('Total profit', '\$${totalProfit.toStringAsFixed(4)}', green),
+                _buildDetailRow('Total trades', '$totalTrades', Colors.white),
+                _buildDetailRow('Wins', '$wins', green),
+                _buildDetailRow('Total DCAs', '30', Colors.white),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: borderColor)),
+            child: Column(
+              children: [
+                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                  Text('1d Breakdown', style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 14)),
+                  Text('+\$${totalProfit.toStringAsFixed(2)}', style: TextStyle(color: green, fontWeight: FontWeight.bold, fontSize: 13)),
+                ]),
+                const Divider(color: Color(0xFF202d42), height: 20),
+                ...breakdown.map((b) {
+                  final date = b['date'] ?? '';
+                  final pnl = (b['pnl'] ?? 0.0).toDouble();
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                      Text(date, style: const TextStyle(color: Colors.white, fontSize: 13)),
+                      Text('${pnl >= 0 ? '+' : ''}\$${pnl.toStringAsFixed(2)}', style: TextStyle(color: pnl >= 0 ? green : red, fontWeight: FontWeight.bold, fontSize: 13)),
+                    ]),
+                  );
+                }).toList(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCapitalBreakdown() {
+    final cap = widget.data['capital'] ?? {};
+    final risk = widget.data['risk'] ?? {};
+    final freeUsdt = (cap['free'] ?? 0.0).toDouble();
+    final posValue = (risk['positions_value'] ?? 0.0).toDouble();
+    final bnbValue = (cap['bnb_value'] ?? 0.0).toDouble();
+    final total = (cap['total'] ?? 0.0).toDouble();
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: borderColor)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Total Capital Breakdown', style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 15)),
+            const Divider(color: Color(0xFF202d42), height: 24),
+            _buildDetailRow('Free USDT', '\$${freeUsdt.toStringAsFixed(2)}', accent),
+            const Divider(color: Color(0xFF202d42), height: 16),
+            _buildDetailRow('Positions Value', '\$${posValue.toStringAsFixed(2)}', const Color(0xFFa78bfa)),
+            const Divider(color: Color(0xFF202d42), height: 16),
+            _buildDetailRow('BNB Reserve', '\$${bnbValue.toStringAsFixed(2)}', gold),
+            const Divider(color: Color(0xFF202d42), height: 16),
+            _buildDetailRow('Total', '\$${total.toStringAsFixed(2)}', Colors.white, isBold: true),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCapitalEvents() {
+    final cap = widget.data['capital'] ?? {};
+    final events = widget.data['events'] ?? {};
+    final binance = (cap['free'] ?? 0.0).toDouble();
+    final posValue = (widget.data['risk']?['positions_value'] ?? 0.0).toDouble();
+    final bnb = (cap['bnb_value'] ?? 0.0).toDouble();
+    final total = (cap['total'] ?? 0.0).toDouble();
+    final deposits = (events['deposits'] ?? 0.0).toDouble();
+    final withdrawals = (events['withdrawals'] ?? 0.0).toDouble();
+    final refCapital = (cap['ref_capital'] ?? 0.0).toDouble();
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: borderColor)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('CAPITAL BREAKDOWN', style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 14)),
+            const Divider(color: Color(0xFF202d42), height: 20),
+            _buildDetailRow('Free USDT', '\$${binance.toStringAsFixed(2)}', accent),
+            _buildDetailRow('Positions Value', '\$${posValue.toStringAsFixed(2)}', const Color(0xFFa78bfa)),
+            _buildDetailRow('BNB Reserve', '\$${bnb.toStringAsFixed(2)}', gold),
+            const SizedBox(height: 8),
+            _buildDetailRow('Total Capital', '\$${total.toStringAsFixed(2)}', Colors.white, isBold: true),
+            const Divider(color: Color(0xFF202d42), height: 20),
+            Text('CAPITAL EVENTS', style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 14)),
+            const Divider(color: Color(0xFF202d42), height: 20),
+            _buildDetailRow('Deposits', '\$${deposits.toStringAsFixed(2)}', green),
+            _buildDetailRow('Withdrawals', '\$${withdrawals.toStringAsFixed(2)}', Colors.orange),
+            _buildDetailRow('Reference Capital', '\$${refCapital.toStringAsFixed(2)}', Colors.grey),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCapitalExposure() {
+    final risk = widget.data['risk'] ?? {};
+    final cap = widget.data['capital'] ?? {};
+    final exp = (risk['exposure_pct'] ?? 0.0).toDouble();
+    final posValue = (risk['positions_value'] ?? 0.0).toDouble();
+    final total = (cap['total'] ?? 0.0).toDouble();
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: borderColor)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('CAPITAL EXPOSURE', style: TextStyle(color: green, fontWeight: FontWeight.bold, fontSize: 14)),
+            const Divider(color: Color(0xFF202d42), height: 20),
+            _buildDetailRow('Exposure %', '${exp.toStringAsFixed(2)}%', exp > 65 ? red : (exp > 50 ? Colors.orange : green)),
+            _buildDetailRow('Positions Value', '\$${posValue.toStringAsFixed(2)}', accent),
+            _buildDetailRow('Total Capital', '\$${total.toStringAsFixed(2)}', Colors.white, isBold: true),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildJournal() {
+    final List journal = widget.data['journal'] ?? [];
+    if (journal.isEmpty) return const Center(child: Text('Journal is empty', style: TextStyle(color: Colors.grey)));
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: journal.length,
+      itemBuilder: (context, index) {
+        final j = journal[index];
+        final type = j['type'] ?? 'INFO';
+        final msg = j['message'] ?? '';
+        final time = j['time'] ?? '';
+        Color c = Colors.grey;
+        IconData icon = Icons.info_outline;
+        if (type.contains('BUY')) { c = green; icon = Icons.arrow_downward; }
+        else if (type.contains('SELL')) { c = red; icon = Icons.arrow_upward; }
+        else if (type.contains('DCA')) { c = Colors.blue; icon = Icons.repeat; }
+        return Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(8), border: Border.all(color: borderColor)),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, size: 16, color: c),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('$type - $time', style: TextStyle(fontSize: 11, color: c, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 4),
+                    Text(msg, style: const TextStyle(fontSize: 12, color: Colors.white)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value, Color valColor, {bool isBold = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+          Text(value, style: TextStyle(color: valColor, fontSize: 14, fontWeight: isBold ? FontWeight.bold : FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+}
+
+// ================= TRADE DETAIL SCREEN =================
+class TradeDetailScreen extends StatelessWidget {
+  final Map<String, dynamic> trade;
+  final Color cardBg, borderColor, green, red, accent;
+
+  const TradeDetailScreen({super.key, required this.trade, required this.cardBg, required this.borderColor, required this.green, required this.red, required this.accent});
+
+  @override
+  Widget build(BuildContext context) {
+    final sym = trade['symbol'] ?? 'UNKNOWN';
+    final pnl = (trade['realized_profit_usdt'] ?? 0.0).toDouble();
+    final isWin = pnl >= 0;
+    final lifecycle = trade['lifecycle'] as List? ?? [];
+    final fees = (trade['fees_deducted'] ?? 0.0).toDouble();
+    final entry = (trade['entry'] ?? 0.0).toDouble();
+    final sellPrice = (trade['sell_price'] ?? 0.0).toDouble();
+    final qty = (trade['executed_qty'] ?? 0.0).toDouble();
+
+    return Scaffold(
+      backgroundColor: const Color(0xFF080d14),
+      appBar: AppBar(backgroundColor: cardBg, leading: IconButton(icon: Icon(Icons.arrow_back, color: accent), onPressed: () => Navigator.pop(context)), title: Text('$sym Details', style: TextStyle(color: accent, fontWeight: FontWeight.bold))),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: borderColor)),
+              child: Column(
+                children: [
+                  const Text('Net PnL', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                  const SizedBox(height: 4),
+                  Text('${isWin ? '+' : ''}\$${pnl.toStringAsFixed(4)}', style: TextStyle(color: isWin ? green : red, fontSize: 28, fontWeight: FontWeight.bold)),
+                  const Divider(color: Color(0xFF202d42), height: 24),
+                  _buildRow('Entry Price', '\$${entry.toStringAsFixed(4)}'),
+                  _buildRow('Sell Price', '\$${sellPrice.toStringAsFixed(4)}'),
+                  _buildRow('Executed Qty', qty.toStringAsFixed(6)),
+                  _buildRow('Fees Deducted', '\$${fees.toStringAsFixed(4)}', isGold: true),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (lifecycle.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: borderColor)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Lifecycle (Events)', style: TextStyle(fontWeight: FontWeight.bold, color: accent)),
+                    const Divider(color: Color(0xFF202d42), height: 20),
+                    ...lifecycle.map((ev) {
+                      final action = ev['action'] ?? '?';
+                      final price = (ev['price'] ?? 0.0).toDouble();
+                      final val = (ev['value'] ?? 0.0).toDouble();
+                      final step = ev['step'];
+                      String label = action;
+                      if (step != null) label += ' $step';
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                            Text('@ \$${price.toStringAsFixed(4)} = \$${val.toStringAsFixed(2)}', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRow(String label, String value, {bool isGold = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+          Text(value, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: isGold ? const Color(0xFFf0b90b) : Colors.white)),
+        ],
+      ),
+    );
+  }
+}
+
+// ================= MENU SCREEN =================
+class MenuScreen extends StatelessWidget {
+  final VoidCallback onLogout;
+  const MenuScreen({super.key, required this.onLogout});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF080d14),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF080d14),
+        elevation: 0,
+        leading: IconButton(icon: const Icon(Icons.arrow_back, color: Color(0xFF00d9ff)), onPressed: () => Navigator.pop(context)),
+        title: const Text('MENU', style: TextStyle(color: Color(0xFF00d9ff), fontWeight: FontWeight.bold, letterSpacing: 1.5, fontSize: 18)),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(14),
+        children: [
+          _menuItem(title: 'Explore Assets', subtitle: 'Search and browse', icon: Icons.explore, iconColor: const Color(0xFFfbbf24), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const SubMenuScreen(title: 'Explore Assets', items: [
+            SubMenuItem(title: 'Search Asset', subtitle: 'Look up any symbol', icon: Icons.search, iconColor: Color(0xFFfbbf24), route: PlaceholderScreen(title: 'Search Asset')),
+            SubMenuItem(title: 'Active Universe', subtitle: 'Currently approved assets', icon: Icons.public, iconColor: Color(0xFF00d9ff), route: PlaceholderScreen(title: 'Active Universe')),
+          ])))),
+          _menuItem(title: 'History', subtitle: 'Trades and events', icon: Icons.receipt_long, iconColor: const Color(0xFF10b981), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const SubMenuScreen(title: 'History', items: [
+            SubMenuItem(title: 'Trade History', subtitle: 'Full log of closed trades', icon: Icons.receipt_long, iconColor: Color(0xFF10b981), route: PlaceholderScreen(title: 'Trade History')),
+            SubMenuItem(title: 'Capital Events', subtitle: 'Deposits and withdrawals log', icon: Icons.account_balance, iconColor: Color(0xFF00d9ff), route: PlaceholderScreen(title: 'Capital Events')),
+          ])))),
+          _menuItem(title: 'Analytics', subtitle: 'Experience and errors', icon: Icons.psychology, iconColor: const Color(0xFFa78bfa), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const SubMenuScreen(title: 'Analytics', items: [
+            SubMenuItem(title: 'Smart Wallet Experience', subtitle: 'Experience learned per asset', icon: Icons.psychology, iconColor: Color(0xFFa78bfa), route: PlaceholderScreen(title: 'Smart Wallet Experience')),
+            SubMenuItem(title: 'Technical Errors', subtitle: 'errors.log content', icon: Icons.bug_report, iconColor: Color(0xFFef4444), route: PlaceholderScreen(title: 'Technical Errors')),
+          ])))),
+          _menuItem(title: 'Trading Settings', subtitle: 'Connect account & settings', icon: Icons.link, iconColor: const Color(0xFF38bdf8), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const PlaceholderScreen(title: 'Trading Settings')))),
+          _menuItem(title: 'My Account', subtitle: 'Info and preferences', icon: Icons.person, iconColor: const Color(0xFFa78bfa), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const SubMenuScreen(title: 'My Account', items: [
+            SubMenuItem(title: 'My Account', subtitle: 'Profile and security', icon: Icons.person, iconColor: Color(0xFFa78bfa), route: PlaceholderScreen(title: 'Profile')),
+            SubMenuItem(title: 'Settings', subtitle: 'App preferences', icon: Icons.settings, iconColor: Color(0xFF94a3b8), route: PlaceholderScreen(title: 'Settings')),
+          ])))),
+          _menuItem(title: 'Support', subtitle: 'We are here to help', icon: Icons.help_outline, iconColor: const Color(0xFF38bdf8), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const PlaceholderScreen(title: 'Support')))),
+          _menuItem(title: 'Legal', subtitle: 'Terms and privacy', icon: Icons.gavel, iconColor: const Color(0xFF38bdf8), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const SubMenuScreen(title: 'Legal', items: [
+            SubMenuItem(title: 'menu.terms', subtitle: 'menu.terms_sub', icon: Icons.gavel, iconColor: Color(0xFF38bdf8), route: PlaceholderScreen(title: 'Terms')),
+            SubMenuItem(title: 'menu.privacy', subtitle: 'menu.privacy_sub', icon: Icons.shield, iconColor: Color(0xFFa78bfa), route: PlaceholderScreen(title: 'Privacy')),
+          ])))),
+          _menuItem(title: 'Developer Panel', subtitle: 'Manage all users', icon: Icons.admin_panel_settings, iconColor: const Color(0xFFf59e0b), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const PlaceholderScreen(title: 'Developer Panel')))),
+          _menuItem(title: 'Logout', subtitle: 'End current session', icon: Icons.logout, iconColor: const Color(0xFFef4444), onTap: onLogout),
+        ],
+      ),
+    );
+  }
+
+  Widget _menuItem({required String title, required String subtitle, required IconData icon, required Color iconColor, required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(9),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(color: const Color(0xFF101722), borderRadius: BorderRadius.circular(9), border: Border.all(color: const Color(0xFF202d42))),
+        child: Row(
+          children: [
+            Container(width: 40, height: 40, decoration: const BoxDecoration(color: Color(0xFF080d14), shape: BoxShape.circle), child: Icon(icon, color: iconColor, size: 20)),
+            const SizedBox(width: 14),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(title, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold, color: Colors.white)),
+              const SizedBox(height: 3),
+              Text(subtitle, style: const TextStyle(fontSize: 10.8, color: Colors.grey)),
+            ])),
+            const Icon(Icons.chevron_right, color: Color(0xFF475569), size: 18),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class SubMenuItem {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color iconColor;
+  final Widget route;
+
+  const SubMenuItem({required this.title, required this.subtitle, required this.icon, required this.iconColor, required this.route});
+}
+
+class SubMenuScreen extends StatelessWidget {
+  final String title;
+  final List<SubMenuItem> items;
+  const SubMenuScreen({super.key, required this.title, required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF080d14),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF080d14),
+        elevation: 0,
+        leading: IconButton(icon: const Icon(Icons.arrow_back, color: Color(0xFF00d9ff)), onPressed: () => Navigator.pop(context)),
+        title: Text(title, style: const TextStyle(color: Color(0xFF00d9ff), fontWeight: FontWeight.bold, fontSize: 18)),
+      ),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(14),
+        itemCount: items.length,
+        itemBuilder: (context, index) {
+          final item = items[index];
+          return InkWell(
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => item.route)),
+            borderRadius: BorderRadius.circular(9),
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(color: const Color(0xFF101722), borderRadius: BorderRadius.circular(9), border: Border.all(color: const Color(0xFF202d42))),
+              child: Row(
+                children: [
+                  Container(width: 36, height: 36, decoration: const BoxDecoration(color: Color(0xFF080d14), shape: BoxShape.circle), child: Icon(item.icon, color: item.iconColor, size: 18)),
+                  const SizedBox(width: 12),
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(item.title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
+                    const SizedBox(height: 2),
+                    Text(item.subtitle, style: const TextStyle(fontSize: 9, color: Colors.grey)),
+                  ])),
+                  const Icon(Icons.chevron_right, color: Color(0xFF475569), size: 16),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class PlaceholderScreen extends StatelessWidget {
+  final String title;
+  const PlaceholderScreen({super.key, required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF080d14),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF101722),
+        leading: IconButton(icon: const Icon(Icons.arrow_back, color: Color(0xFF00d9ff)), onPressed: () => Navigator.pop(context)),
+        title: Text(title, style: const TextStyle(color: Color(0xFF00d9ff), fontWeight: FontWeight.bold, fontSize: 18)),
+      ),
+      body: Center(child: Text('$title Page\n(Content Coming Soon)', textAlign: TextAlign.center, style: const TextStyle(color: Colors.grey, fontSize: 16))),
+    );
+  }
+}
