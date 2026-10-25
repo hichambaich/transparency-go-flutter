@@ -272,7 +272,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<FlSpot> _rawSpots = [];
   double _chartChangePct = 0.0;
   double _chartChangeUsd = 0.0;
-  List<FlSpot> _dietzSpots = [];
   List<String> _chartLabels = [];
   Timer? _pollingTimer;
   String _errorMsg = '';
@@ -359,7 +358,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
         setState(() {
           _rawSpots = newRaw;
-          _dietzSpots = newDietz;
           _chartLabels = labelsList.map((e) => e.toString()).toList();
           _chartChangePct = (chartData['change_pct'] as num?)?.toDouble() ?? 0.0;
           _chartChangeUsd = (chartData['change_val'] as num?)?.toDouble() ?? 0.0;
@@ -487,7 +485,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.ac_unit, size: 28, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a))),
+                      Text('❄️', style: TextStyle(fontSize: 24)),
                       Text('SMARTWALLET GO', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))),
                     ],
                   ),
@@ -594,7 +592,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   InkWell(
                                     onTap: () => _openStatDetail(context, AppTranslations.t('stat.capital')),
                                     child: Row(children: [
-                                      Text(AppTranslations.t('dash.total_capital'), style: TextStyle(fontSize: 10, color: Colors.grey)),
+                                      Text(AppTranslations.t('dash.total_capital'), style: TextStyle(fontSize: 9, color: Colors.grey)),
                                       const SizedBox(width: 6),
                                       Text(textDirection: TextDirection.ltr, 'ROI ${formatPct(roi)}', style: TextStyle(fontSize: 10, color: roi >= 0 ? green : red, fontWeight: FontWeight.bold)),
                                       const SizedBox(width: 2),
@@ -605,7 +603,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   Row(
                                     crossAxisAlignment: CrossAxisAlignment.center,
                                     children: [
-                                      Text(textDirection: TextDirection.ltr, '${totalCapital.toStringAsFixed(2)}', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))),
+                                      Text(textDirection: TextDirection.ltr, '${totalCapital.toStringAsFixed(2)}', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))),
                                       const SizedBox(width: 6),
                                       SizedBox(
                                       width: 18,
@@ -620,8 +618,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                         mainAxisAlignment: MainAxisAlignment.center,
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          Text('USDT', style: TextStyle(color: Color(0xFF10b981), fontWeight: FontWeight.bold, fontSize: 11)),
-                                          Text('Tether US', style: TextStyle(color: Colors.grey, fontSize: 8)),
+                                          Text('USDT', style: TextStyle(color: Color(0xFF10b981), fontWeight: FontWeight.bold, fontSize: 13)),
+                                          Text('Tether US', style: TextStyle(color: Colors.grey, fontSize: 7)),
                                         ],
                                       ),
                                     ],
@@ -684,9 +682,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                       dotData: const FlDotData(show: false),
                                                       belowBarData: BarAreaData(show: false),
                                                     ),
-                                                    if (_dietzSpots.isNotEmpty)
                                                       LineChartBarData(
-                                                        spots: _dietzSpots,
                                                         isCurved: true,
                                                         color: accent,
                                                         barWidth: 1,
@@ -750,15 +746,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           children: [
                             Expanded(child: _buildInnerCard(AppTranslations.t('dash.closed_trades'), '$closedTrades', Icons.receipt_long, Colors.grey, null, bnbLogoUrl, onTap: () => _openStatDetail(context, AppTranslations.t('dash.closed_trades')))),
                             const SizedBox(width: 7),
-                            Expanded(child: _buildInnerCard(AppTranslations.t('dash.profit_trades'), '$profitTrades', Icons.emoji_events, green, '${AppTranslations.t('dash.winrate')} ${winRate.toStringAsFixed(1)}%', bnbLogoUrl, onTap: () => _openStatDetail(context, AppTranslations.t('dash.profit_trades')))),
+                            Expanded(child: _buildInnerCard(AppTranslations.t('dash.profit_trades'), '$profitTrades', Icons.emoji_events, green, '${AppTranslations.t('dash.winrate')} ${winRate.toStringAsFixed(1)}%', bnbLogoUrl, onTap: () => _openStatDetail(context, AppTranslations.t('dash.profit_trades')), valueColor: green)),
                           ],
                         ),
                         const SizedBox(height: 7),
                         Row(
                           children: [
-                            Expanded(child: _buildInnerCard(AppTranslations.t('dash.bnb_fees_reserve'), '\$${bnbValue.toStringAsFixed(2)}', null, gold, null, bnbLogoUrl, isBnbIcon: true, onTap: () => _openStatDetail(context, AppTranslations.t('dash.bnb_fees_reserve')))),
+                            Expanded(child: _buildInnerCard(AppTranslations.t('dash.bnb_fees_reserve'), '\$${bnbValue.toStringAsFixed(2)}', null, gold, null, bnbLogoUrl, isBnbIcon: true, onTap: () => _openStatDetail(context, AppTranslations.t('dash.bnb_fees_reserve')), titleColor: gold)),
                             const SizedBox(width: 7),
-                            Expanded(child: _buildInnerCard(AppTranslations.t('dash.realized_pnl'), formatUsd(realizedPnl), Icons.account_balance_wallet, green, formatPct(realizedPnlPct), bnbLogoUrl, onTap: () => _openStatDetail(context, AppTranslations.t('stat.capital')))),
+                            Expanded(child: _buildInnerCard(AppTranslations.t('dash.realized_pnl'), formatUsd(realizedPnl), Icons.account_balance_wallet, green, null, bnbLogoUrl, onTap: () => _openStatDetail(context, AppTranslations.t('dash.realized_pnl')), valueColor: green, customTitle: Row(mainAxisSize: MainAxisSize.min, children: [
+      Text(AppTranslations.t('dash.realized_pnl'), style: TextStyle(fontSize: 10, color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF94a3b8) : const Color(0xFF475569)))),
+      const SizedBox(width: 4),
+      Text(formatPct(realizedPnlPct), style: const TextStyle(fontSize: 10, color: Color(0xFF10b981), fontWeight: FontWeight.bold)),
+    ]))),
                           ],
                         ),
                         // Divider
@@ -767,7 +767,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         const SizedBox(height: 6),
                         // Exposure
                         InkWell(
-                          onTap: () => _openStatDetail(context, 'Capital Exposure'),
+                          onTap: () => _openStatDetail(context, AppTranslations.t('dash.capital_exposure')),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(vertical: 4),
                             child: Column(
@@ -872,7 +872,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
                                             Row(children: [
-                                              Icon(Icons.savings, size: 16, color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2))),
+                                              Icon(Icons.savings_outlined, size: 16, color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2))),
                                               const SizedBox(width: 4),
                                               Text(AppTranslations.t('dash.cost_efficiency'), style: TextStyle(fontSize: 8, color: Colors.grey)),
                                             ]),
@@ -927,7 +927,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Row(children: [
-                        Text(AppTranslations.t('dash.positions'), style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : Color(0xFF0f172a)))),
+                        Text(AppTranslations.t('dash.positions'), style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : Color(0xFF0f172a)))),
                         const SizedBox(width: 5),
                         Text('${positions.length}/${_data['max_positions'] ?? 7}', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))),
                       ]),
@@ -1065,7 +1065,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 }
 
 
-  Widget _buildInnerCard(String title, String value, IconData? icon, Color iconColor, String? subtitle, String bnbLogoUrl, {bool isBnbIcon = false, VoidCallback? onTap}) {
+  Widget _buildInnerCard(String title, String value, IconData? icon, Color iconColor, String? subtitle, String bnbLogoUrl, {bool isBnbIcon = false, VoidCallback? onTap, Color? titleColor, Color? valueColor, Widget? customTitle}) {
       return InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(8),
@@ -1081,7 +1081,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(title, style: TextStyle(fontSize: 10, color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF94a3b8) : const Color(0xFF475569)))),
+              customTitle ?? Text(title, style: TextStyle(fontSize: 10, color: titleColor ?? (themeNotifier.value == ThemeMode.dark ? const Color(0xFF94a3b8) : const Color(0xFF475569)))),
               const SizedBox(height: 4),
               Row(
                 children: [
@@ -1090,7 +1090,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   else if (icon != null)
                     Icon(icon, size: 16, color: iconColor),
                   const SizedBox(width: 6),
-                  Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))),
+                  Text(value, textDirection: TextDirection.ltr, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: valueColor ?? (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))),
                   const Spacer(),
                   if (subtitle != null) Text(subtitle, style: const TextStyle(fontSize: 9, color: Color(0xFF10b981), fontWeight: FontWeight.bold)),
                   const SizedBox(width: 4),
@@ -1367,7 +1367,7 @@ Widget build(BuildContext context) {
                     padding: const EdgeInsets.all(3),
                     decoration: BoxDecoration(border: Border.all(color: Colors.grey), borderRadius: BorderRadius.circular(4)),
                     child: Icon(
-                      _isExpanded ? Icons.keyboard_double_arrow_up : Icons.keyboard_double_arrow_down,
+                      _isExpanded ? Icons.unfold_less : Icons.unfold_more,
                       size: 14, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)),
                     ),
                   ),
@@ -1590,6 +1590,7 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
   Map<String, dynamic> _dashboardData = {};
   Map<String, dynamic> _extraData = {};
   List<dynamic> _trades = [];
+  String _selectedPeriod = '1d';
   String _errorMsg = '';
 
   Color get cardBg => themeNotifier.value == ThemeMode.dark ? const Color(0xFF101722) : Colors.white;
@@ -1630,7 +1631,7 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
           final allTrades = jsonDecode(res.body)['trades'] ?? [];
           setState(() {
             if (widget.title == AppTranslations.t('dash.profit_trades')) {
-              _trades = allTrades.where((t) => (t['realized_profit_usdt'] ?? 0.0) > 0).toList();
+              _trades = allTrades.where((t) => ((t['realized_profit_usdt'] ?? 0.0) as num).toDouble() > 0).toList();
             } else {
               _trades = allTrades;
             }
@@ -1661,9 +1662,12 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
           setState(() { _errorMsg = 'Failed'; _isLoading = false; });
         }
       } else if (widget.title == AppTranslations.t('dash.realized_pnl')) {
-        final res = await http.get(Uri.parse('http://100.77.27.80:8553/api/stats/realized'), headers: headers);
+        final res = await http.get(Uri.parse('http://100.77.27.80:8553/api/history'), headers: headers);
         if (res.statusCode == 200) {
-          setState(() { _extraData = jsonDecode(res.body); _isLoading = false; });
+          setState(() { 
+            _trades = jsonDecode(res.body)['trades'] ?? [];
+            _isLoading = false; 
+          });
         } else {
           setState(() { _errorMsg = 'Failed'; _isLoading = false; });
         }
@@ -1707,7 +1711,7 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
     if (widget.title == AppTranslations.t('dash.realized_pnl')) return _buildRealized();
     if (widget.title == AppTranslations.t('stat.capital')) return _buildCapitalBreakdown();
     if (widget.title == AppTranslations.t('menu.capital_events')) return _buildCapitalEvents();
-    if (widget.title == 'Capital Exposure') return _buildCapitalExposure();
+    if (widget.title == AppTranslations.t('dash.capital_exposure')) return _buildCapitalExposure();
     if (widget.title == 'Journal') return _buildJournal();
     return const Center(child: Text('No detailed data available.', style: TextStyle(color: Colors.grey)));
   }
@@ -1745,7 +1749,19 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
                   decoration: BoxDecoration(border: Border(bottom: BorderSide(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0)), width: 1))),
                   child: Row(
                     children: [
-                      CircleAvatar(radius: 14, backgroundColor: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)), child: Text(sym.isNotEmpty ? sym[0] : '?', style: TextStyle(fontSize: 12, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontWeight: FontWeight.bold))),
+                      CircleAvatar(
+                        radius: 14,
+                        backgroundColor: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)),
+                        child: ClipOval(
+                          child: Image.network(
+                            'https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/${sym.split('/')[0].toLowerCase()}.png',
+                            width: 28, height: 28, fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => Center(
+                              child: Text(sym.isNotEmpty ? sym[0] : '?', style: TextStyle(fontSize: 12, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontWeight: FontWeight.bold)),
+                            ),
+                          ),
+                        ),
+                      ),
                       const SizedBox(width: 12),
                       Expanded(flex: 2, child: Text(sym, style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontWeight: FontWeight.bold, fontSize: 13))),
                       Expanded(flex: 3, child: Text(dateStr, style: const TextStyle(color: Colors.grey, fontSize: 10))),
@@ -1860,7 +1876,19 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
                 children: [
                   Row(
                     children: [
-                      CircleAvatar(radius: 12, backgroundColor: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)), child: Text(sym.isNotEmpty ? sym[0] : '?', style: TextStyle(fontSize: 10, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a))))),
+                      CircleAvatar(
+                        radius: 12,
+                        backgroundColor: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)),
+                        child: ClipOval(
+                          child: Image.network(
+                            'https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/${sym.split('/')[0].toLowerCase()}.png',
+                            width: 24, height: 24, fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => Center(
+                              child: Text(sym.isNotEmpty ? sym[0] : '?', style: TextStyle(fontSize: 10, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))),
+                            ),
+                          ),
+                        ),
+                      ),
                       const SizedBox(width: 8),
                       Text(sym, style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontWeight: FontWeight.bold)),
                       const SizedBox(width: 8),
@@ -1916,12 +1944,119 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
     );
   }
 
+  List<Map<String, dynamic>> _aggregatePnl(String period, List<dynamic> trades) {
+    Map<String, double> buckets = {};
+    Map<String, String> sortKeys = {};
+    
+    for (var t in trades) {
+      if (t['closed'] != true) continue;
+      final ts = (t['last_action'] ?? 0.0).toDouble();
+      if (ts <= 0) continue;
+      final dt = DateTime.fromMillisecondsSinceEpoch(ts.toInt() * 1000);
+      final pnl = (t['realized_profit_usdt'] ?? 0.0).toDouble();
+      
+      String key = '';
+      String sortKey = '';
+      
+      if (period == '1h') {
+        key = '${dt.day.toString().padLeft(2, '0')}-${dt.month.toString().padLeft(2, '0')} ${dt.hour.toString().padLeft(2, '0')}:00';
+        sortKey = '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')} ${dt.hour.toString().padLeft(2, '0')}';
+      } else if (period == '1d' || period == '1D') {
+        key = '${dt.day.toString().padLeft(2, '0')}-${dt.month.toString().padLeft(2, '0')}-${dt.year}';
+        sortKey = '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+      } else if (period == '1w' || period == '1W') {
+        final firstDayOfYear = DateTime(dt.year, 1, 1);
+        final daysOffset = firstDayOfYear.weekday - 1;
+        final firstMonday = firstDayOfYear.subtract(Duration(days: daysOffset));
+        final weekNumber = ((dt.difference(firstMonday).inDays) / 7).floor() + 1;
+        key = 'W${weekNumber.toString().padLeft(2, '0')}-${dt.year}';
+        sortKey = '${dt.year}-W${weekNumber.toString().padLeft(2, '0')}';
+      } else if (period == '1mo' || period == '1MO') {
+        key = '${dt.month.toString().padLeft(2, '0')}-${dt.year}';
+        sortKey = '${dt.year}-${dt.month.toString().padLeft(2, '0')}';
+      } else if (period == '1y' || period == '1Y') {
+        key = '${dt.year}';
+        sortKey = '${dt.year}';
+      }
+      
+      buckets[key] = (buckets[key] ?? 0.0) + pnl;
+      sortKeys[key] = sortKey;
+    }
+    
+    final sortedKeys = buckets.keys.toList()..sort((a, b) => sortKeys[b]!.compareTo(sortKeys[a]!));
+    return sortedKeys.map((k) => {'date': k, 'pnl': buckets[k]}).toList();
+  }
+
+  void _showPeriodPicker() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        final isDark = themeNotifier.value == ThemeMode.dark;
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF101722) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Select Period', style: TextStyle(color: isDark ? Colors.white : const Color(0xFF0f172a), fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 20),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                alignment: WrapAlignment.center,
+                children: ['1H', '1D', '1W', '1MO', '1Y'].map((p) {
+                  final isSelected = _selectedPeriod.toLowerCase() == p.toLowerCase();
+                  return InkWell(
+                    onTap: () {
+                      setState(() { _selectedPeriod = p.toLowerCase(); });
+                      Navigator.pop(ctx);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: isSelected ? accent : Colors.transparent,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: isSelected ? accent : borderColor),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (isSelected) ...[
+                            const Icon(Icons.check, color: Colors.black, size: 16),
+                            const SizedBox(width: 4),
+                          ],
+                          Text(
+                            p,
+                            style: TextStyle(
+                              color: isSelected ? Colors.black : (isDark ? Colors.white : const Color(0xFF0f172a)),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildRealized() {
-    final List breakdown = _extraData['breakdown'] ?? [];
     final stats = widget.data['stats'] ?? {};
     final totalProfit = (stats['realized_pnl'] ?? 0.0).toDouble();
     final totalTrades = stats['closed_trades'] ?? 0;
     final wins = stats['profit_trades'] ?? 0;
+    
+    final breakdown = _aggregatePnl(_selectedPeriod, _trades);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -1935,10 +2070,14 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
               children: [
                 Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                   Text(AppTranslations.t('dash.realized_pnl'), style: TextStyle(color: green, fontWeight: FontWeight.bold, fontSize: 14)),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)), borderRadius: BorderRadius.circular(14)),
-                    child: Row(children: [const Icon(Icons.sync, size: 10, color: Colors.grey), const SizedBox(width: 4), Text('1d', style: TextStyle(color: accent, fontSize: 10, fontWeight: FontWeight.bold))]),
+                  InkWell(
+                    onTap: _showPeriodPicker,
+                    borderRadius: BorderRadius.circular(14),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)), borderRadius: BorderRadius.circular(14)),
+                      child: Row(children: [Icon(Icons.sync, size: 10, color: accent), const SizedBox(width: 4), Text(_selectedPeriod.toUpperCase(), style: TextStyle(color: accent, fontSize: 10, fontWeight: FontWeight.bold))]),
+                    ),
                   ),
                 ]),
                 Divider(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0)), height: 20),
@@ -1956,21 +2095,24 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
             child: Column(
               children: [
                 Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                  Text('1d Breakdown', style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 14)),
+                  Text('${_selectedPeriod.toUpperCase()} Breakdown', style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 14)),
                   Text(textDirection: TextDirection.ltr, '+\$${totalProfit.toStringAsFixed(2)}', style: TextStyle(color: green, fontWeight: FontWeight.bold, fontSize: 13)),
                 ]),
                 Divider(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0)), height: 20),
-                ...breakdown.map((b) {
-                  final date = b['date'] ?? '';
-                  final pnl = (b['pnl'] ?? 0.0).toDouble();
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                      Text(date, style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontSize: 13)),
-                      Text(textDirection: TextDirection.ltr, '${pnl >= 0 ? '+' : ''}\$${pnl.toStringAsFixed(2)}', style: TextStyle(color: pnl >= 0 ? green : red, fontWeight: FontWeight.bold, fontSize: 13)),
-                    ]),
-                  );
-                }).toList(),
+                if (breakdown.isEmpty) 
+                  Padding(padding: const EdgeInsets.all(20), child: Text('No data for this period', style: TextStyle(color: Colors.grey, fontSize: 12)))
+                else
+                  ...breakdown.map((b) {
+                    final date = b['date'] ?? '';
+                    final pnl = (b['pnl'] ?? 0.0).toDouble();
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                        Text(date, style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontSize: 13)),
+                        Text(textDirection: TextDirection.ltr, '${pnl >= 0 ? '+' : ''}\$${pnl.toStringAsFixed(2)}', style: TextStyle(color: pnl >= 0 ? green : red, fontWeight: FontWeight.bold, fontSize: 13)),
+                      ]),
+                    );
+                  }).toList(),
               ],
             ),
           ),
@@ -2047,25 +2189,116 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
   Widget _buildCapitalExposure() {
     final risk = widget.data['risk'] ?? {};
     final cap = widget.data['capital'] ?? {};
+    final positions = widget.data['positions'] as List? ?? [];
     final exp = (risk['exposure_pct'] ?? 0.0).toDouble();
     final posValue = (risk['positions_value'] ?? 0.0).toDouble();
     final total = (cap['total'] ?? 0.0).toDouble();
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: borderColor)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(AppTranslations.t('dash.capital_exposure'), style: TextStyle(color: green, fontWeight: FontWeight.bold, fontSize: 14)),
-            Divider(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0)), height: 20),
-            _buildDetailRow('Exposure %', '${exp.toStringAsFixed(2)}%', exp > 65 ? red : (exp > 50 ? Colors.orange : green)),
-            _buildDetailRow(AppTranslations.t('dash.positions_value'), '\$${posValue.toStringAsFixed(2)}', accent),
-            _buildDetailRow('Total Capital', '\$${total.toStringAsFixed(2)}', (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), isBold: true),
-          ],
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // بطاقة الإحصائيات
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: borderColor)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(AppTranslations.t('dash.capital_exposure'), style: TextStyle(color: green, fontWeight: FontWeight.bold, fontSize: 10)),
+                Divider(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0)), height: 20),
+                _buildDetailRow('Exposure %', '${exp.toStringAsFixed(2)}%', exp > 65 ? red : (exp > 50 ? Colors.orange : green)),
+                _buildDetailRow(AppTranslations.t('dash.positions_value'), '\$${posValue.toStringAsFixed(2)}', accent),
+                _buildDetailRow('Total Capital', '\$${total.toStringAsFixed(2)}', (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), isBold: true),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          // شارة المراكز المفتوحة
+          Align(
+            alignment: Alignment.centerRight,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF0f172a) : Colors.white),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: green),
+              ),
+              child: Text(
+                '${AppTranslations.t('dash.positions')} (${positions.length})',
+                style: TextStyle(color: green, fontWeight: FontWeight.bold, fontSize: 12),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // قائمة المراكز
+          if (positions.isNotEmpty)
+            ...positions.map((p) {
+              final sym = p['symbol'] ?? 'UNKNOWN';
+              final val = (p['value'] ?? 0.0).toDouble();
+              final pnlPct = (p['pnl'] ?? 0.0).toDouble();
+              final isWin = pnlPct >= 0;
+              final pnlColor = isWin ? green : red;
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: cardBg,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: borderColor),
+                ),
+                child: Column(
+                  children: [
+                    // الصف الأول: الأيقونة والرمز
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 12,
+                          backgroundColor: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)),
+                          child: ClipOval(
+                            child: Image.network(
+                              'https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/${sym.split('/')[0].toLowerCase()}.png',
+                              width: 24, height: 24, fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) => Center(
+                                child: Text(sym.isNotEmpty ? sym[0] : '?', style: TextStyle(fontSize: 10, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontWeight: FontWeight.bold)),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(sym, style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontWeight: FontWeight.bold, fontSize: 14)),
+                      ],
+                    ),
+                    Divider(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0)), height: 16),
+                    // الصف الثاني: القيمة والربح
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(AppTranslations.t('dash.positions_value'), style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                            Text('\$${val.toStringAsFixed(2)}', textDirection: TextDirection.ltr, style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 13)),
+                          ],
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(AppTranslations.t('pos.pnl'), style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                            Text('${isWin ? '+' : ''}${pnlPct.toStringAsFixed(2)}%', textDirection: TextDirection.ltr, style: TextStyle(color: pnlColor, fontWeight: FontWeight.bold, fontSize: 13)),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+        ],
       ),
     );
   }
@@ -2139,7 +2372,6 @@ class _StatsScreenState extends State<StatsScreen> {
   bool _isLoading = true;
   Map<String, dynamic> _data = {};
   List<FlSpot> _rawSpots = [];
-  List<FlSpot> _dietzSpots = [];
   List<String> _chartLabels = [];
   double _changePct = 0.0;
 
@@ -2182,7 +2414,6 @@ class _StatsScreenState extends State<StatsScreen> {
         setState(() {
           _data = d;
           _rawSpots = raw;
-          _dietzSpots = dietz;
           _chartLabels = labelsList.map((e) => e.toString()).toList();
           _changePct = (d['trend']?['net_pct'] as num?)?.toDouble() ?? 0.0;
           _isLoading = false;
@@ -2272,15 +2503,7 @@ class _StatsScreenState extends State<StatsScreen> {
                                   barWidth: 2,
                                   dotData: const FlDotData(show: false),
                                 ),
-                                if (_dietzSpots.isNotEmpty)
-                                  LineChartBarData(
-                                    spots: _dietzSpots,
-                                    isCurved: true,
-                                    color: accent,
-                                    barWidth: 1,
-                                    dotData: const FlDotData(show: false),
-                                    dashArray: [4, 3],
-                                  ),
+
                               ],
                             ),
                           ),
@@ -2608,7 +2831,19 @@ class TradeDetailScreen extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      CircleAvatar(radius: 12, backgroundColor: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)), child: Text(sym.isNotEmpty ? sym[0] : '?', style: TextStyle(fontSize: 12, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a))))),
+                      CircleAvatar(
+                      radius: 12,
+                      backgroundColor: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)),
+                      child: ClipOval(
+                        child: Image.network(
+                          'https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/${sym.split('/')[0].toLowerCase()}.png',
+                          width: 24, height: 24, fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => Center(
+                            child: Text(sym.isNotEmpty ? sym[0] : '?', style: TextStyle(fontSize: 12, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))),
+                          ),
+                        ),
+                      ),
+                    ),
                       const SizedBox(width: 8),
                       Text(sym, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))),
                     ],
@@ -2705,6 +2940,29 @@ class MenuScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(14),
         children: [
+          FutureBuilder<String?>(
+            future: SharedPreferences.getInstance().then((p) => p.getString('admin_backup_token')),
+            builder: (context, snapshot) {
+              if (snapshot.hasData && snapshot.data != null) {
+                return _menuItem(
+                  title: AppTranslations.t('admin.exit_impersonation'),
+                  subtitle: AppTranslations.t('admin.return_to_admin'),
+                  icon: Icons.arrow_back,
+                  iconColor: const Color(0xFFef4444),
+                  onTap: () async {
+                    final prefs = await SharedPreferences.getInstance();
+                    final adminToken = snapshot.data!;
+                    await prefs.setString('auth_token', adminToken);
+                    await prefs.remove('admin_backup_token');
+                    if (context.mounted) {
+                      Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(MaterialPageRoute(builder: (c) => const AuthGate(key: ValueKey('impersonate'))), (route) => false);
+                    }
+                  },
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
           _menuItem(title: AppTranslations.t('menu.submenu_explore'), subtitle: AppTranslations.t('menu.submenu_explore_sub'), icon: Icons.explore, iconColor: Color(0xFFfbbf24), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => SubMenuScreen(title: AppTranslations.t('menu.submenu_explore'), items: [
             SubMenuItem(title: AppTranslations.t('menu.search_asset'), subtitle: AppTranslations.t('menu.search_asset_sub'), icon: Icons.search, iconColor: Color(0xFFfbbf24), route: SearchAssetScreen()),
             SubMenuItem(title: AppTranslations.t('menu.active_universe'), subtitle: AppTranslations.t('menu.active_universe_sub'), icon: Icons.public, iconColor: (themeNotifier.value == ThemeMode.dark ? Color(0xFF00d9ff) : Color(0xFF0891b2)), route: ActiveUniverseScreen()),
@@ -2727,15 +2985,47 @@ class MenuScreen extends StatelessWidget {
             SubMenuItem(title: AppTranslations.t('legal.terms_title'), subtitle: 'Read before using', icon: Icons.gavel, iconColor: Color(0xFF38bdf8), route: TermsScreen()),
             SubMenuItem(title: AppTranslations.t('legal.privacy_title'), subtitle: AppTranslations.t('legal.privacy_sub'), icon: Icons.shield, iconColor: Color(0xFFa78bfa), route: PrivacyScreen()),
           ])))),
-          _menuItem(title: AppTranslations.t('menu.admin_panel'), subtitle: AppTranslations.t('menu.admin_panel_sub'), icon: Icons.admin_panel_settings, iconColor: Color(0xFFf59e0b), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => PlaceholderScreen(title: AppTranslations.t('menu.admin_panel'))))),
+          _menuItem(title: AppTranslations.t('menu.admin_panel'), subtitle: AppTranslations.t('menu.admin_panel_sub'), icon: Icons.admin_panel_settings, iconColor: Color(0xFFf59e0b), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const DeveloperPanelScreen()))),
           _menuItem(
             title: AppTranslations.t('menu.logout'), 
             subtitle: AppTranslations.t('menu.logout_sub'), 
             icon: Icons.logout, 
             iconColor: const Color(0xFFef4444), 
             onTap: () {
-              Navigator.of(context).popUntil((route) => route.isFirst);
-              onLogout();
+              showDialog(
+                context: context,
+                builder: (dialogContext) => AlertDialog(
+                  backgroundColor: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF1e293b) : Colors.white),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  title: Text(
+                    'Confirm Logout',
+                    style: TextStyle(
+                      color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(dialogContext),
+                      child: Text(
+                        'No',
+                        style: TextStyle(
+                          color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2)),
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(dialogContext);
+                        Navigator.of(context).popUntil((route) => route.isFirst);
+                        onLogout();
+                      },
+                      child: const Text('Yes', style: TextStyle(color: Color(0xFFef4444), fontSize: 16)),
+                    ),
+                  ],
+                ),
+              );
             }
           ),
         ],
@@ -3228,6 +3518,216 @@ class PlaceholderScreen extends StatelessWidget {
 }
 
 
+
+// ================= DEVELOPER PANEL SCREEN =================
+class DeveloperPanelScreen extends StatefulWidget {
+  const DeveloperPanelScreen({super.key});
+  @override
+  State<DeveloperPanelScreen> createState() => _DeveloperPanelScreenState();
+}
+
+class _DeveloperPanelScreenState extends State<DeveloperPanelScreen> {
+  bool _isLoading = true;
+  List<dynamic> _users = [];
+  String _errorMsg = '';
+
+  Color get cardBg => themeNotifier.value == ThemeMode.dark ? const Color(0xFF101722) : Colors.white;
+  Color get borderColor => themeNotifier.value == ThemeMode.dark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0);
+  Color get accent => themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2);
+  final Color green = const Color(0xFF10b981);
+  final Color red = const Color(0xFFef4444);
+  final Color gold = const Color(0xFFf0b90b);
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUsers();
+  }
+
+  Future<void> _fetchUsers() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token') ?? '';
+      final res = await http.get(Uri.parse('http://100.77.27.80:8553/api/admin/users'), headers: {'Authorization': 'Bearer $token'});
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        setState(() {
+          _users = data['users'] ?? [];
+          _isLoading = false;
+        });
+      } else if (res.statusCode == 403) {
+        setState(() { _errorMsg = 'Access denied. Admin only.'; _isLoading = false; });
+      } else {
+        setState(() { _errorMsg = 'Failed to load users'; _isLoading = false; });
+      }
+    } catch (e) {
+      setState(() { _errorMsg = 'Error: $e'; _isLoading = false; });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)),
+      appBar: AppBar(
+        backgroundColor: cardBg,
+        leading: IconButton(icon: Icon(Icons.arrow_back, color: accent), onPressed: () => Navigator.pop(context)),
+        title: Text(AppTranslations.t('menu.admin_panel'), style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 18)),
+      ),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator(color: accent))
+          : _errorMsg.isNotEmpty
+              ? Center(child: Text(_errorMsg, style: const TextStyle(color: Colors.red)))
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: _users.length,
+                  itemBuilder: (context, index) {
+                    final u = _users[index];
+                    final isSuspended = u['is_suspended'] ?? false;
+                    final isRunning = u['bot_running'] ?? false;
+                    return InkWell(
+                      onTap: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (c) => UserDetailsScreen(
+                          userId: u['id'],
+                          username: u['username'],
+                          email: u['email'],
+                          isSuspended: isSuspended,
+                          isRunning: isRunning,
+                          balance: (u['balance'] ?? 0.0).toDouble(),
+                          positions: u['positions_count'] ?? 0,
+                        ))).then((_) => _fetchUsers());
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(10), border: Border.all(color: borderColor)),
+                        child: Row(
+                          children: [
+                            Icon(Icons.person, color: accent, size: 28),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text('${u['username']} (ID: ${u['id']})', style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontWeight: FontWeight.bold, fontSize: 14)),
+                                      Text(isRunning ? 'Bot Running' : 'Bot Stopped', style: TextStyle(color: isRunning ? green : Colors.grey, fontSize: 11)),
+                                    ],
+                                  ),
+                                  Text(u['email'] ?? '', style: const TextStyle(color: Colors.grey, fontSize: 11)),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      Text('Balance: \$${(u['balance'] ?? 0.0).toStringAsFixed(2)}', style: TextStyle(color: accent, fontSize: 11)),
+                                      const SizedBox(width: 10),
+                                      Text('Positions: ${u['positions_count'] ?? 0}', style: TextStyle(color: gold, fontSize: 11)),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+    );
+  }
+}
+
+// ================= USER DETAILS SCREEN =================
+class UserDetailsScreen extends StatelessWidget {
+  final int userId;
+  final String username;
+  final String email;
+  final bool isSuspended;
+  final bool isRunning;
+  final double balance;
+  final int positions;
+
+  const UserDetailsScreen({super.key, required this.userId, required this.username, required this.email, required this.isSuspended, required this.isRunning, required this.balance, required this.positions});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = themeNotifier.value == ThemeMode.dark;
+    final cardBg = isDark ? const Color(0xFF101722) : Colors.white;
+    final borderColor = isDark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0);
+    final accent = isDark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2);
+    final green = const Color(0xFF10b981);
+    final red = const Color(0xFFef4444);
+
+    return Scaffold(
+      backgroundColor: isDark ? const Color(0xFF080d14) : const Color(0xFFf8fafc),
+      appBar: AppBar(
+        backgroundColor: cardBg,
+        leading: IconButton(icon: Icon(Icons.arrow_back, color: accent), onPressed: () => Navigator.pop(context)),
+        title: Text('User Details', style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 18)),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: borderColor)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(children: [Icon(Icons.person, color: accent, size: 28), const SizedBox(width: 10), Text('$username (ID: $userId)', style: TextStyle(color: isDark ? Colors.white : const Color(0xFF0f172a), fontWeight: FontWeight.bold, fontSize: 16))]),
+                  const SizedBox(height: 4),
+                  Text(email, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Actions Grid
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              alignment: WrapAlignment.center,
+              children: [
+                _actionBtn('Login as User', const Color(0xFF9c27b0), () async {
+                  final prefs = await SharedPreferences.getInstance();
+                  final oldToken = prefs.getString('auth_token') ?? '';
+                  final res = await http.post(Uri.parse('http://100.77.27.80:8553/api/admin/impersonate/$userId'), headers: {'Authorization': 'Bearer $oldToken'});
+                  if (res.statusCode == 200) {
+                    final newToken = jsonDecode(res.body)['token'];
+                    await prefs.setString('admin_backup_token', oldToken);
+                    await prefs.setString('auth_token', newToken);
+                    if (context.mounted) {
+                      Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(MaterialPageRoute(builder: (c) => const AuthGate(key: ValueKey('impersonate'))), (route) => false);
+                    }
+                  }
+                }),
+                _actionBtn('View User Trades', accent, () {}),
+                _actionBtn(isRunning ? 'Force Stop Bot' : 'Force Start Bot', isRunning ? red : green, () {}),
+                _actionBtn(isSuspended ? 'Unsuspend Account' : 'Suspend Account', const Color(0xFFf59e0b), () {}),
+                _actionBtn('Reset Password', const Color(0xFFd32f2f), () {}),
+                _actionBtn('Delete Account', const Color(0xFF7f0000), () {}),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _actionBtn(String text, Color color, VoidCallback onTap) {
+    return SizedBox(
+      width: 160,
+      child: ElevatedButton(
+        onPressed: onTap,
+        style: ElevatedButton.styleFrom(backgroundColor: color, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)), padding: const EdgeInsets.symmetric(vertical: 12)),
+        child: Text(text, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11), textAlign: TextAlign.center),
+      ),
+    );
+  }
+}
+
+
 // ================= SEARCH ASSET SCREEN =================
 class SearchAssetScreen extends StatefulWidget {
   const SearchAssetScreen({super.key});
@@ -3342,12 +3842,84 @@ class _SearchAssetScreenState extends State<SearchAssetScreen> {
 
 
 // ================= ASSET DETAILS SCREEN =================
-class AssetDetailsScreen extends StatelessWidget {
+class AssetDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> asset;
   final Map<String, dynamic>? experience;
   final List<dynamic> history;
 
   const AssetDetailsScreen({super.key, required this.asset, this.experience, required this.history});
+
+  @override
+  State<AssetDetailsScreen> createState() => _AssetDetailsScreenState();
+}
+
+class _AssetDetailsScreenState extends State<AssetDetailsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _fetchBlockStatus();
+  }
+
+  bool _isBlocked = false;
+  bool _isCustomBlocked = false;
+  bool _isGlobalBlocked = false;
+  bool _isLoadingBlock = true;
+
+  Future<void> _fetchBlockStatus() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token') ?? '';
+      final sym = widget.asset['symbol'] ?? 'UNKNOWN';
+      final res = await http.get(Uri.parse('http://100.77.27.80:8553/api/asset/block_status?symbol=$sym'), headers: {'Authorization': 'Bearer $token'});
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        setState(() {
+          _isBlocked = data['is_blocked'] ?? false;
+          _isCustomBlocked = data['is_custom'] ?? false;
+          _isGlobalBlocked = data['is_global'] ?? false;
+          _isLoadingBlock = false;
+        });
+      } else {
+        setState(() => _isLoadingBlock = false);
+      }
+    } catch (e) {
+      setState(() => _isLoadingBlock = false);
+    }
+  }
+
+  Future<void> _toggleBlock() async {
+    final newState = !_isBlocked;
+    setState(() => _isBlocked = newState);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token') ?? '';
+      final sym = widget.asset['symbol'] ?? 'UNKNOWN';
+      final res = await http.post(
+        Uri.parse('http://100.77.27.80:8553/api/asset/block'),
+        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
+        body: jsonEncode({'symbol': sym, 'block': newState}),
+      );
+      if (res.statusCode == 200) {
+        setState(() {
+          _isCustomBlocked = newState;
+          _isGlobalBlocked = false; // عند إلغاء الحظر، نتجاوز الحظر العالمي
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(newState ? AppTranslations.t('search.asset_blocked_success') : AppTranslations.t('search.asset_unblocked_success')),
+              backgroundColor: const Color(0xFF10b981),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      } else {
+        setState(() => _isBlocked = !newState);
+      }
+    } catch (e) {
+      setState(() => _isBlocked = !newState);
+    }
+  }
 
   Color get cardBg => themeNotifier.value == ThemeMode.dark ? const Color(0xFF101722) : Colors.white;
   Color get borderColor => themeNotifier.value == ThemeMode.dark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0);
@@ -3385,8 +3957,8 @@ class AssetDetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String symbol = asset['symbol'] ?? 'UNKNOWN';
-    String status = asset['status'] ?? 'UNKNOWN';
+    String symbol = widget.asset['symbol'] ?? 'UNKNOWN';
+    String status = widget.asset['status'] ?? 'UNKNOWN';
     Color statusColor = status == 'ACTIVE' ? green : red;
 
     return Scaffold(
@@ -3394,7 +3966,7 @@ class AssetDetailsScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: cardBg,
         leading: IconButton(icon: Icon(Icons.arrow_back, color: accent), onPressed: () => Navigator.pop(context)),
-        title: Text(symbol, style: TextStyle(color: accent, fontWeight: FontWeight.bold)),
+        title: Text('Search Results: $symbol', style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 16)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -3407,26 +3979,107 @@ class AssetDetailsScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('[ASSET DETAIL]', style: TextStyle(color: Colors.grey, fontSize: 11)),
-                  const SizedBox(height: 8),
+                  // Header with icon and Block button
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 18,
+                        backgroundColor: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)),
+                        child: ClipOval(
+                          child: Image.network(
+                            'https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/${symbol.split('/')[0].toLowerCase()}.png',
+                            width: 36, height: 36, fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => Center(
+                              child: Text(symbol.isNotEmpty ? symbol[0] : '?', style: TextStyle(fontSize: 14, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontWeight: FontWeight.bold)),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(symbol, style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontWeight: FontWeight.bold, fontSize: 16)),
+                            Text(status, style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 12)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // Block button
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF141b28) : const Color(0xFFf1f5f9)),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: _isBlocked ? red : borderColor),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: _isBlocked ? red.withOpacity(0.15) : Colors.transparent,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(Icons.block, color: _isBlocked ? red : Colors.grey, size: 24),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                _isCustomBlocked 
+                                    ? AppTranslations.t('search.asset_blocked_custom')
+                                    : (_isGlobalBlocked ? AppTranslations.t('search.asset_blocked') : AppTranslations.t('search.block_asset_hint')),
+                                style: TextStyle(fontSize: 11, color: _isBlocked ? red : (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a))),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _isLoadingBlock ? null : _toggleBlock,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: red,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                            ),
+                            child: Text(
+                              _isBlocked 
+                                  ? (_isGlobalBlocked ? AppTranslations.t('search.unblock_asset') : AppTranslations.t('search.unblock_asset_custom'))
+                                  : AppTranslations.t('search.block_asset'),
+                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   _buildRow(AppTranslations.t('field.asset'), symbol),
                   _buildRow(AppTranslations.t('field.status'), status, valColor: statusColor),
-                  _buildRow(AppTranslations.t('field.confidence'), '${_fmtNum(asset['confidence_score'])}/100', valColor: green),
-                  _buildRow(AppTranslations.t('field.health'), '${_fmtNum(asset['health_score'])}/100', valColor: green),
-                  _buildRow(AppTranslations.t('field.liquidity'), _fmtPrice(asset['liquidity_24h'])),
-                  _buildRow('${AppTranslations.t('dash.max')} DD', '-${_fmtNum(asset['max_drawdown'])}%', valColor: red),
-                  _buildRow(AppTranslations.t('field.current_dd'), '-${_fmtNum(asset['current_drawdown'])}%', valColor: gold),
-                  _buildRow(AppTranslations.t('field.dd_duration'), '${_fmtNum(asset['current_dd_duration_days'])} days'),
-                  _buildRow(AppTranslations.t('field.liquidity_trend'), asset['liquidity_trend'] ?? 'N/A'),
-                  _buildRow(AppTranslations.t('field.valid_exchanges'), '${asset['valid_exchanges'] ?? 0}'),
-                  _buildRow(AppTranslations.t('field.model'), '${asset['model_version'] ?? 'N/A'}'),
+                  _buildRow(AppTranslations.t('field.confidence'), '${_fmtNum(widget.asset['confidence_score'])}/100', valColor: green),
+                  _buildRow(AppTranslations.t('field.health'), '${_fmtNum(widget.asset['health_score'])}/100', valColor: green),
+                  _buildRow(AppTranslations.t('field.liquidity'), _fmtPrice(widget.asset['liquidity_24h'])),
+                  _buildRow('${AppTranslations.t('dash.max')} DD', '-${_fmtNum(widget.asset['max_drawdown'])}%', valColor: red),
+                  _buildRow(AppTranslations.t('field.current_dd'), '-${_fmtNum(widget.asset['current_drawdown'])}%', valColor: gold),
+                  _buildRow(AppTranslations.t('field.dd_duration'), '${_fmtNum(widget.asset['current_dd_duration_days'])} days'),
+                  _buildRow(AppTranslations.t('field.liquidity_trend'), widget.asset['liquidity_trend'] ?? 'N/A'),
+                  _buildRow(AppTranslations.t('field.valid_exchanges'), '${widget.asset['valid_exchanges'] ?? 0}'),
+                  _buildRow(AppTranslations.t('field.model'), '${widget.asset['model_version'] ?? 'N/A'}'),
                 ],
               ),
             ),
             const SizedBox(height: 12),
 
             // Trade Experience Card
-            if (experience != null)
+            if (widget.experience != null)
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: borderColor)),
@@ -3435,29 +4088,29 @@ class AssetDetailsScreen extends StatelessWidget {
                   children: [
                     Text(AppTranslations.t('card.trade_experience'), style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 13)),
                     Divider(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0)), height: 20),
-                    _buildRow(AppTranslations.t('field.total_positions'), '${experience!['total_positions'] ?? 0}'),
-                    _buildRow(AppTranslations.t('field.wins_losses'), '${experience!['winning_positions'] ?? 0} / ${experience!['losing_positions'] ?? 0}'),
-                    _buildRow(AppTranslations.t('field.total_net_pnl'), '\$${_fmtNum(experience!['total_net_pnl'], decimals: 4)}', valColor: green),
-                    _buildRow(AppTranslations.t('field.avg_pnl_trade'), '\$${_fmtNum(experience!['avg_pnl'], decimals: 4)}', valColor: green),
-                    _buildRow(AppTranslations.t('field.avg_hold'), '${_fmtNum(experience!['avg_hold_minutes'], decimals: 1)} min'),
-                    _buildRow(AppTranslations.t('field.avg_max_dca'), '${_fmtNum(experience!['avg_dca_levels'])} / ${experience!['max_dca_levels'] ?? 0}'),
-                    _buildRow(AppTranslations.t('field.experience_score'), '${_fmtNum(experience!['experience_score'], decimals: 4)}', valColor: Color(0xFFa78bfa)),
+                    _buildRow(AppTranslations.t('field.total_positions'), '${widget.experience!['total_positions'] ?? 0}'),
+                    _buildRow(AppTranslations.t('field.wins_losses'), '${widget.experience!['winning_positions'] ?? 0} / ${widget.experience!['losing_positions'] ?? 0}'),
+                    _buildRow(AppTranslations.t('field.total_net_pnl'), '\$${_fmtNum(widget.experience!['total_net_pnl'], decimals: 4)}', valColor: green),
+                    _buildRow(AppTranslations.t('field.avg_pnl_trade'), '\$${_fmtNum(widget.experience!['avg_pnl'], decimals: 4)}', valColor: green),
+                    _buildRow(AppTranslations.t('field.avg_hold'), '${_fmtNum(widget.experience!['avg_hold_minutes'], decimals: 1)} min'),
+                    _buildRow(AppTranslations.t('field.avg_max_dca'), '${_fmtNum(widget.experience!['avg_dca_levels'])} / ${widget.experience!['max_dca_levels'] ?? 0}'),
+                    _buildRow(AppTranslations.t('field.experience_score'), '${_fmtNum(widget.experience!['experience_score'], decimals: 4)}', valColor: Color(0xFFa78bfa)),
                   ],
                 ),
               ),
             const SizedBox(height: 12),
 
             // Status History Card
-            if (history.isNotEmpty)
+            if (widget.history.isNotEmpty)
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: borderColor)),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Status History (${history.length})', style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 13)),
+                    Text('Status History (${widget.history.length})', style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 13)),
                     Divider(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0)), height: 20),
-                    ...history.map((h) {
+                    ...widget.history.map((h) {
                       String oldSt = h['old_status'] ?? '';
                       String newSt = h['new_status'] ?? '';
                       String reason = h['reason'] ?? '';
