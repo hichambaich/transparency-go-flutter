@@ -66,7 +66,7 @@ class MyApp extends StatelessWidget {
           builder: (context, currentMode, child) {
             return MaterialApp(
               key: ValueKey(currentLang),
-              title: 'SmartWallet Go',
+              title: 'SmartWallet',
               debugShowCheckedModeBanner: false,
               themeMode: currentMode,
               builder: (context, child) {
@@ -220,7 +220,7 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               Image.asset('assets/images/snowflake.png', width: 80, height: 80),
               const SizedBox(height: 10),
-              Text('SMARTWALLET GO', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2)))),
+              Text('SMARTWALLET', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2)))),
               const SizedBox(height: 40),
               TextField(controller: _emailCtrl, decoration: InputDecoration(labelText: AppTranslations.t('support.email'), border: OutlineInputBorder())),
               const SizedBox(height: 16),
@@ -504,7 +504,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Row(
                     children: [
                       Image.asset('assets/images/snowflake.png', width: 28, height: 28),
-                      Text('SMARTWALLET GO', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))),
+                      Text('SMARTWALLET', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))),
                     ],
                   ),
                   Row(
@@ -1497,7 +1497,7 @@ Widget build(BuildContext context) {
                       const SizedBox(width: 8),
                       Text(textDirection: TextDirection.ltr, '+${grossTp.toStringAsFixed(2)}%  ->  \$${nextTpTarget.toStringAsFixed(4)}', style: TextStyle(fontSize: 10, color: widget.green, fontWeight: FontWeight.bold)),
                       const SizedBox(width: 4),
-                      Text(textDirection: TextDirection.ltr, '(${nextTpDist > 0 ? '+' : ''}${nextTpDist.toStringAsFixed(2)}% away)', style: TextStyle(fontSize: 9, color: Colors.grey)),
+                      Text(textDirection: TextDirection.ltr, '(${nextTpDist > 0 ? '+' : ''}${nextTpDist.toStringAsFixed(2)}% ${AppTranslations.t('pos.away')})', style: TextStyle(fontSize: 9, color: Colors.grey)),
                     ],
                   ),
                   const SizedBox(height: 4),
@@ -1508,7 +1508,7 @@ Widget build(BuildContext context) {
                       if (nextDcaTarget != null) ...[
                         Text(textDirection: TextDirection.ltr, '${nextDcaPctStr}%  ->  \$${nextDcaTarget.toStringAsFixed(4)}', style: TextStyle(fontSize: 10, color: Colors.orange, fontWeight: FontWeight.bold)),
                         const SizedBox(width: 4),
-                        Text(textDirection: TextDirection.ltr, '(${nextDcaDist! > 0 ? '+' : ''}${nextDcaDist.toStringAsFixed(2)}% away)', style: TextStyle(fontSize: 9, color: Colors.grey)),
+                        Text(textDirection: TextDirection.ltr, '(${nextDcaDist! > 0 ? '+' : ''}${nextDcaDist.toStringAsFixed(2)}% ${AppTranslations.t('pos.away')})', style: TextStyle(fontSize: 9, color: Colors.grey)),
                       ] else
                         Text(AppTranslations.t('pos.max_reached'), style: TextStyle(fontSize: 10, color: Colors.red, fontWeight: FontWeight.bold)),
                     ],
@@ -3000,7 +3000,7 @@ class MenuScreen extends StatelessWidget {
                     await prefs.setString('auth_token', adminToken);
                     await prefs.remove('admin_backup_token');
                     if (context.mounted) {
-                      Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(MaterialPageRoute(builder: (c) => const AuthGate(key: ValueKey('impersonate'))), (route) => false);
+                      Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(MaterialPageRoute(builder: (c) => AuthGate(key: ValueKey('impersonate_${DateTime.now().millisecondsSinceEpoch}'))), (route) => false);
                     }
                   },
                 );
@@ -3027,7 +3027,7 @@ class MenuScreen extends StatelessWidget {
           ])))),
           _menuItem(title: AppTranslations.t('support.title'), subtitle: AppTranslations.t('support.sub'), icon: Icons.help_outline, iconColor: Color(0xFF38bdf8), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => SupportScreen()))),
           _menuItem(title: AppTranslations.t('menu.submenu_legal'), subtitle: AppTranslations.t('menu.submenu_legal_sub'), icon: Icons.gavel, iconColor: Color(0xFF38bdf8), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => SubMenuScreen(title: AppTranslations.t('menu.submenu_legal'), items: [
-            SubMenuItem(title: AppTranslations.t('legal.terms_title'), subtitle: 'Read before using', icon: Icons.gavel, iconColor: Color(0xFF38bdf8), route: TermsScreen()),
+            SubMenuItem(title: AppTranslations.t('legal.terms_title'), subtitle: AppTranslations.t('legal.terms_sub'), icon: Icons.gavel, iconColor: Color(0xFF38bdf8), route: TermsScreen()),
             SubMenuItem(title: AppTranslations.t('legal.privacy_title'), subtitle: AppTranslations.t('legal.privacy_sub'), icon: Icons.shield, iconColor: Color(0xFFa78bfa), route: PrivacyScreen()),
           ])))),
           _menuItem(title: AppTranslations.t('menu.admin_panel'), subtitle: AppTranslations.t('menu.admin_panel_sub'), icon: Icons.admin_panel_settings, iconColor: Color(0xFFf59e0b), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const DeveloperPanelScreen()))),
@@ -3373,13 +3373,13 @@ class UserGuideScreen extends StatelessWidget {
     final borderColor = isDark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0);
 
     final sections = [
-      {'h': AppTranslations.t('guide.s1_h'), 'b': 'This app is a smart trading bot that operates on your personal Binance account.\n• Your funds always stay in your account (we do not hold them).\n• We do not request withdrawal permissions.\n• The bot opens trades, DCA, and sells automatically based on your settings.'},
-      {'h': AppTranslations.t('guide.s2_h'), 'b': 'Step 1: Create an account in the app.\nStep 2: Get API keys from Binance (enable Spot Trading + Read only, NO Withdraw).\nStep 3: Go to [Trading Settings], enter keys, and save.\nStep 4: Set trade size and max positions.\nStep 5: Click [Start Bot].'},
-      {'h': AppTranslations.t('guide.s3_h'), 'b': '• Trade Size: Amount used per buy (10 to 100 USDT).\n• Max Positions: Number of open trades at once (1 to 10).\n• Default is (0) to prevent auto-trading before you decide. You must set values and click Save to start.\n• A warning (yellow/red) appears if your settings will consume a large portion of your capital.'},
-      {'h': AppTranslations.t('guide.s4_h'), 'b': '• Total Capital: Free balance + open positions value.\n• Exposure: Percentage of capital used in active trades.\n• Realized PnL: Net profit from closed trades only.\n• Click any card for full details.'},
-      {'h': AppTranslations.t('guide.s5_h'), 'b': '• Bot opens trades, DCAs on dips, and takes profit (TP) at targets.\n• If the bot stops (e.g., update), it auto-resumes in 30 seconds unless manually stopped.'},
-      {'h': AppTranslations.t('guide.s6_h'), 'b': '• API keys are encrypted before saving.\n• Passwords are protected with bcrypt.\n• No one can read your keys.\n• You can delete your data or stop the bot anytime.'},
-      {'h': AppTranslations.t('guide.s7_h'), 'b': 'Q: Can I stop the bot? A: Yes, from the trading settings page.\nQ: What if internet drops? A: Trades stay in Binance; bot resumes on reconnect.\nQ: Are there fees? A: No trading fees from us. Only Binance standard fees.\nQ: How to delete account? A: From the [My Account] page.'},
+      {'h': AppTranslations.t('guide.s1_h'), 'b': AppTranslations.t('guide.s1_b')},
+      {'h': AppTranslations.t('guide.s2_h'), 'b': AppTranslations.t('guide.s2_b')},
+      {'h': AppTranslations.t('guide.s3_h'), 'b': AppTranslations.t('guide.s3_b')},
+      {'h': AppTranslations.t('guide.s4_h'), 'b': AppTranslations.t('guide.s4_b')},
+      {'h': AppTranslations.t('guide.s5_h'), 'b': AppTranslations.t('guide.s5_b')},
+      {'h': AppTranslations.t('guide.s6_h'), 'b': AppTranslations.t('guide.s6_b')},
+      {'h': AppTranslations.t('guide.s7_h'), 'b': AppTranslations.t('guide.s7_b')},
     ];
 
     return Scaffold(
@@ -3632,7 +3632,7 @@ class _DeveloperPanelScreenState extends State<DeveloperPanelScreen> {
                   itemBuilder: (context, index) {
                     final u = _users[index];
                     final isSuspended = u['is_suspended'] ?? false;
-                    final isRunning = u['bot_running'] ?? false;
+                    final isRunning = u['is_running'] ?? u['bot_running'] ?? false;
                     return InkWell(
                       onTap: () {
                         Navigator.push(context, MaterialPageRoute(builder: (c) => UserDetailsScreen(
@@ -3642,7 +3642,7 @@ class _DeveloperPanelScreenState extends State<DeveloperPanelScreen> {
                           isSuspended: isSuspended,
                           isRunning: isRunning,
                           balance: (u['balance'] ?? 0.0).toDouble(),
-                          positions: u['positions_count'] ?? 0,
+                          positions: u['positions'] ?? u['positions_count'] ?? 0,
                         ))).then((_) => _fetchUsers());
                       },
                       child: Container(
@@ -3670,7 +3670,7 @@ class _DeveloperPanelScreenState extends State<DeveloperPanelScreen> {
                                     children: [
                                       Text('${AppTranslations.t('admin.balance')}: \$${(u['balance'] ?? 0.0).toStringAsFixed(2)}', style: TextStyle(color: accent, fontSize: 11)),
                                       const SizedBox(width: 10),
-                                      Text('${AppTranslations.t('admin.positions')}: ${u['positions_count'] ?? 0}', style: TextStyle(color: gold, fontSize: 11)),
+                                      Text('${AppTranslations.t('admin.positions')}: ${u['positions'] ?? u['positions_count'] ?? 0}', style: TextStyle(color: gold, fontSize: 11)),
                                     ],
                                   ),
                                 ],
@@ -3687,7 +3687,7 @@ class _DeveloperPanelScreenState extends State<DeveloperPanelScreen> {
 }
 
 // ================= USER DETAILS SCREEN =================
-class UserDetailsScreen extends StatelessWidget {
+class UserDetailsScreen extends StatefulWidget {
   final int userId;
   final String username;
   final String email;
@@ -3697,6 +3697,201 @@ class UserDetailsScreen extends StatelessWidget {
   final int positions;
 
   const UserDetailsScreen({super.key, required this.userId, required this.username, required this.email, required this.isSuspended, required this.isRunning, required this.balance, required this.positions});
+
+  @override
+  State<UserDetailsScreen> createState() => _UserDetailsScreenState();
+}
+
+class _UserDetailsScreenState extends State<UserDetailsScreen> {
+  late bool _isRunning;
+  late bool _isSuspended;
+  bool _isBusy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _isRunning = widget.isRunning;
+    _isSuspended = widget.isSuspended;
+  }
+
+  Future<String?> _getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('auth_token');
+  }
+
+  Future<bool> _confirmAction(String title, String message) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: themeNotifier.value == ThemeMode.dark ? const Color(0xFF101722) : Colors.white,
+        title: Text(title, style: TextStyle(
+          color: themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a),
+          fontWeight: FontWeight.bold,
+        )),
+        content: Text(message, style: TextStyle(
+          color: themeNotifier.value == ThemeMode.dark ? Colors.white70 : const Color(0xFF475569),
+        )),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(AppTranslations.t('misc.cancel'), style: const TextStyle(color: Colors.grey)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(AppTranslations.t('misc.confirm'), style: const TextStyle(color: Color(0xFFef4444), fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
+  Future<void> _toggleBot() async {
+    if (_isBusy) return;
+    // Confirm only when stopping (disabling action)
+    if (_isRunning) {
+      final confirmed = await _confirmAction(
+        AppTranslations.t('admin.confirm_stop_bot_title'),
+        AppTranslations.t('admin.confirm_stop_bot_msg').replaceAll('{username}', widget.username),
+      );
+      if (!confirmed) return;
+    }
+    setState(() => _isBusy = true);
+    try {
+      final token = await _getToken();
+      final res = await http.post(
+        Uri.parse('http://100.77.27.80:8553/api/admin/toggle_bot/${widget.userId}'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (res.statusCode == 200) {
+        setState(() => _isRunning = !_isRunning);
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(_isRunning ? 'Bot Started' : 'Bot Stopped'), backgroundColor: const Color(0xFF10b981)),
+        );
+      } else {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed'), backgroundColor: Color(0xFFef4444)),
+        );
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e'), backgroundColor: const Color(0xFFef4444)),
+      );
+    } finally {
+      setState(() => _isBusy = false);
+    }
+  }
+
+  Future<void> _toggleSuspend() async {
+    if (_isBusy) return;
+    // Confirm only when suspending (disabling action)
+    if (!_isSuspended) {
+      final confirmed = await _confirmAction(
+        AppTranslations.t('admin.confirm_suspend_title'),
+        AppTranslations.t('admin.confirm_suspend_msg').replaceAll('{username}', widget.username),
+      );
+      if (!confirmed) return;
+    }
+    setState(() => _isBusy = true);
+    try {
+      final token = await _getToken();
+      final newState = !_isSuspended;
+      final res = await http.post(
+        Uri.parse('http://100.77.27.80:8553/api/admin/suspend/${widget.userId}?suspend=$newState'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (res.statusCode == 200) {
+        setState(() => _isSuspended = newState);
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(newState ? 'Suspended' : 'Unsuspended'), backgroundColor: const Color(0xFF10b981)),
+        );
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e'), backgroundColor: const Color(0xFFef4444)),
+      );
+    } finally {
+      setState(() => _isBusy = false);
+    }
+  }
+
+  Future<void> _showResetPasswordDialog() async {
+    final controller = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: themeNotifier.value == ThemeMode.dark ? const Color(0xFF101722) : Colors.white,
+        title: Text(AppTranslations.t('admin.reset_password_title')),
+        content: TextField(
+          controller: controller,
+          obscureText: true,
+          decoration: InputDecoration(
+            labelText: AppTranslations.t('admin.new_password_label'),
+            border: const OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(AppTranslations.t('misc.cancel'))),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(AppTranslations.t('misc.confirm'), style: const TextStyle(color: Color(0xFFef4444))),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || controller.text.isEmpty) return;
+    try {
+      final token = await _getToken();
+      final res = await http.post(
+        Uri.parse('http://100.77.27.80:8553/api/admin/reset_password/${widget.userId}'),
+        headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
+        body: jsonEncode({'new_password': controller.text}),
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(res.statusCode == 200 ? 'Password reset' : 'Failed'),
+          backgroundColor: res.statusCode == 200 ? const Color(0xFF10b981) : const Color(0xFFef4444),
+        ));
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e'), backgroundColor: const Color(0xFFef4444)),
+      );
+    }
+  }
+
+  Future<void> _confirmDelete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: themeNotifier.value == ThemeMode.dark ? const Color(0xFF101722) : Colors.white,
+        title: Text(AppTranslations.t('admin.delete_account_title')),
+        content: Text(AppTranslations.t('admin.delete_warning')),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(AppTranslations.t('misc.cancel'))),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(AppTranslations.t('admin.delete_btn'), style: const TextStyle(color: Color(0xFFef4444), fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      final token = await _getToken();
+      final res = await http.post(
+        Uri.parse('http://100.77.27.80:8553/api/admin/delete_user/${widget.userId}'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (res.statusCode == 200 && mounted) {
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e'), backgroundColor: const Color(0xFFef4444)),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -3724,9 +3919,9 @@ class UserDetailsScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(children: [Icon(Icons.person, color: accent, size: 28), const SizedBox(width: 10), Text('$username (ID: $userId)', style: TextStyle(color: isDark ? Colors.white : const Color(0xFF0f172a), fontWeight: FontWeight.bold, fontSize: 16))]),
+                  Row(children: [Icon(Icons.person, color: accent, size: 28), const SizedBox(width: 10), Text('${widget.username} (ID: ${widget.userId})', style: TextStyle(color: isDark ? Colors.white : const Color(0xFF0f172a), fontWeight: FontWeight.bold, fontSize: 16))]),
                   const SizedBox(height: 4),
-                  Text(email, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                  Text(widget.email, style: const TextStyle(color: Colors.grey, fontSize: 12)),
                 ],
               ),
             ),
@@ -3740,21 +3935,23 @@ class UserDetailsScreen extends StatelessWidget {
                 _actionBtn(AppTranslations.t('admin.login_as_user'), const Color(0xFF9c27b0), () async {
                   final prefs = await SharedPreferences.getInstance();
                   final oldToken = prefs.getString('auth_token') ?? '';
-                  final res = await http.post(Uri.parse('http://100.77.27.80:8553/api/admin/impersonate/$userId'), headers: {'Authorization': 'Bearer $oldToken'});
+                  final res = await http.post(Uri.parse('http://100.77.27.80:8553/api/admin/impersonate/${widget.userId}'), headers: {'Authorization': 'Bearer $oldToken'});
                   if (res.statusCode == 200) {
                     final newToken = jsonDecode(res.body)['token'];
                     await prefs.setString('admin_backup_token', oldToken);
                     await prefs.setString('auth_token', newToken);
                     if (context.mounted) {
-                      Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(MaterialPageRoute(builder: (c) => const AuthGate(key: ValueKey('impersonate'))), (route) => false);
+                      Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(MaterialPageRoute(builder: (c) => AuthGate(key: ValueKey('impersonate_${DateTime.now().millisecondsSinceEpoch}'))), (route) => false);
                     }
                   }
                 }),
-                _actionBtn(AppTranslations.t('admin.view_user_trades'), accent, () {}),
-                _actionBtn(isRunning ? AppTranslations.t('admin.force_stop_bot') : AppTranslations.t('admin.force_start_bot'), isRunning ? red : green, () {}),
-                _actionBtn(isSuspended ? AppTranslations.t('admin.unsuspend_account') : AppTranslations.t('admin.suspend_account'), const Color(0xFFf59e0b), () {}),
-                _actionBtn(AppTranslations.t('admin.reset_password'), const Color(0xFFd32f2f), () {}),
-                _actionBtn(AppTranslations.t('admin.delete_account'), const Color(0xFF7f0000), () {}),
+                _actionBtn(AppTranslations.t('admin.view_user_trades'), accent, () {
+                  Navigator.push(context, MaterialPageRoute(builder: (c) => AdminUserTradesScreen(userId: widget.userId, username: widget.username)));
+                }),
+                _actionBtn(_isRunning ? AppTranslations.t('admin.force_stop_bot') : AppTranslations.t('admin.force_start_bot'), _isRunning ? red : green, _isBusy ? () {} : _toggleBot),
+                _actionBtn(_isSuspended ? AppTranslations.t('admin.unsuspend_account') : AppTranslations.t('admin.suspend_account'), const Color(0xFFf59e0b), _isBusy ? () {} : _toggleSuspend),
+                _actionBtn(AppTranslations.t('admin.reset_password'), const Color(0xFFd32f2f), _showResetPasswordDialog),
+                _actionBtn(AppTranslations.t('admin.delete_account'), const Color(0xFF7f0000), _confirmDelete),
               ],
             ),
           ],
@@ -3775,6 +3972,95 @@ class UserDetailsScreen extends StatelessWidget {
   }
 }
 
+
+
+// ================= ADMIN: USER TRADES SCREEN =================
+class AdminUserTradesScreen extends StatefulWidget {
+  final int userId;
+  final String username;
+  const AdminUserTradesScreen({super.key, required this.userId, required this.username});
+  @override
+  State<AdminUserTradesScreen> createState() => _AdminUserTradesScreenState();
+}
+
+class _AdminUserTradesScreenState extends State<AdminUserTradesScreen> {
+  bool _loading = true;
+  List<dynamic> _trades = [];
+  String _error = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetch();
+  }
+
+  Future<void> _fetch() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token') ?? '';
+      final res = await http.get(
+        Uri.parse('http://100.77.27.80:8553/api/admin/user_trades/${widget.userId}'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (res.statusCode == 200) {
+        setState(() { _trades = jsonDecode(res.body)['trades'] ?? []; _loading = false; });
+      } else {
+        setState(() { _error = 'Failed (${res.statusCode})'; _loading = false; });
+      }
+    } catch (e) {
+      setState(() { _error = 'Error: $e'; _loading = false; });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = themeNotifier.value == ThemeMode.dark;
+    final bg = isDark ? const Color(0xFF080d14) : const Color(0xFFf8fafc);
+    final cardBg = isDark ? const Color(0xFF101722) : Colors.white;
+    final accent = isDark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2);
+    final green = const Color(0xFF10b981);
+    final red = const Color(0xFFef4444);
+    final border = isDark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0);
+
+    return Scaffold(
+      backgroundColor: bg,
+      appBar: AppBar(
+        backgroundColor: cardBg,
+        leading: IconButton(icon: Icon(Icons.arrow_back, color: accent), onPressed: () => Navigator.pop(context)),
+        title: Text('${widget.username} - ${AppTranslations.t('admin.trades_label')} (${_trades.length})', style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 16)),
+      ),
+      body: _loading
+          ? Center(child: CircularProgressIndicator(color: accent))
+          : _error.isNotEmpty
+              ? Center(child: Text(_error, style: const TextStyle(color: Colors.red)))
+              : _trades.isEmpty
+                  ? const Center(child: Text('No trades', style: TextStyle(color: Colors.grey)))
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _trades.length,
+                      itemBuilder: (c, i) {
+                        final t = _trades[i];
+                        final sym = t['symbol'] ?? '?';
+                        final pnl = (t['realized_profit_usdt'] ?? 0.0).toDouble();
+                        final win = pnl >= 0;
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(8), border: Border.all(color: border)),
+                          child: Row(
+                            children: [
+                              Text(sym, style: TextStyle(color: isDark ? Colors.white : const Color(0xFF0f172a), fontWeight: FontWeight.bold)),
+                              const Spacer(),
+                              Text('${win ? '+' : ''}\$${pnl.toStringAsFixed(4)}',
+                                style: TextStyle(color: win ? green : red, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+    );
+  }
+}
 
 // ================= SEARCH ASSET SCREEN =================
 class SearchAssetScreen extends StatefulWidget {
@@ -4950,6 +5236,7 @@ class MyAccountScreen extends StatefulWidget {
 }
 
 class _MyAccountScreenState extends State<MyAccountScreen> {
+  bool _isImpersonating = false;
   Map<String, dynamic> _account = {};
   List<dynamic> _sessions = [];
   bool _isLoading = true;
@@ -5096,8 +5383,8 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
             ),
             const SizedBox(height: 16),
             
-            // Change Password Card
-            Container(
+            // Change Password Card (hidden in impersonation)
+            if (!_isImpersonating) Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: borderColor)),
               child: Column(

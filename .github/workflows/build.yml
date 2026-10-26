@@ -74,9 +74,9 @@ jobs:
 
       - name: Set App Label
         run: |
-          sed -i 's/android:label="[^"]*"/android:label="SMARTWALLET GO"/' android/app/src/main/AndroidManifest.xml
-          grep -q 'android:label="SMARTWALLET GO"' android/app/src/main/AndroidManifest.xml || (echo "Label fix failed" && exit 1)
-          echo "Label set to SMARTWALLET GO"
+          sed -i 's/android:label="[^"]*"/android:label="SMARTWALLET"/' android/app/src/main/AndroidManifest.xml
+          grep -q 'android:label="SMARTWALLET"' android/app/src/main/AndroidManifest.xml || (echo "Label fix failed" && exit 1)
+          echo "Label set to SMARTWALLET"
 
       - name: Install Pillow
         run: pip install Pillow

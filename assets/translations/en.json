@@ -261,7 +261,12 @@
         "hold": "Hold",
         "hours": "hours",
         "details_24h": "24h Details",
-        "trade_title_prefix": "Trade"
+        "trade_title_prefix": "Trade",
+        "change_24h": "Change 24h",
+        "high_24h": "High 24h",
+        "low_24h": "Low 24h",
+        "weighted_24h": "Weighted 24h",
+        "volume_24h": "Volume 24h"
     },
     "support": {
         "title": "Support",
@@ -459,7 +464,10 @@
         "breakdown_label": "Breakdown",
         "api_key_label": "API Key",
         "label_label": "Label",
-        "assets_tracked_suffix": "assets tracked"
+        "assets_tracked_suffix": "assets tracked",
+        "close": "Close",
+        "confirm": "Confirm",
+        "cancel": "Cancel"
     },
     "common": {
         "cancel": "Cancel",
@@ -619,7 +627,17 @@
         "force_start_bot": "Force Start Bot",
         "suspend_account": "Suspend Account",
         "unsuspend_account": "Unsuspend Account",
-        "reset_password": "Reset Password"
+        "reset_password": "Reset Password",
+        "confirm_stop_bot_title": "Stop Bot?",
+        "confirm_stop_bot_msg": "Bot for {username} will be stopped. Open positions will not be managed until restarted.",
+        "confirm_suspend_title": "Suspend Account?",
+        "confirm_suspend_msg": "Account {username} will be suspended. The bot will stop and login will be blocked.",
+        "reset_password_title": "Reset Password",
+        "new_password_label": "New Password",
+        "delete_account_title": "Delete Account?",
+        "delete_warning": "This cannot be undone.",
+        "delete_btn": "Delete",
+        "trades_label": "Trades"
     },
     "analytics": {
         "assets_tracked": "assets tracked"
