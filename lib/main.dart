@@ -218,7 +218,7 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('❄️', style: TextStyle(fontSize: 60)),
+              Image.asset('assets/images/snowflake.png', width: 80, height: 80),
               const SizedBox(height: 10),
               Text('SMARTWALLET GO', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2)))),
               const SizedBox(height: 40),
@@ -503,7 +503,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   Row(
                     children: [
-                      Text('❄️', style: TextStyle(fontSize: 24)),
+                      Image.asset('assets/images/snowflake.png', width: 28, height: 28),
                       Text('SMARTWALLET GO', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))),
                     ],
                   ),
