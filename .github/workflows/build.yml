@@ -139,6 +139,9 @@ jobs:
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
         run: bash scripts/setup_signing.sh
 
+      - name: Generate Android Launcher Icons
+        run: bash scripts/generate_android_icons.sh
+
       - name: Install dependencies
         run: flutter pub get
 
@@ -148,11 +151,16 @@ jobs:
       - name: Build APK
         run: flutter build apk --release --split-per-abi --verbose
 
+      - name: Build AAB
+        run: flutter build appbundle --release
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: "v1.0.${{ github.run_number }}"
           name: "Flutter Build ${{ github.run_number }}"
-          files: build/app/outputs/flutter-apk/*.apk
+          files: |
+            build/app/outputs/flutter-apk/*.apk
+            build/app/outputs/bundle/release/*.aab
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
