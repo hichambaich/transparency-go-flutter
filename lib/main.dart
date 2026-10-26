@@ -230,7 +230,7 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() { _isLoading = true; _error = ''; });
     try {
       final res = await http.post(
-        Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/login'),
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': _emailCtrl.text.trim(), 'password': _passCtrl.text}),
       );
@@ -386,7 +386,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     try {
       final headers = {'Authorization': 'Bearer ${widget.token}'};
-      final resDash = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/dashboard'), headers: headers);
+      final resDash = await http.get(Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/dashboard'), headers: headers);
       if (resDash.statusCode == 401) {
         setState(() { _errorMsg = "Session expired. Please log in again."; _isLoading = false; });
         _pollingTimer?.cancel();
@@ -397,7 +397,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         setState(() => _data = jsonDecode(resDash.body));
       }
 
-      final resChart = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/trend_history?period=$_currentPeriod'), headers: headers);
+      final resChart = await http.get(Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/trend_history?period=$_currentPeriod'), headers: headers);
       if (resChart.statusCode == 200) {
         final chartData = jsonDecode(resChart.body);
         final rawList = chartData['raw'] as List? ?? [];
@@ -1246,7 +1246,7 @@ class _ExpandablePositionCardState extends State<ExpandablePositionCard> {
     final base = symbol.split('/')[0].replaceAll('USDT', '');
     showDialog(context: context, barrierDismissible: false, builder: (ctx) => const Center(child: CircularProgressIndicator()));
     try {
-      final res = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/binance/24h?symbol=$base'));
+      final res = await http.get(Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/binance/24h?symbol=$base'));
       Navigator.pop(context);
       if (res.statusCode == 200) {
         final d = jsonDecode(res.body);
@@ -1677,7 +1677,7 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
       
       // جلب بيانات الداشبورد إذا كنا في Capital Events وكانت البيانات فارغة
       if (widget.title == AppTranslations.t('menu.capital_events') && _dashboardData.isEmpty) {
-        final resDash = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/dashboard'), headers: {'Authorization': 'Bearer $_token'});
+        final resDash = await http.get(Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/dashboard'), headers: {'Authorization': 'Bearer $_token'});
         if (resDash.statusCode == 200) {
           _dashboardData = jsonDecode(resDash.body);
         }
@@ -1686,7 +1686,7 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
       final headers = {'Authorization': 'Bearer $_token'};
 
       if (widget.title == AppTranslations.t('dash.closed_trades') || widget.title == AppTranslations.t('dash.profit_trades')) {
-        final res = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/history'), headers: headers);
+        final res = await http.get(Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/history'), headers: headers);
         if (res.statusCode == 200) {
           final allTrades = jsonDecode(res.body)['trades'] ?? [];
           setState(() {
@@ -1701,28 +1701,28 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
           setState(() { _errorMsg = 'Failed to load trades'; _isLoading = false; });
         }
       } else if (widget.title == AppTranslations.t('dash.all_time_pnl_range')) {
-        final res = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/stats/pnl_range'), headers: headers);
+        final res = await http.get(Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/stats/pnl_range'), headers: headers);
         if (res.statusCode == 200) {
           setState(() { _extraData = jsonDecode(res.body); _isLoading = false; });
         } else {
           setState(() { _errorMsg = 'Failed'; _isLoading = false; });
         }
       } else if (widget.title == AppTranslations.t('dash.cost_efficiency_full')) {
-        final res = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/stats/fees'), headers: headers);
+        final res = await http.get(Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/stats/fees'), headers: headers);
         if (res.statusCode == 200) {
           setState(() { _extraData = jsonDecode(res.body); _isLoading = false; });
         } else {
           setState(() { _errorMsg = 'Failed'; _isLoading = false; });
         }
       } else if (widget.title == AppTranslations.t('dash.bnb_fees_reserve')) {
-        final res = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/bnb/status'), headers: headers);
+        final res = await http.get(Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/bnb/status'), headers: headers);
         if (res.statusCode == 200) {
           setState(() { _extraData = jsonDecode(res.body); _isLoading = false; });
         } else {
           setState(() { _errorMsg = 'Failed'; _isLoading = false; });
         }
       } else if (widget.title == AppTranslations.t('dash.realized_pnl')) {
-        final res = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/history'), headers: headers);
+        final res = await http.get(Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/history'), headers: headers);
         if (res.statusCode == 200) {
           setState(() { 
             _trades = jsonDecode(res.body)['trades'] ?? [];
@@ -2484,7 +2484,7 @@ class _StatsScreenState extends State<StatsScreen> {
   Future<void> _fetchData() async {
     try {
       final res = await http.get(
-        Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/stats/performance'),
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/stats/performance'),
         headers: {'Authorization': 'Bearer ${widget.token}'},
       );
       if (res.statusCode == 200) {
@@ -2779,7 +2779,7 @@ class _PeriodHistoryScreenState extends State<PeriodHistoryScreen> {
   Future<void> _fetch() async {
     try {
       final res = await http.get(
-        Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/stats/period_history?period=${widget.period}'),
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/stats/period_history?period=${widget.period}'),
         headers: {'Authorization': 'Bearer ${widget.token}'},
       );
       if (res.statusCode == 200) {
@@ -3236,7 +3236,7 @@ class _SupportScreenState extends State<SupportScreen> {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token') ?? '';
       final res = await http.post(
-        Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/support/message'),
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/support/message'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -3645,7 +3645,7 @@ class _DeveloperPanelScreenState extends State<DeveloperPanelScreen> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token') ?? '';
-      final res = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/admin/users'), headers: {'Authorization': 'Bearer $token'});
+      final res = await http.get(Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/admin/users'), headers: {'Authorization': 'Bearer $token'});
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         setState(() {
@@ -3811,7 +3811,7 @@ class _SystemAdminPanelScreenState extends State<SystemAdminPanelScreen> {
   Future<void> _fetchStats() async {
     try {
       final t = await _token();
-      final res = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/admin/system/stats'), headers: {'Authorization': 'Bearer $t'});
+      final res = await http.get(Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/admin/system/stats'), headers: {'Authorization': 'Bearer $t'});
       if (res.statusCode == 200) {
         setState(() { _stats = jsonDecode(res.body); _isLoading = false; });
       } else {
@@ -3834,7 +3834,7 @@ class _SystemAdminPanelScreenState extends State<SystemAdminPanelScreen> {
     setState(() => _isBackupLoading = true);
     try {
       final t = await _token();
-      final res = await http.post(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/admin/system/backup'), headers: {'Authorization': 'Bearer $t'});
+      final res = await http.post(Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/admin/system/backup'), headers: {'Authorization': 'Bearer $t'});
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(res.statusCode == 200 ? AppTranslations.t('admin.backup_success') : AppTranslations.t('admin.backup_failed')),
         backgroundColor: res.statusCode == 200 ? green : red));
@@ -3865,7 +3865,7 @@ class _SystemAdminPanelScreenState extends State<SystemAdminPanelScreen> {
     setState(() => _isRestartLoading = true);
     try {
       final t = await _token();
-      await http.post(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/admin/system/restart_macro'), headers: {'Authorization': 'Bearer $t'});
+      await http.post(Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/admin/system/restart_macro'), headers: {'Authorization': 'Bearer $t'});
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppTranslations.t('admin.macro_restarted')), backgroundColor: green));
     } catch (_) {} finally {
@@ -3876,7 +3876,7 @@ class _SystemAdminPanelScreenState extends State<SystemAdminPanelScreen> {
   Future<void> _showLogs() async {
     try {
       final t = await _token();
-      final res = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/admin/system/logs'), headers: {'Authorization': 'Bearer $t'});
+      final res = await http.get(Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/admin/system/logs'), headers: {'Authorization': 'Bearer $t'});
       final logs = res.statusCode == 200 ? (jsonDecode(res.body)['logs'] as List? ?? []) : <dynamic>[];
       if (!mounted) return;
       showDialog(
@@ -4061,7 +4061,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
     try {
       final token = await _getToken();
       final res = await http.post(
-        Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/admin/toggle_bot/${widget.userId}'),
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/admin/toggle_bot/${widget.userId}'),
         headers: {'Authorization': 'Bearer $token'},
       );
       if (res.statusCode == 200) {
@@ -4098,7 +4098,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
       final token = await _getToken();
       final newState = !_isSuspended;
       final res = await http.post(
-        Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/admin/suspend/${widget.userId}?suspend=$newState'),
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/admin/suspend/${widget.userId}?suspend=$newState'),
         headers: {'Authorization': 'Bearer $token'},
       );
       if (res.statusCode == 200) {
@@ -4144,7 +4144,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
     try {
       final token = await _getToken();
       final res = await http.post(
-        Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/admin/reset_password/${widget.userId}'),
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/admin/reset_password/${widget.userId}'),
         headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
         body: jsonEncode({'new_password': controller.text}),
       );
@@ -4181,7 +4181,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
     try {
       final token = await _getToken();
       final res = await http.post(
-        Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/admin/delete_user/${widget.userId}'),
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/admin/delete_user/${widget.userId}'),
         headers: {'Authorization': 'Bearer $token'},
       );
       if (res.statusCode == 200 && mounted) {
@@ -4236,7 +4236,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                 _actionBtn(AppTranslations.t('admin.login_as_user'), const Color(0xFF9c27b0), () async {
                   final prefs = await SharedPreferences.getInstance();
                   final oldToken = prefs.getString('auth_token') ?? '';
-                  final res = await http.post(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/admin/impersonate/${widget.userId}'), headers: {'Authorization': 'Bearer $oldToken'});
+                  final res = await http.post(Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/admin/impersonate/${widget.userId}'), headers: {'Authorization': 'Bearer $oldToken'});
                   if (res.statusCode == 200) {
                     final newToken = jsonDecode(res.body)['token'];
                     await prefs.setString('admin_backup_token', oldToken);
@@ -4300,7 +4300,7 @@ class _AdminUserTradesScreenState extends State<AdminUserTradesScreen> {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token') ?? '';
       final res = await http.get(
-        Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/admin/user_trades/${widget.userId}'),
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/admin/user_trades/${widget.userId}'),
         headers: {'Authorization': 'Bearer $token'},
       );
       if (res.statusCode == 200) {
@@ -4392,7 +4392,7 @@ class _SearchAssetScreenState extends State<SearchAssetScreen> {
       final token = prefs.getString('auth_token') ?? '';
       final headers = {'Authorization': 'Bearer $token'};
       
-      final res = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/search?symbol=$q'), headers: headers);
+      final res = await http.get(Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/search?symbol=$q'), headers: headers);
       
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
@@ -4505,7 +4505,7 @@ class _AssetDetailsScreenState extends State<AssetDetailsScreen> {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token') ?? '';
       final sym = widget.asset['symbol'] ?? 'UNKNOWN';
-      final res = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/asset/block_status?symbol=$sym'), headers: {'Authorization': 'Bearer $token'});
+      final res = await http.get(Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/asset/block_status?symbol=$sym'), headers: {'Authorization': 'Bearer $token'});
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         setState(() {
@@ -4530,7 +4530,7 @@ class _AssetDetailsScreenState extends State<AssetDetailsScreen> {
       final token = prefs.getString('auth_token') ?? '';
       final sym = widget.asset['symbol'] ?? 'UNKNOWN';
       final res = await http.post(
-        Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/asset/block'),
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/asset/block'),
         headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
         body: jsonEncode({'symbol': sym, 'block': newState}),
       );
@@ -4812,7 +4812,7 @@ class _ActiveUniverseScreenState extends State<ActiveUniverseScreen> {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token') ?? '';
       final res = await http.get(
-        Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/active_universe'),
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/active_universe'),
         headers: {'Authorization': 'Bearer $token'},
       );
 
@@ -4843,7 +4843,7 @@ class _ActiveUniverseScreenState extends State<ActiveUniverseScreen> {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token') ?? '';
       final res = await http.get(
-        Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/search?symbol=$symbol'),
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/search?symbol=$symbol'),
         headers: {'Authorization': 'Bearer $token'},
       );
       if (res.statusCode == 200) {
@@ -4960,7 +4960,7 @@ class _ExperienceScreenState extends State<ExperienceScreen> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token') ?? '';
-      final res = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/experience'), headers: {'Authorization': 'Bearer $token'});
+      final res = await http.get(Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/experience'), headers: {'Authorization': 'Bearer $token'});
       if (res.statusCode == 200) {
         setState(() {
           _exps = jsonDecode(res.body)['experiences'] ?? [];
@@ -5096,7 +5096,7 @@ class _TechnicalErrorsScreenState extends State<TechnicalErrorsScreen> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token') ?? '';
-      final res = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/errors'), headers: {'Authorization': 'Bearer $token'});
+      final res = await http.get(Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/errors'), headers: {'Authorization': 'Bearer $token'});
       if (res.statusCode == 200) {
         setState(() {
           _errors = jsonDecode(res.body)['errors'] ?? [];
@@ -5190,7 +5190,7 @@ class _TradingSettingsScreenState extends State<TradingSettingsScreen> {
       final token = await _getToken();
       final headers = {'Authorization': 'Bearer $token'};
 
-      final resSettings = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/trading/settings'), headers: headers);
+      final resSettings = await http.get(Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/trading/settings'), headers: headers);
       if (resSettings.statusCode == 200) {
         final data = jsonDecode(resSettings.body);
         setState(() {
@@ -5199,12 +5199,12 @@ class _TradingSettingsScreenState extends State<TradingSettingsScreen> {
         });
       }
 
-      final resBot = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/bot/status'), headers: headers);
+      final resBot = await http.get(Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/bot/status'), headers: headers);
       if (resBot.statusCode == 200) {
         setState(() => _botRunning = jsonDecode(resBot.body)['is_running'] ?? false);
       }
 
-      final resBinance = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/binance/status'), headers: headers);
+      final resBinance = await http.get(Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/binance/status'), headers: headers);
       if (resBinance.statusCode == 200) {
         final data = jsonDecode(resBinance.body);
         setState(() {
@@ -5228,7 +5228,7 @@ class _TradingSettingsScreenState extends State<TradingSettingsScreen> {
     try {
       final token = await _getToken();
       final res = await http.post(
-        Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/trading/settings'),
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/trading/settings'),
         headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
         body: jsonEncode({'trade_size_usdt': _tradeSize, 'max_open_positions': _maxPositions}),
       );
@@ -5267,7 +5267,7 @@ class _TradingSettingsScreenState extends State<TradingSettingsScreen> {
     try {
       final token = await _getToken();
       final endpoint = _botRunning ? '/api/bot/stop' : '/api/bot/start';
-      final res = await http.post(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com$endpoint'), headers: {'Authorization': 'Bearer $token'});
+      final res = await http.post(Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000$endpoint'), headers: {'Authorization': 'Bearer $token'});
       if (res.statusCode == 200) {
         _showSnack(_botRunning ? AppTranslations.t('admin.force_stop_msg') : AppTranslations.t('admin.force_start_msg'), isSuccess: true);
         _fetchAllData();
@@ -5329,7 +5329,7 @@ class _TradingSettingsScreenState extends State<TradingSettingsScreen> {
     try {
       final token = await _getToken();
       final res = await http.post(
-        Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/binance/disconnect'),
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/binance/disconnect'),
         headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
         body: jsonEncode({'password': pwdController.text}),
       );
@@ -5582,10 +5582,10 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
       final token = await _getToken();
       final headers = {'Authorization': 'Bearer $token'};
       
-      final resAcc = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/account'), headers: headers);
+      final resAcc = await http.get(Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/account'), headers: headers);
       if (resAcc.statusCode == 200) _account = jsonDecode(resAcc.body);
 
-      final resSess = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/account/sessions'), headers: headers);
+      final resSess = await http.get(Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/account/sessions'), headers: headers);
       if (resSess.statusCode == 200) _sessions = jsonDecode(resSess.body)['sessions'] ?? [];
 
       setState(() => _isLoading = false);
@@ -5603,7 +5603,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
     try {
       final token = await _getToken();
       final res = await http.post(
-        Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/account/change_password'),
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/account/change_password'),
         headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
         body: jsonEncode({'current_password': _oldPassCtrl.text, 'new_password': _newPassCtrl.text}),
       );
@@ -5773,7 +5773,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
   Future<void> _fetchSettings() async {
     try {
       final token = await _getToken();
-      final res = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/notifications'), headers: {'Authorization': 'Bearer $token'});
+      final res = await http.get(Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/notifications'), headers: {'Authorization': 'Bearer $token'});
       if (res.statusCode == 200) {
         final d = jsonDecode(res.body);
         setState(() {
@@ -5794,7 +5794,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
     try {
       final token = await _getToken();
       final res = await http.post(
-        Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/notifications'),
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/notifications'),
         headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
         body: jsonEncode({
           'notifications_enabled': _notifEnabled ? 1 : 0,
@@ -6007,7 +6007,7 @@ class _ActiveSessionsScreenState extends State<ActiveSessionsScreen> {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token') ?? '';
       final res = await http.post(
-        Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/account/sessions/revoke'),
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/account/sessions/revoke'),
         headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
         body: jsonEncode({'session_id': sessionId}),
       );
@@ -6110,7 +6110,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     try {
       final res = await http.post(
-        Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/register'),
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/register'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'username': _usernameCtrl.text.trim(),
