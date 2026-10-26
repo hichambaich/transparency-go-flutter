@@ -900,15 +900,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                             Text(AppTranslations.t('dash.all_time_pnl'), style: TextStyle(fontSize: 8, color: Colors.grey)),
                                             const SizedBox(height: 2),
                                             Row(children: [
-                                              Text('${AppTranslations.t('dash.min')} 0.41%', style: TextStyle(fontSize: 9, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : Color(0xFF0f172a)))),
+                                              SizedBox(
+                                                width: 60,
+                                                child: Text('${AppTranslations.t('dash.min')} 0.41%', style: TextStyle(fontSize: 9, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : Color(0xFF0f172a)))),
+                                              ),
                                               const SizedBox(width: 6),
-                                              Icon(Icons.south_east, size: 11, color: red),
+                                              Container(
+                                                padding: const EdgeInsets.all(2),
+                                                decoration: BoxDecoration(color: red, borderRadius: BorderRadius.circular(3)),
+                                                child: const Icon(Icons.south_east, color: Colors.white, size: 10),
+                                              ),
                                             ]),
                                             const SizedBox(height: 2),
                                             Row(children: [
-                                              Text('${AppTranslations.t('dash.max')} 0.92%', style: TextStyle(fontSize: 9, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : Color(0xFF0f172a)))),
+                                              SizedBox(
+                                                width: 60,
+                                                child: Text('${AppTranslations.t('dash.max')} 0.92%', style: TextStyle(fontSize: 9, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : Color(0xFF0f172a)))),
+                                              ),
                                               const SizedBox(width: 6),
-                                              Icon(Icons.north_east, size: 11, color: green),
+                                              Container(
+                                                padding: const EdgeInsets.all(2),
+                                                decoration: BoxDecoration(color: green, borderRadius: BorderRadius.circular(3)),
+                                                child: const Icon(Icons.north_east, color: Colors.white, size: 10),
+                                              ),
                                             ]),
                                           ],
                                         ),
@@ -1863,25 +1877,21 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
               },
               child: Row(
                 children: [
-                  SizedBox(width: 35, child: Text(AppTranslations.t('dash.min'), style: TextStyle(color: Colors.grey, fontSize: 13))),
-                  // تثبيت العرض للنص لضمان محاذاة الأسهم مثل Flet (width=60)
-                  SizedBox(
-                    width: 90,
-                    child: Text(
-                      '${minPct >= 0 ? '+' : ''}${minPct.toStringAsFixed(2)}% ($minSym)',
-                      textDirection: TextDirection.ltr,
-                      textAlign: TextAlign.right,
-                      style: TextStyle(color: red, fontWeight: FontWeight.bold, fontSize: 13),
+                  SizedBox(width: 35, child: Text(AppTranslations.t('dash.min'), style: TextStyle(color: Colors.grey, fontSize: 11))),
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Text(
+                          '${minPct >= 0 ? '+' : ''}${minPct.toStringAsFixed(2)}% ($minSym)',
+                          textDirection: TextDirection.ltr,
+                          style: TextStyle(color: red, fontWeight: FontWeight.bold, fontSize: 11),
+                        ),
+
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  // السهم الأحمر في صندوق أحمر
-                  Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(color: red, borderRadius: BorderRadius.circular(3)),
-                    child: const Icon(Icons.south_east, color: Colors.white, size: 12),
-                  ),
-                  const Spacer(),
+                  const SizedBox(width: 12),
                   const Icon(Icons.chevron_right, color: Color(0xFF475569), size: 16),
                 ],
               ),
@@ -1894,25 +1904,21 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
               },
               child: Row(
                 children: [
-                  SizedBox(width: 35, child: Text(AppTranslations.t('dash.max'), style: TextStyle(color: Colors.grey, fontSize: 13))),
-                  // تثبيت العرض للنص لضمان محاذاة الأسهم مثل Flet (width=60)
-                  SizedBox(
-                    width: 90,
-                    child: Text(
-                      '+${maxPct.toStringAsFixed(2)}% ($maxSym)',
-                      textDirection: TextDirection.ltr,
-                      textAlign: TextAlign.right,
-                      style: TextStyle(color: green, fontWeight: FontWeight.bold, fontSize: 13),
+                  SizedBox(width: 35, child: Text(AppTranslations.t('dash.max'), style: TextStyle(color: Colors.grey, fontSize: 11))),
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Text(
+                          '+${maxPct.toStringAsFixed(2)}% ($maxSym)',
+                          textDirection: TextDirection.ltr,
+                          style: TextStyle(color: green, fontWeight: FontWeight.bold, fontSize: 11),
+                        ),
+
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  // السهم الأخضر في صندوق أخضر
-                  Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(color: green, borderRadius: BorderRadius.circular(3)),
-                    child: const Icon(Icons.north_east, color: Colors.white, size: 12),
-                  ),
-                  const Spacer(),
+                  const SizedBox(width: 12),
                   const Icon(Icons.chevron_right, color: Color(0xFF475569), size: 16),
                 ],
               ),
