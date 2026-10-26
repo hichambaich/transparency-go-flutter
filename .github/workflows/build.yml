@@ -126,7 +126,7 @@ jobs:
               if not c_content.strip():
                   c_content = '<?xml version="1.0" encoding="utf-8"?>\n<resources></resources>'
               c_content = c_content.replace('</resources>',
-                  '    <color name="ic_launcher_background">#080d14</color>\n</resources>')
+                  '    <color name="ic_launcher_background">#FFFFFF</color>\n</resources>')
               with open(colors, 'w') as fh: fh.write(c_content)
           print('DONE: icons + adaptive + background generated')
           INNEREOF
