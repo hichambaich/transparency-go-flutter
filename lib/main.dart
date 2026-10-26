@@ -3490,7 +3490,7 @@ class LegalScreen extends StatelessWidget {
               children: [
                 Text(AppTranslations.t('legal.footer_owner'), style: TextStyle(fontSize: 10, color: textMuted)),
                 const SizedBox(height: 4),
-                Text('❄️', style: TextStyle(fontSize: 10, color: textMuted)),
+                Image.asset('assets/images/snowflake.png', width: 12, height: 12),
                 const SizedBox(height: 4),
                 InkWell(onTap: () => openUrl('mailto:transparancygo@gmail.com'), child: Text(AppTranslations.t('legal.footer_contact'), style: TextStyle(fontSize: 10, color: accent))),
               ],
