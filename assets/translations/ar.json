@@ -86,7 +86,14 @@
         "admin_panel_sub": "إدارة جميع المستخدمين",
         "logout_confirm": "تأكيد تسجيل الخروج",
         "active_assets": "الأصول النشطة",
-        "active_assets_unit": "أصول نشطة"
+        "active_assets_unit": {
+            "zero": "أصول نشطة",
+            "one": "أصل نشط",
+            "two": "أصلان نشطان",
+            "few": "أصول نشطة",
+            "many": "أصلاً نشطاً",
+            "other": "أصل نشط"
+        }
     },
     "settings": {
         "title": "الإعدادات",
@@ -266,7 +273,8 @@
         "high_24h": "الأعلى 24 ساعة",
         "low_24h": "الأدنى 24 ساعة",
         "weighted_24h": "المتوسط 24 ساعة",
-        "volume_24h": "الحجم 24 ساعة"
+        "volume_24h": "الحجم 24 ساعة",
+        "step": "خطوة"
     },
     "support": {
         "title": "فريق الدعم",
@@ -458,16 +466,42 @@
         "yes": "نعم",
         "no": "لا",
         "search_results": "نتائج البحث:",
-        "days": "أيام",
-        "trades_unit": "صفقات",
+        "days": {
+            "zero": "أيام",
+            "one": "يوم",
+            "two": "يومان",
+            "few": "أيام",
+            "many": "يوماً",
+            "other": "يوم"
+        },
+        "trades_unit": {
+            "zero": "صفقة",
+            "one": "صفقة",
+            "two": "صفقتان",
+            "few": "صفقات",
+            "many": "صفقة",
+            "other": "صفقة"
+        },
         "assets_sorted_suffix": "أصول - مرتبة حسب الصافي (تنازلي)",
         "breakdown_label": "تفصيل",
         "api_key_label": "مفتاح API",
         "label_label": "التسمية",
-        "assets_tracked_suffix": "أصول متتبعة",
+        "assets_tracked_suffix": {
+            "zero": "أصل متتبع",
+            "one": "أصل متتبع",
+            "two": "أصلان متتبعان",
+            "few": "أصول متتبعة",
+            "many": "أصلاً متتبعاً",
+            "other": "أصل متتبع"
+        },
         "close": "إغلاق",
         "confirm": "تأكيد",
-        "cancel": "إلغاء"
+        "cancel": "إلغاء",
+        "period_1h": "ساعة",
+        "period_1d": "يوم",
+        "period_1w": "أسبوع",
+        "period_1mo": "شهر",
+        "period_1y": "سنة"
     },
     "common": {
         "cancel": "إلغاء",
@@ -607,15 +641,15 @@
         "return_to_admin": "إنهاء وضع الدخول كالمستخدم",
         "sys_admin": "إدارة الناظم (System)",
         "sys_admin_sub": "التحكم بالسيرفر والنسخ الاحتياطي",
-        "cpu": "المعالج (CPU)",
-        "ram": "الذاكرة (RAM)",
-        "disk": "القرص (4Disk)",
-        "uptime": "المدة التهيئة (Uptime)",
-        "take_backup": "إߺ الحقلاصية (Take Backup Now)",
-        "backup_success": "✓ تم الارشقان المصلين بنجاح",
-        "restart_macro": "רلادائنية مضخة البيانات",
-        "macro_restarted": "✓ تم مسح المورم لتحديثة",
-        "system_logs": "سجلات النظام (Logs)",
+        "cpu": "المعالج",
+        "ram": "الذاكرة",
+        "disk": "القرص",
+        "uptime": "مدة التشغيل",
+        "take_backup": "أخذ نسخة احتياطية الآن",
+        "backup_success": "تم إنشاء النسخة الاحتياطية بنجاح",
+        "restart_macro": "إعادة تشغيل محرك Macro",
+        "macro_restarted": "تمت إعادة تشغيل محرك Macro",
+        "system_logs": "سجلات النظام",
         "view_logs": "عطر سجلات الأخطاء",
         "delete_account": "حذف الحساب",
         "delete_confirm_title": "تأكيد الحذف",
@@ -637,7 +671,16 @@
         "delete_account_title": "حذف الحساب؟",
         "delete_warning": "لا يمكن التراجع عن هذا الإجراء.",
         "delete_btn": "حذف",
-        "trades_label": "الصفقات"
+        "trades_label": "الصفقات",
+        "system_admin_title": "إدارة النظام",
+        "system_admin_sub": "إحصائيات الخادم والإجراءات",
+        "system_actions": "إجراءات النظام",
+        "view_error_logs": "عرض سجلات الأخطاء",
+        "backup_failed": "فشل إنشاء النسخة الاحتياطية",
+        "macro_restart_confirm": "إعادة تشغيل محرك Macro؟",
+        "macro_restart_msg": "سيتم إعادة تشغيل محرك Macro. هل تريد المتابعة؟",
+        "logs_title": "سجلات الأخطاء",
+        "no_logs": "لا توجد سجلات متاحة"
     },
     "analytics": {
         "assets_tracked": "أصول متتبعة"
@@ -651,5 +694,13 @@
     "lang": {
         "english": "English",
         "arabic": "العربية"
+    },
+    "events": {
+        "BUY": "شراء",
+        "SELL": "بيع",
+        "DCA": "تعزيز"
+    },
+    "history": {
+        "page_title": "سجل"
     }
 }

@@ -48,7 +48,42 @@ class AppTranslations {
         return key; // Fallback to key
       }
     }
+    if (current is Map) {
+      return (current['other'] ?? key).toString();
+    }
     return current.toString();
+  }
+
+  static String _pluralForm(num count, String lang) {
+    final n = count.abs();
+    if (lang == 'ar') {
+      if (n == 0) return 'zero';
+      if (n == 1) return 'one';
+      if (n == 2) return 'two';
+      final rem = n % 100;
+      if (rem >= 3 && rem <= 10) return 'few';
+      if (rem >= 11 && rem <= 99) return 'many';
+      return 'other';
+    } else {
+      return n == 1 ? 'one' : 'other';
+    }
+  }
+
+  static String plural(String key, num count) {
+    final lang = languageNotifier.value;
+    final map = lang == 'ar' ? _ar : _en;
+    final parts = key.split('.');
+    dynamic current = map;
+    for (final part in parts) {
+      if (current is Map && current.containsKey(part)) {
+        current = current[part];
+      } else {
+        return key;
+      }
+    }
+    if (current is! Map) return key;
+    final form = _pluralForm(count, lang);
+    return (current[form] ?? current['other'] ?? key).toString();
   }
 }
 
@@ -122,6 +157,13 @@ class MyApp extends StatelessWidget {
 //    (matching Flet's exact behavior - language names not translated).
 // ============================================================
 
+// TODO (2026-10-26): Period picker labels (1H/1D/...) not translating in AR.
+// Root cause suspected: AppTranslations.load() caches _ar at startup; JSON updates
+// require full app restart AND cache bypass, which is fragile on mobile.
+// Workaround for now: keep English labels (1H, 1D, ...) in AR — acceptable UX.
+// Proper fix (deferred): pass explicit label list from a FutureBuilder, or
+//   add languageNotifier listener to reload translations on change.
+
 // ================= AUTH GATE =================
 class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
@@ -188,7 +230,7 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() { _isLoading = true; _error = ''; });
     try {
       final res = await http.post(
-        Uri.parse('http://100.77.27.80:8553/api/login'),
+        Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': _emailCtrl.text.trim(), 'password': _passCtrl.text}),
       );
@@ -344,7 +386,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     try {
       final headers = {'Authorization': 'Bearer ${widget.token}'};
-      final resDash = await http.get(Uri.parse('http://100.77.27.80:8553/api/dashboard'), headers: headers);
+      final resDash = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/dashboard'), headers: headers);
       if (resDash.statusCode == 401) {
         setState(() { _errorMsg = "Session expired. Please log in again."; _isLoading = false; });
         _pollingTimer?.cancel();
@@ -355,7 +397,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         setState(() => _data = jsonDecode(resDash.body));
       }
 
-      final resChart = await http.get(Uri.parse('http://100.77.27.80:8553/api/trend_history?period=$_currentPeriod'), headers: headers);
+      final resChart = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/trend_history?period=$_currentPeriod'), headers: headers);
       if (resChart.statusCode == 200) {
         final chartData = jsonDecode(resChart.body);
         final rawList = chartData['raw'] as List? ?? [];
@@ -1204,7 +1246,7 @@ class _ExpandablePositionCardState extends State<ExpandablePositionCard> {
     final base = symbol.split('/')[0].replaceAll('USDT', '');
     showDialog(context: context, barrierDismissible: false, builder: (ctx) => const Center(child: CircularProgressIndicator()));
     try {
-      final res = await http.get(Uri.parse('http://100.77.27.80:8553/api/binance/24h?symbol=$base'));
+      final res = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/binance/24h?symbol=$base'));
       Navigator.pop(context);
       if (res.statusCode == 200) {
         final d = jsonDecode(res.body);
@@ -1635,7 +1677,7 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
       
       // جلب بيانات الداشبورد إذا كنا في Capital Events وكانت البيانات فارغة
       if (widget.title == AppTranslations.t('menu.capital_events') && _dashboardData.isEmpty) {
-        final resDash = await http.get(Uri.parse('http://100.77.27.80:8553/api/dashboard'), headers: {'Authorization': 'Bearer $_token'});
+        final resDash = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/dashboard'), headers: {'Authorization': 'Bearer $_token'});
         if (resDash.statusCode == 200) {
           _dashboardData = jsonDecode(resDash.body);
         }
@@ -1644,7 +1686,7 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
       final headers = {'Authorization': 'Bearer $_token'};
 
       if (widget.title == AppTranslations.t('dash.closed_trades') || widget.title == AppTranslations.t('dash.profit_trades')) {
-        final res = await http.get(Uri.parse('http://100.77.27.80:8553/api/history'), headers: headers);
+        final res = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/history'), headers: headers);
         if (res.statusCode == 200) {
           final allTrades = jsonDecode(res.body)['trades'] ?? [];
           setState(() {
@@ -1659,28 +1701,28 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
           setState(() { _errorMsg = 'Failed to load trades'; _isLoading = false; });
         }
       } else if (widget.title == AppTranslations.t('dash.all_time_pnl_range')) {
-        final res = await http.get(Uri.parse('http://100.77.27.80:8553/api/stats/pnl_range'), headers: headers);
+        final res = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/stats/pnl_range'), headers: headers);
         if (res.statusCode == 200) {
           setState(() { _extraData = jsonDecode(res.body); _isLoading = false; });
         } else {
           setState(() { _errorMsg = 'Failed'; _isLoading = false; });
         }
       } else if (widget.title == AppTranslations.t('dash.cost_efficiency_full')) {
-        final res = await http.get(Uri.parse('http://100.77.27.80:8553/api/stats/fees'), headers: headers);
+        final res = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/stats/fees'), headers: headers);
         if (res.statusCode == 200) {
           setState(() { _extraData = jsonDecode(res.body); _isLoading = false; });
         } else {
           setState(() { _errorMsg = 'Failed'; _isLoading = false; });
         }
       } else if (widget.title == AppTranslations.t('dash.bnb_fees_reserve')) {
-        final res = await http.get(Uri.parse('http://100.77.27.80:8553/api/bnb/status'), headers: headers);
+        final res = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/bnb/status'), headers: headers);
         if (res.statusCode == 200) {
           setState(() { _extraData = jsonDecode(res.body); _isLoading = false; });
         } else {
           setState(() { _errorMsg = 'Failed'; _isLoading = false; });
         }
       } else if (widget.title == AppTranslations.t('dash.realized_pnl')) {
-        final res = await http.get(Uri.parse('http://100.77.27.80:8553/api/history'), headers: headers);
+        final res = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/history'), headers: headers);
         if (res.statusCode == 200) {
           setState(() { 
             _trades = jsonDecode(res.body)['trades'] ?? [];
@@ -1937,7 +1979,7 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
                       const SizedBox(width: 8),
                       Text(sym, style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontWeight: FontWeight.bold)),
                       const SizedBox(width: 8),
-                      Text('$trades ' + AppTranslations.t('misc.trades_unit'), style: const TextStyle(color: Colors.grey, fontSize: 10)),
+                      Text('$trades ' + AppTranslations.plural('misc.trades_unit', trades), style: const TextStyle(color: Colors.grey, fontSize: 10)),
                       const Spacer(),
                       Text(textDirection: TextDirection.ltr, '${net >= 0 ? '+' : ''}\$${net.toStringAsFixed(2)}', style: TextStyle(color: net >= 0 ? green : red, fontWeight: FontWeight.bold)),
                     ],
@@ -2055,6 +2097,7 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
                 alignment: WrapAlignment.center,
                 children: ['1H', '1D', '1W', '1MO', '1Y'].map((p) {
                   final isSelected = _selectedPeriod.toLowerCase() == p.toLowerCase();
+                  final periodLabel = AppTranslations.t('misc.period_' + p.toLowerCase());
                   return InkWell(
                     onTap: () {
                       setState(() { _selectedPeriod = p.toLowerCase(); });
@@ -2075,7 +2118,7 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
                             const SizedBox(width: 4),
                           ],
                           Text(
-                            p,
+                            periodLabel,
                             style: TextStyle(
                               color: isSelected ? Colors.black : (isDark ? Colors.white : const Color(0xFF0f172a)),
                               fontWeight: FontWeight.bold,
@@ -2121,7 +2164,7 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)), borderRadius: BorderRadius.circular(14)),
-                      child: Row(children: [Icon(Icons.sync, size: 11, color: accent), const SizedBox(width: 4), Text(_selectedPeriod.toUpperCase(), style: TextStyle(color: accent, fontSize: 11, fontWeight: FontWeight.bold))]),
+                      child: Row(children: [Icon(Icons.sync, size: 11, color: accent), const SizedBox(width: 4), Text(AppTranslations.t('misc.period_' + _selectedPeriod), style: TextStyle(color: accent, fontSize: 11, fontWeight: FontWeight.bold))]),
                     ),
                   ),
                 ]),
@@ -2363,7 +2406,7 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
         IconData icon = Icons.info_outline;
         if (type.contains('BUY')) { c = green; icon = Icons.arrow_downward; }
         else if (type.contains('SELL')) { c = red; icon = Icons.arrow_upward; }
-        else if (type.contains(AppTranslations.t('pos.dca'))) { c = Colors.blue; icon = Icons.repeat; }
+        else if (type.contains('DCA')) { c = Colors.blue; icon = Icons.repeat; }
         return Container(
           margin: const EdgeInsets.only(bottom: 8),
           padding: const EdgeInsets.all(12),
@@ -2377,9 +2420,15 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('$type - $time', style: TextStyle(fontSize: 11, color: c, fontWeight: FontWeight.bold)),
+                    Text('${(() {
+                      String dt = type;
+                      if (type.contains('BUY')) dt = AppTranslations.t('events.BUY');
+                      else if (type.contains('SELL')) dt = AppTranslations.t('events.SELL');
+                      else if (type.contains('DCA')) dt = AppTranslations.t('events.DCA');
+                      return dt;
+                    })()} - $time', style: TextStyle(fontSize: 11, color: c, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 4),
-                    Text(msg, style: TextStyle(fontSize: 12, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))),
+                    Text(msg.replaceAll('step ', AppTranslations.t('pos.step') + ' '), style: TextStyle(fontSize: 12, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))),
                   ],
                 ),
               ),
@@ -2435,7 +2484,7 @@ class _StatsScreenState extends State<StatsScreen> {
   Future<void> _fetchData() async {
     try {
       final res = await http.get(
-        Uri.parse('http://100.77.27.80:8553/api/stats/performance'),
+        Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/stats/performance'),
         headers: {'Authorization': 'Bearer ${widget.token}'},
       );
       if (res.statusCode == 200) {
@@ -2730,7 +2779,7 @@ class _PeriodHistoryScreenState extends State<PeriodHistoryScreen> {
   Future<void> _fetch() async {
     try {
       final res = await http.get(
-        Uri.parse('http://100.77.27.80:8553/api/stats/period_history?period=${widget.period}'),
+        Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/stats/period_history?period=${widget.period}'),
         headers: {'Authorization': 'Bearer ${widget.token}'},
       );
       if (res.statusCode == 200) {
@@ -2758,7 +2807,7 @@ class _PeriodHistoryScreenState extends State<PeriodHistoryScreen> {
           icon: Icon(Icons.arrow_back, color: accent),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text('${widget.title} History', style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 18)),
+        title: Text(AppTranslations.t('history.page_title') + ' ' + widget.title, style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 18)),
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2))))
@@ -3187,7 +3236,7 @@ class _SupportScreenState extends State<SupportScreen> {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token') ?? '';
       final res = await http.post(
-        Uri.parse('http://100.77.27.80:8553/api/support/message'),
+        Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/support/message'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -3596,7 +3645,7 @@ class _DeveloperPanelScreenState extends State<DeveloperPanelScreen> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token') ?? '';
-      final res = await http.get(Uri.parse('http://100.77.27.80:8553/api/admin/users'), headers: {'Authorization': 'Bearer $token'});
+      final res = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/admin/users'), headers: {'Authorization': 'Bearer $token'});
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         setState(() {
@@ -3628,10 +3677,10 @@ class _DeveloperPanelScreenState extends State<DeveloperPanelScreen> {
               ? Center(child: Text(_errorMsg, style: const TextStyle(color: Colors.red)))
               : ListView.builder(
                   padding: const EdgeInsets.all(16),
-                  itemCount: _users.length,
+                  itemCount: _users.length + 1,
                   itemBuilder: (context, index) {
-                    final u = _users[index];
-                    final isSuspended = u['is_suspended'] ?? false;
+                    if (index == 0) return const _SystemAdminCard();
+                    final u = _users[index - 1];                    final isSuspended = u['is_suspended'] ?? false;
                     final isRunning = u['is_running'] ?? u['bot_running'] ?? false;
                     return InkWell(
                       onTap: () {
@@ -3682,6 +3731,258 @@ class _DeveloperPanelScreenState extends State<DeveloperPanelScreen> {
                     );
                   },
                 ),
+    );
+  }
+}
+
+class _SystemAdminCard extends StatelessWidget {
+  const _SystemAdminCard();
+  @override
+  Widget build(BuildContext context) {
+    final isDark = themeNotifier.value == ThemeMode.dark;
+    final cardBg = isDark ? const Color(0xFF101722) : Colors.white;
+    final accent = isDark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2);
+    final gold = const Color(0xFFf0b90b);
+
+    return InkWell(
+      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const SystemAdminPanelScreen())),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: accent, width: 2),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.admin_panel_settings, color: gold, size: 32),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(AppTranslations.t('admin.system_admin_title'),
+                    style: TextStyle(color: gold, fontWeight: FontWeight.bold, fontSize: 16)),
+                  const SizedBox(height: 4),
+                  Text(AppTranslations.t('admin.system_admin_sub'),
+                    style: const TextStyle(color: Colors.grey, fontSize: 11)),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: accent, size: 24),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class SystemAdminPanelScreen extends StatefulWidget {
+  const SystemAdminPanelScreen({super.key});
+  @override
+  State<SystemAdminPanelScreen> createState() => _SystemAdminPanelScreenState();
+}
+
+class _SystemAdminPanelScreenState extends State<SystemAdminPanelScreen> {
+  bool _isLoading = true;
+  Map<String, dynamic> _stats = {};
+  bool _isBackupLoading = false;
+  bool _isRestartLoading = false;
+
+  Color get cardBg => themeNotifier.value == ThemeMode.dark ? const Color(0xFF101722) : Colors.white;
+  Color get borderColor => themeNotifier.value == ThemeMode.dark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0);
+  Color get accent => themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2);
+  final Color green = const Color(0xFF10b981);
+  final Color red = const Color(0xFFef4444);
+  final Color gold = const Color(0xFFf0b90b);
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchStats();
+  }
+
+  Future<String?> _token() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('auth_token');
+  }
+
+  Future<void> _fetchStats() async {
+    try {
+      final t = await _token();
+      final res = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/admin/system/stats'), headers: {'Authorization': 'Bearer $t'});
+      if (res.statusCode == 200) {
+        setState(() { _stats = jsonDecode(res.body); _isLoading = false; });
+      } else {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  String _fmtUptime(int seconds) {
+    final d = seconds ~/ 86400;
+    final h = (seconds % 86400) ~/ 3600;
+    final m = (seconds % 3600) ~/ 60;
+    final s = seconds % 60;
+    return '$d ${AppTranslations.plural('misc.days', d)}, ${h.toString().padLeft(2, "0")}:${m.toString().padLeft(2, "0")}:${s.toString().padLeft(2, "0")}';
+  }
+
+  Future<void> _takeBackup() async {
+    setState(() => _isBackupLoading = true);
+    try {
+      final t = await _token();
+      final res = await http.post(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/admin/system/backup'), headers: {'Authorization': 'Bearer $t'});
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(res.statusCode == 200 ? AppTranslations.t('admin.backup_success') : AppTranslations.t('admin.backup_failed')),
+        backgroundColor: res.statusCode == 200 ? green : red));
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppTranslations.t('admin.backup_failed')), backgroundColor: red));
+    } finally {
+      setState(() => _isBackupLoading = false);
+    }
+  }
+
+  Future<void> _restartMacro() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: cardBg,
+        title: Text(AppTranslations.t('admin.macro_restart_confirm'),
+          style: TextStyle(color: themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a), fontWeight: FontWeight.bold)),
+        content: Text(AppTranslations.t('admin.macro_restart_msg'),
+          style: TextStyle(color: themeNotifier.value == ThemeMode.dark ? Colors.white70 : const Color(0xFF475569))),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(AppTranslations.t('misc.cancel'), style: const TextStyle(color: Colors.grey))),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(AppTranslations.t('misc.confirm'), style: TextStyle(color: red, fontWeight: FontWeight.bold))),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    setState(() => _isRestartLoading = true);
+    try {
+      final t = await _token();
+      await http.post(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/admin/system/restart_macro'), headers: {'Authorization': 'Bearer $t'});
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppTranslations.t('admin.macro_restarted')), backgroundColor: green));
+    } catch (_) {} finally {
+      setState(() => _isRestartLoading = false);
+    }
+  }
+
+  Future<void> _showLogs() async {
+    try {
+      final t = await _token();
+      final res = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/admin/system/logs'), headers: {'Authorization': 'Bearer $t'});
+      final logs = res.statusCode == 200 ? (jsonDecode(res.body)['logs'] as List? ?? []) : <dynamic>[];
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: cardBg,
+          title: Text(AppTranslations.t('admin.logs_title'), style: TextStyle(color: accent, fontWeight: FontWeight.bold)),
+          content: SizedBox(
+            width: double.maxFinite, height: 400,
+            child: logs.isEmpty
+              ? Center(child: Text(AppTranslations.t('admin.no_logs'), style: const TextStyle(color: Colors.grey)))
+              : ListView.builder(
+                  itemCount: logs.length,
+                  itemBuilder: (c, i) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2),
+                    child: Text(logs[i].toString(),
+                      style: const TextStyle(fontSize: 10, fontFamily: 'monospace', color: Colors.grey)),
+                  ),
+                ),
+          ),
+          actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppTranslations.t('misc.close')))],
+        ),
+      );
+    } catch (_) {}
+  }
+
+  Widget _statRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+        Text(label, style: TextStyle(color: themeNotifier.value == ThemeMode.dark ? Colors.white70 : const Color(0xFF475569), fontSize: 13)),
+        Text(value, style: TextStyle(color: themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a), fontWeight: FontWeight.bold, fontSize: 13)),
+      ]),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc),
+      appBar: AppBar(
+        backgroundColor: cardBg,
+        leading: IconButton(icon: Icon(Icons.arrow_back, color: accent), onPressed: () => Navigator.pop(context)),
+        title: Text(AppTranslations.t('admin.system_admin_title'), style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 18)),
+      ),
+      body: _isLoading
+        ? Center(child: CircularProgressIndicator(color: accent))
+        : SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: borderColor)),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Row(children: [
+                    Icon(Icons.dns, color: accent, size: 22),
+                    const SizedBox(width: 8),
+                    Text(AppTranslations.t('admin.system_admin_title'), style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 14)),
+                  ]),
+                  Divider(color: borderColor, height: 20),
+                  _statRow(AppTranslations.t('admin.cpu'), '${_stats['cpu'] ?? 0}%'),
+                  _statRow(AppTranslations.t('admin.ram'), '${_stats['ram_percent'] ?? 0}% (${_stats['ram_used_gb'] ?? 0}GB / ${_stats['ram_total_gb'] ?? 0}GB)'),
+                  _statRow(AppTranslations.t('admin.disk'), '${_stats['disk_percent'] ?? 0}% (${_stats['disk_used_gb'] ?? 0}GB / ${_stats['disk_total_gb'] ?? 0}GB)'),
+                  _statRow(AppTranslations.t('admin.uptime'), _fmtUptime(_stats['uptime_seconds'] ?? 0)),
+                ]),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: borderColor)),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(AppTranslations.t('admin.system_actions'), style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 14)),
+                  Divider(color: borderColor, height: 20),
+                  Row(children: [
+                    Expanded(child: ElevatedButton.icon(
+                      onPressed: _isBackupLoading ? null : _takeBackup,
+                      icon: _isBackupLoading ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.download),
+                      label: Text(AppTranslations.t('admin.take_backup'), style: const TextStyle(fontSize: 12)),
+                      style: ElevatedButton.styleFrom(backgroundColor: green, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
+                    )),
+                    const SizedBox(width: 8),
+                    Expanded(child: ElevatedButton.icon(
+                      onPressed: _isRestartLoading ? null : _restartMacro,
+                      icon: _isRestartLoading ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.refresh),
+                      label: Text(AppTranslations.t('admin.restart_macro'), style: const TextStyle(fontSize: 11)),
+                      style: ElevatedButton.styleFrom(backgroundColor: gold, foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(vertical: 12)),
+                    )),
+                  ]),
+                ]),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: borderColor)),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(AppTranslations.t('admin.system_logs'), style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 14)),
+                  Divider(color: borderColor, height: 20),
+                  SizedBox(width: double.infinity, child: ElevatedButton.icon(
+                    onPressed: _showLogs, icon: const Icon(Icons.list_alt),
+                    label: Text(AppTranslations.t('admin.view_error_logs')),
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.blueGrey, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12)),
+                  )),
+                ]),
+              ),
+            ]),
+          ),
     );
   }
 }
@@ -3760,7 +4061,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
     try {
       final token = await _getToken();
       final res = await http.post(
-        Uri.parse('http://100.77.27.80:8553/api/admin/toggle_bot/${widget.userId}'),
+        Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/admin/toggle_bot/${widget.userId}'),
         headers: {'Authorization': 'Bearer $token'},
       );
       if (res.statusCode == 200) {
@@ -3797,7 +4098,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
       final token = await _getToken();
       final newState = !_isSuspended;
       final res = await http.post(
-        Uri.parse('http://100.77.27.80:8553/api/admin/suspend/${widget.userId}?suspend=$newState'),
+        Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/admin/suspend/${widget.userId}?suspend=$newState'),
         headers: {'Authorization': 'Bearer $token'},
       );
       if (res.statusCode == 200) {
@@ -3843,7 +4144,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
     try {
       final token = await _getToken();
       final res = await http.post(
-        Uri.parse('http://100.77.27.80:8553/api/admin/reset_password/${widget.userId}'),
+        Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/admin/reset_password/${widget.userId}'),
         headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
         body: jsonEncode({'new_password': controller.text}),
       );
@@ -3880,7 +4181,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
     try {
       final token = await _getToken();
       final res = await http.post(
-        Uri.parse('http://100.77.27.80:8553/api/admin/delete_user/${widget.userId}'),
+        Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/admin/delete_user/${widget.userId}'),
         headers: {'Authorization': 'Bearer $token'},
       );
       if (res.statusCode == 200 && mounted) {
@@ -3935,7 +4236,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                 _actionBtn(AppTranslations.t('admin.login_as_user'), const Color(0xFF9c27b0), () async {
                   final prefs = await SharedPreferences.getInstance();
                   final oldToken = prefs.getString('auth_token') ?? '';
-                  final res = await http.post(Uri.parse('http://100.77.27.80:8553/api/admin/impersonate/${widget.userId}'), headers: {'Authorization': 'Bearer $oldToken'});
+                  final res = await http.post(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/admin/impersonate/${widget.userId}'), headers: {'Authorization': 'Bearer $oldToken'});
                   if (res.statusCode == 200) {
                     final newToken = jsonDecode(res.body)['token'];
                     await prefs.setString('admin_backup_token', oldToken);
@@ -3999,7 +4300,7 @@ class _AdminUserTradesScreenState extends State<AdminUserTradesScreen> {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token') ?? '';
       final res = await http.get(
-        Uri.parse('http://100.77.27.80:8553/api/admin/user_trades/${widget.userId}'),
+        Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/admin/user_trades/${widget.userId}'),
         headers: {'Authorization': 'Bearer $token'},
       );
       if (res.statusCode == 200) {
@@ -4091,7 +4392,7 @@ class _SearchAssetScreenState extends State<SearchAssetScreen> {
       final token = prefs.getString('auth_token') ?? '';
       final headers = {'Authorization': 'Bearer $token'};
       
-      final res = await http.get(Uri.parse('http://100.77.27.80:8553/api/search?symbol=$q'), headers: headers);
+      final res = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/search?symbol=$q'), headers: headers);
       
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
@@ -4204,7 +4505,7 @@ class _AssetDetailsScreenState extends State<AssetDetailsScreen> {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token') ?? '';
       final sym = widget.asset['symbol'] ?? 'UNKNOWN';
-      final res = await http.get(Uri.parse('http://100.77.27.80:8553/api/asset/block_status?symbol=$sym'), headers: {'Authorization': 'Bearer $token'});
+      final res = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/asset/block_status?symbol=$sym'), headers: {'Authorization': 'Bearer $token'});
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         setState(() {
@@ -4229,7 +4530,7 @@ class _AssetDetailsScreenState extends State<AssetDetailsScreen> {
       final token = prefs.getString('auth_token') ?? '';
       final sym = widget.asset['symbol'] ?? 'UNKNOWN';
       final res = await http.post(
-        Uri.parse('http://100.77.27.80:8553/api/asset/block'),
+        Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/asset/block'),
         headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
         body: jsonEncode({'symbol': sym, 'block': newState}),
       );
@@ -4511,7 +4812,7 @@ class _ActiveUniverseScreenState extends State<ActiveUniverseScreen> {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token') ?? '';
       final res = await http.get(
-        Uri.parse('http://100.77.27.80:8553/api/active_universe'),
+        Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/active_universe'),
         headers: {'Authorization': 'Bearer $token'},
       );
 
@@ -4542,7 +4843,7 @@ class _ActiveUniverseScreenState extends State<ActiveUniverseScreen> {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token') ?? '';
       final res = await http.get(
-        Uri.parse('http://100.77.27.80:8553/api/search?symbol=$symbol'),
+        Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/search?symbol=$symbol'),
         headers: {'Authorization': 'Bearer $token'},
       );
       if (res.statusCode == 200) {
@@ -4574,7 +4875,7 @@ class _ActiveUniverseScreenState extends State<ActiveUniverseScreen> {
               : ListView(
                   padding: const EdgeInsets.all(16),
                   children: [
-                    Text('${_assets.length} ' + AppTranslations.t('menu.active_assets_unit'), style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                    Text('${_assets.length} ' + AppTranslations.plural('menu.active_assets_unit', _assets.length), style: const TextStyle(color: Colors.grey, fontSize: 12)),
                     const SizedBox(height: 10),
                     ..._assets.map((a) {
                       String sym = a['symbol'] ?? '';
@@ -4659,7 +4960,7 @@ class _ExperienceScreenState extends State<ExperienceScreen> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token') ?? '';
-      final res = await http.get(Uri.parse('http://100.77.27.80:8553/api/experience'), headers: {'Authorization': 'Bearer $token'});
+      final res = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/experience'), headers: {'Authorization': 'Bearer $token'});
       if (res.statusCode == 200) {
         setState(() {
           _exps = jsonDecode(res.body)['experiences'] ?? [];
@@ -4709,7 +5010,7 @@ class _ExperienceScreenState extends State<ExperienceScreen> {
               : ListView(
                   padding: const EdgeInsets.all(16),
                   children: [
-                    Text('${_exps.length} ' + AppTranslations.t('misc.assets_tracked_suffix'), style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                    Text('${_exps.length} ' + AppTranslations.plural('misc.assets_tracked_suffix', _exps.length), style: const TextStyle(color: Colors.grey, fontSize: 12)),
                     const SizedBox(height: 10),
                     ..._exps.map((e) {
                       String sym = e['symbol'] ?? 'UNKNOWN';
@@ -4795,7 +5096,7 @@ class _TechnicalErrorsScreenState extends State<TechnicalErrorsScreen> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token') ?? '';
-      final res = await http.get(Uri.parse('http://100.77.27.80:8553/api/errors'), headers: {'Authorization': 'Bearer $token'});
+      final res = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/errors'), headers: {'Authorization': 'Bearer $token'});
       if (res.statusCode == 200) {
         setState(() {
           _errors = jsonDecode(res.body)['errors'] ?? [];
@@ -4889,7 +5190,7 @@ class _TradingSettingsScreenState extends State<TradingSettingsScreen> {
       final token = await _getToken();
       final headers = {'Authorization': 'Bearer $token'};
 
-      final resSettings = await http.get(Uri.parse('http://100.77.27.80:8553/api/trading/settings'), headers: headers);
+      final resSettings = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/trading/settings'), headers: headers);
       if (resSettings.statusCode == 200) {
         final data = jsonDecode(resSettings.body);
         setState(() {
@@ -4898,12 +5199,12 @@ class _TradingSettingsScreenState extends State<TradingSettingsScreen> {
         });
       }
 
-      final resBot = await http.get(Uri.parse('http://100.77.27.80:8553/api/bot/status'), headers: headers);
+      final resBot = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/bot/status'), headers: headers);
       if (resBot.statusCode == 200) {
         setState(() => _botRunning = jsonDecode(resBot.body)['is_running'] ?? false);
       }
 
-      final resBinance = await http.get(Uri.parse('http://100.77.27.80:8553/api/binance/status'), headers: headers);
+      final resBinance = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/binance/status'), headers: headers);
       if (resBinance.statusCode == 200) {
         final data = jsonDecode(resBinance.body);
         setState(() {
@@ -4927,7 +5228,7 @@ class _TradingSettingsScreenState extends State<TradingSettingsScreen> {
     try {
       final token = await _getToken();
       final res = await http.post(
-        Uri.parse('http://100.77.27.80:8553/api/trading/settings'),
+        Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/trading/settings'),
         headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
         body: jsonEncode({'trade_size_usdt': _tradeSize, 'max_open_positions': _maxPositions}),
       );
@@ -4966,7 +5267,7 @@ class _TradingSettingsScreenState extends State<TradingSettingsScreen> {
     try {
       final token = await _getToken();
       final endpoint = _botRunning ? '/api/bot/stop' : '/api/bot/start';
-      final res = await http.post(Uri.parse('http://100.77.27.80:8553$endpoint'), headers: {'Authorization': 'Bearer $token'});
+      final res = await http.post(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com$endpoint'), headers: {'Authorization': 'Bearer $token'});
       if (res.statusCode == 200) {
         _showSnack(_botRunning ? AppTranslations.t('admin.force_stop_msg') : AppTranslations.t('admin.force_start_msg'), isSuccess: true);
         _fetchAllData();
@@ -5028,7 +5329,7 @@ class _TradingSettingsScreenState extends State<TradingSettingsScreen> {
     try {
       final token = await _getToken();
       final res = await http.post(
-        Uri.parse('http://100.77.27.80:8553/api/binance/disconnect'),
+        Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/binance/disconnect'),
         headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
         body: jsonEncode({'password': pwdController.text}),
       );
@@ -5281,10 +5582,10 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
       final token = await _getToken();
       final headers = {'Authorization': 'Bearer $token'};
       
-      final resAcc = await http.get(Uri.parse('http://100.77.27.80:8553/api/account'), headers: headers);
+      final resAcc = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/account'), headers: headers);
       if (resAcc.statusCode == 200) _account = jsonDecode(resAcc.body);
 
-      final resSess = await http.get(Uri.parse('http://100.77.27.80:8553/api/account/sessions'), headers: headers);
+      final resSess = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/account/sessions'), headers: headers);
       if (resSess.statusCode == 200) _sessions = jsonDecode(resSess.body)['sessions'] ?? [];
 
       setState(() => _isLoading = false);
@@ -5302,7 +5603,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
     try {
       final token = await _getToken();
       final res = await http.post(
-        Uri.parse('http://100.77.27.80:8553/api/account/change_password'),
+        Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/account/change_password'),
         headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
         body: jsonEncode({'current_password': _oldPassCtrl.text, 'new_password': _newPassCtrl.text}),
       );
@@ -5472,7 +5773,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
   Future<void> _fetchSettings() async {
     try {
       final token = await _getToken();
-      final res = await http.get(Uri.parse('http://100.77.27.80:8553/api/notifications'), headers: {'Authorization': 'Bearer $token'});
+      final res = await http.get(Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/notifications'), headers: {'Authorization': 'Bearer $token'});
       if (res.statusCode == 200) {
         final d = jsonDecode(res.body);
         setState(() {
@@ -5493,7 +5794,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
     try {
       final token = await _getToken();
       final res = await http.post(
-        Uri.parse('http://100.77.27.80:8553/api/notifications'),
+        Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/notifications'),
         headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
         body: jsonEncode({
           'notifications_enabled': _notifEnabled ? 1 : 0,
@@ -5706,7 +6007,7 @@ class _ActiveSessionsScreenState extends State<ActiveSessionsScreen> {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token') ?? '';
       final res = await http.post(
-        Uri.parse('http://100.77.27.80:8553/api/account/sessions/revoke'),
+        Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/account/sessions/revoke'),
         headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
         body: jsonEncode({'session_id': sessionId}),
       );
@@ -5809,7 +6110,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     try {
       final res = await http.post(
-        Uri.parse('http://100.77.27.80:8553/api/register'),
+        Uri.parse('https://control-unknown-graham-decided.trycloudflare.com/api/register'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'username': _usernameCtrl.text.trim(),

@@ -86,7 +86,14 @@
         "admin_panel_sub": "Manage all users",
         "logout_confirm": "Confirm Logout",
         "active_assets": "ACTIVE assets",
-        "active_assets_unit": "ACTIVE assets"
+        "active_assets_unit": {
+            "zero": "ACTIVE assets",
+            "one": "ACTIVE asset",
+            "two": "ACTIVE assets",
+            "few": "ACTIVE assets",
+            "many": "ACTIVE assets",
+            "other": "ACTIVE assets"
+        }
     },
     "settings": {
         "title": "Settings",
@@ -266,7 +273,8 @@
         "high_24h": "High 24h",
         "low_24h": "Low 24h",
         "weighted_24h": "Weighted 24h",
-        "volume_24h": "Volume 24h"
+        "volume_24h": "Volume 24h",
+        "step": "step"
     },
     "support": {
         "title": "Support",
@@ -458,16 +466,42 @@
         "yes": "Yes",
         "no": "No",
         "search_results": "Search Results:",
-        "days": "days",
-        "trades_unit": "trades",
+        "days": {
+            "zero": "days",
+            "one": "day",
+            "two": "days",
+            "few": "days",
+            "many": "days",
+            "other": "days"
+        },
+        "trades_unit": {
+            "zero": "trades",
+            "one": "trade",
+            "two": "trades",
+            "few": "trades",
+            "many": "trades",
+            "other": "trades"
+        },
         "assets_sorted_suffix": "assets - sorted by net (desc)",
         "breakdown_label": "Breakdown",
         "api_key_label": "API Key",
         "label_label": "Label",
-        "assets_tracked_suffix": "assets tracked",
+        "assets_tracked_suffix": {
+            "zero": "assets tracked",
+            "one": "asset tracked",
+            "two": "assets tracked",
+            "few": "assets tracked",
+            "many": "assets tracked",
+            "other": "assets tracked"
+        },
         "close": "Close",
         "confirm": "Confirm",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "period_1h": "1H",
+        "period_1d": "1D",
+        "period_1w": "1W",
+        "period_1mo": "1MO",
+        "period_1y": "1Y"
     },
     "common": {
         "cancel": "Cancel",
@@ -612,9 +646,9 @@
         "disk": "Disk",
         "uptime": "Uptime",
         "take_backup": "Take Backup Now",
-        "backup_success": "'✓ Backup created successfully",
+        "backup_success": "Backup created successfully",
         "restart_macro": "Restart Macro Engine",
-        "macro_restarted": "'✓ Restart command sent",
+        "macro_restarted": "Macro engine restarted",
         "system_logs": "System Logs",
         "view_logs": "View Error Logs",
         "delete_account": "Delete Account",
@@ -637,7 +671,16 @@
         "delete_account_title": "Delete Account?",
         "delete_warning": "This cannot be undone.",
         "delete_btn": "Delete",
-        "trades_label": "Trades"
+        "trades_label": "Trades",
+        "system_admin_title": "System Administration",
+        "system_admin_sub": "Server stats & actions",
+        "system_actions": "System Actions",
+        "view_error_logs": "View Error Logs",
+        "backup_failed": "Backup failed",
+        "macro_restart_confirm": "Restart Macro Engine?",
+        "macro_restart_msg": "This will restart the macro updater. Continue?",
+        "logs_title": "Error Logs",
+        "no_logs": "No logs available"
     },
     "analytics": {
         "assets_tracked": "assets tracked"
@@ -651,5 +694,13 @@
     "lang": {
         "english": "English",
         "arabic": "العربية"
+    },
+    "events": {
+        "BUY": "BUY",
+        "SELL": "SELL",
+        "DCA": "DCA"
+    },
+    "history": {
+        "page_title": "History"
     }
 }
