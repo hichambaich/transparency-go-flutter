@@ -104,6 +104,24 @@ class MyApp extends StatelessWidget {
   }
 }
 
+
+// ============================================================
+// TODO: Known i18n limitations (documented, not silently ignored)
+// ============================================================
+// 1. Pluralization: misc.trades_unit = "صفقات" fails for 1, 2, 11-99
+//    (e.g. "1 صفقات" should be "1 صفقة")
+//    Fix: implement proper plural rules via intl package.
+//
+// 2. Remaining audit hits (deferred, low priority):
+//    - L2846 'Trade $sym' (AppBar title, mixed)
+//    - L597  'ROI ${formatPct(roi)}' (ROI is technical, may not need)
+//    - L830  'July' (month name, needs Intl.DateTimeFormat)
+//    - L3037 'No' (context-dependent, may be RouteSettings)
+//
+// 3. `_meta.name` was replaced by 'English' as hardcoded string
+//    (matching Flet's exact behavior - language names not translated).
+// ============================================================
+
 // ================= AUTH GATE =================
 class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
@@ -200,7 +218,7 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.ac_unit, size: 60, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a))),
+              Text('❄️', style: TextStyle(fontSize: 60)),
               const SizedBox(height: 10),
               Text('SMARTWALLET GO', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2)))),
               const SizedBox(height: 40),
@@ -223,7 +241,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   Row(children: [
                     Checkbox(value: _rememberMe, onChanged: (v) => setState(() => _rememberMe = v ?? true), activeColor: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2))),
-                    const Text('Remember Me', style: TextStyle(fontSize: 12)),
+                    Text(AppTranslations.t('auth.remember_me'), style: TextStyle(fontSize: 12)),
                   ]),
                 ],
               ),
@@ -384,7 +402,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Select Period', style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontSize: 16, fontWeight: FontWeight.bold)),
+              Text(AppTranslations.t('misc.select_period'), style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontSize: 16, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
               Wrap(
                 spacing: 8, runSpacing: 8,
@@ -658,7 +676,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   SizedBox(
                                     height: 50,
                                     child: _rawSpots.isEmpty
-                                        ? const Center(child: Text('Loading...', style: TextStyle(color: Colors.grey, fontSize: 10)))
+                                        ? Center(child: Text(AppTranslations.t('misc.loading'), style: TextStyle(color: Colors.grey, fontSize: 10)))
                                         : Stack(
                                             children: [
                                               Positioned.fill(top: 25, child: CustomPaint(painter: DashedLinePainter(color: Colors.grey.withOpacity(0.4)))),
@@ -726,7 +744,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(AppTranslations.t('dash.capital_events'), style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
-                                      Text(textDirection: TextDirection.ltr, '${AppTranslations.t('dash.deposits')} \$${deposits.toStringAsFixed(2)} | Withdrawals \$${withdrawals.toStringAsFixed(2)} | Ref \$${refCapital.toStringAsFixed(2)}', style: TextStyle(fontSize: 8, color: Colors.grey)),
+                                      Text(textDirection: TextDirection.ltr, '${AppTranslations.t('dash.deposits')} \$${deposits.toStringAsFixed(2)} | ${AppTranslations.t('dash.withdrawals_label')} \$${withdrawals.toStringAsFixed(2)} | ${AppTranslations.t('dash.ref_label')} \$${refCapital.toStringAsFixed(2)}', style: TextStyle(fontSize: 8, color: Colors.grey)),
                                     ],
                                   ),
                                 ),
@@ -818,7 +836,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           children: [
                             Expanded(
                               child: InkWell(
-                                onTap: () => _openStatDetail(context, 'All-Time PnL Range'),
+                                onTap: () => _openStatDetail(context, AppTranslations.t('dash.all_time_pnl_range')),
                                 child: _buildInnerCardContent(
                                   child: Row(
                                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -862,7 +880,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             const SizedBox(width: 7),
                             Expanded(
                               child: InkWell(
-                                onTap: () => _openStatDetail(context, '${AppTranslations.t('pos.cost')} & Efficiency'),
+                                onTap: () => _openStatDetail(context, AppTranslations.t('dash.cost_efficiency_full')),
                                 child: _buildInnerCardContent(
                                   child: Row(
                                     children: [
@@ -1236,7 +1254,7 @@ class _ExpandablePositionCardState extends State<ExpandablePositionCard> {
               _dlgRow(AppTranslations.t('pos.volume_24h'), '\$${vol.toStringAsFixed(0)}', color: Color(0xFFf0b90b)),
             ],
           ),
-          actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close'))],
+          actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppTranslations.t('misc.close')))],
         ));
       } else {
         print('Failed to load 24h data');
@@ -1640,14 +1658,14 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
         } else {
           setState(() { _errorMsg = 'Failed to load trades'; _isLoading = false; });
         }
-      } else if (widget.title == 'All-Time PnL Range') {
+      } else if (widget.title == AppTranslations.t('dash.all_time_pnl_range')) {
         final res = await http.get(Uri.parse('http://100.77.27.80:8553/api/stats/pnl_range'), headers: headers);
         if (res.statusCode == 200) {
           setState(() { _extraData = jsonDecode(res.body); _isLoading = false; });
         } else {
           setState(() { _errorMsg = 'Failed'; _isLoading = false; });
         }
-      } else if (widget.title == '${AppTranslations.t('pos.cost')} & Efficiency') {
+      } else if (widget.title == AppTranslations.t('dash.cost_efficiency_full')) {
         final res = await http.get(Uri.parse('http://100.77.27.80:8553/api/stats/fees'), headers: headers);
         if (res.statusCode == 200) {
           setState(() { _extraData = jsonDecode(res.body); _isLoading = false; });
@@ -1705,19 +1723,20 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
 
   Widget _buildBody() {
     if (widget.title == AppTranslations.t('dash.closed_trades') || widget.title == AppTranslations.t('dash.profit_trades')) return _buildTradesList();
-    if (widget.title == 'All-Time PnL Range') return _buildPnlRange();
-    if (widget.title == '${AppTranslations.t('pos.cost')} & Efficiency') return _buildFees();
+    if (widget.title == AppTranslations.t('dash.all_time_pnl_range')) return _buildPnlRange();
+    if (widget.title == AppTranslations.t('dash.cost_efficiency_full')) return _buildFees();
     if (widget.title == AppTranslations.t('dash.bnb_fees_reserve')) return _buildBnb();
     if (widget.title == AppTranslations.t('dash.realized_pnl')) return _buildRealized();
     if (widget.title == AppTranslations.t('stat.capital')) return _buildCapitalBreakdown();
     if (widget.title == AppTranslations.t('menu.capital_events')) return _buildCapitalEvents();
     if (widget.title == AppTranslations.t('dash.capital_exposure')) return _buildCapitalExposure();
+    // WARNING: 'Journal' is an internal identifier (routing), not a display string.
     if (widget.title == 'Journal') return _buildJournal();
-    return const Center(child: Text('No detailed data available.', style: TextStyle(color: Colors.grey)));
+    return Center(child: Text(AppTranslations.t('misc.no_data'), style: TextStyle(color: Colors.grey)));
   }
 
   Widget _buildTradesList() {
-    if (_trades.isEmpty) return const Center(child: Text('No trades found', style: TextStyle(color: Colors.grey)));
+    if (_trades.isEmpty) return Center(child: Text(AppTranslations.t('misc.no_trades'), style: TextStyle(color: Colors.grey)));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1801,14 +1820,27 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
                 if (trade != null) Navigator.push(context, MaterialPageRoute(builder: (c) => TradeDetailScreen(trade: trade, cardBg: cardBg, borderColor: borderColor, green: green, red: red, accent: accent)));
               },
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(AppTranslations.t('dash.min'), style: TextStyle(color: Colors.grey, fontSize: 13)),
-                  Row(children: [
-                    Text(textDirection: TextDirection.ltr, '${minPct >= 0 ? '+' : ''}${minPct.toStringAsFixed(2)}% ($minSym)', style: TextStyle(color: red, fontWeight: FontWeight.bold, fontSize: 13)),
-                    const SizedBox(width: 4),
-                    const Icon(Icons.chevron_right, color: Color(0xFF475569), size: 16),
-                  ]),
+                  SizedBox(width: 35, child: Text(AppTranslations.t('dash.min'), style: TextStyle(color: Colors.grey, fontSize: 13))),
+                  // تثبيت العرض للنص لضمان محاذاة الأسهم مثل Flet (width=60)
+                  SizedBox(
+                    width: 90,
+                    child: Text(
+                      '${minPct >= 0 ? '+' : ''}${minPct.toStringAsFixed(2)}% ($minSym)',
+                      textDirection: TextDirection.ltr,
+                      textAlign: TextAlign.right,
+                      style: TextStyle(color: red, fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // السهم الأحمر في صندوق أحمر
+                  Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(color: red, borderRadius: BorderRadius.circular(3)),
+                    child: const Icon(Icons.south_east, color: Colors.white, size: 12),
+                  ),
+                  const Spacer(),
+                  const Icon(Icons.chevron_right, color: Color(0xFF475569), size: 16),
                 ],
               ),
             ),
@@ -1819,14 +1851,27 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
                 if (trade != null) Navigator.push(context, MaterialPageRoute(builder: (c) => TradeDetailScreen(trade: trade, cardBg: cardBg, borderColor: borderColor, green: green, red: red, accent: accent)));
               },
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(AppTranslations.t('dash.max'), style: TextStyle(color: Colors.grey, fontSize: 13)),
-                  Row(children: [
-                    Text(textDirection: TextDirection.ltr, '+${maxPct.toStringAsFixed(2)}% ($maxSym)', style: TextStyle(color: green, fontWeight: FontWeight.bold, fontSize: 13)),
-                    const SizedBox(width: 4),
-                    const Icon(Icons.chevron_right, color: Color(0xFF475569), size: 16),
-                  ]),
+                  SizedBox(width: 35, child: Text(AppTranslations.t('dash.max'), style: TextStyle(color: Colors.grey, fontSize: 13))),
+                  // تثبيت العرض للنص لضمان محاذاة الأسهم مثل Flet (width=60)
+                  SizedBox(
+                    width: 90,
+                    child: Text(
+                      '+${maxPct.toStringAsFixed(2)}% ($maxSym)',
+                      textDirection: TextDirection.ltr,
+                      textAlign: TextAlign.right,
+                      style: TextStyle(color: green, fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // السهم الأخضر في صندوق أخضر
+                  Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(color: green, borderRadius: BorderRadius.circular(3)),
+                    child: const Icon(Icons.north_east, color: Colors.white, size: 12),
+                  ),
+                  const Spacer(),
+                  const Icon(Icons.chevron_right, color: Color(0xFF475569), size: 16),
                 ],
               ),
             ),
@@ -1860,7 +1905,7 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          Align(alignment: Alignment.centerLeft, child: Text('${assets.length} assets - sorted by net (desc)', style: const TextStyle(color: Colors.grey, fontSize: 11))),
+          Align(alignment: Alignment.centerLeft, child: Text('${assets.length} ' + AppTranslations.t('misc.assets_sorted_suffix'), style: const TextStyle(color: Colors.grey, fontSize: 11))),
           const SizedBox(height: 8),
           ...assets.map((a) {
             final sym = a['symbol'] ?? '?';
@@ -1892,7 +1937,7 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
                       const SizedBox(width: 8),
                       Text(sym, style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontWeight: FontWeight.bold)),
                       const SizedBox(width: 8),
-                      Text('$trades trades', style: const TextStyle(color: Colors.grey, fontSize: 10)),
+                      Text('$trades ' + AppTranslations.t('misc.trades_unit'), style: const TextStyle(color: Colors.grey, fontSize: 10)),
                       const Spacer(),
                       Text(textDirection: TextDirection.ltr, '${net >= 0 ? '+' : ''}\$${net.toStringAsFixed(2)}', style: TextStyle(color: net >= 0 ? green : red, fontWeight: FontWeight.bold)),
                     ],
@@ -1933,7 +1978,7 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
           children: [
             Text(AppTranslations.t('dash.bnb_fees_reserve'), style: TextStyle(color: gold, fontWeight: FontWeight.bold, fontSize: 14)),
             Divider(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0)), height: 20),
-            _buildDetailRow(AppTranslations.t('field.status'), status, status == 'RUNNING' ? green : Colors.orange),
+            _buildDetailRow(AppTranslations.t('field.status'), status == 'RUNNING' ? AppTranslations.t('status.running') : status, status == 'RUNNING' ? green : Colors.orange),
             _buildDetailRow(AppTranslations.t('admin.balance'), '${balance.toStringAsFixed(8)} BNB', (themeNotifier.value == ThemeMode.dark ? Colors.white : Color(0xFF0f172a))),
             _buildDetailRow(AppTranslations.t('field.price_hint'), '\$${price.toStringAsFixed(2)}', (themeNotifier.value == ThemeMode.dark ? Colors.white : Color(0xFF0f172a))),
             _buildDetailRow(AppTranslations.t('pos.value'), '\$${value.toStringAsFixed(2)}', gold),
@@ -2002,7 +2047,7 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Select Period', style: TextStyle(color: isDark ? Colors.white : const Color(0xFF0f172a), fontSize: 18, fontWeight: FontWeight.bold)),
+              Text(AppTranslations.t('misc.select_period'), style: TextStyle(color: isDark ? Colors.white : const Color(0xFF0f172a), fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 20),
               Wrap(
                 spacing: 10,
@@ -2076,7 +2121,7 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)), borderRadius: BorderRadius.circular(14)),
-                      child: Row(children: [Icon(Icons.sync, size: 10, color: accent), const SizedBox(width: 4), Text(_selectedPeriod.toUpperCase(), style: TextStyle(color: accent, fontSize: 10, fontWeight: FontWeight.bold))]),
+                      child: Row(children: [Icon(Icons.sync, size: 11, color: accent), const SizedBox(width: 4), Text(_selectedPeriod.toUpperCase(), style: TextStyle(color: accent, fontSize: 11, fontWeight: FontWeight.bold))]),
                     ),
                   ),
                 ]),
@@ -2095,12 +2140,12 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
             child: Column(
               children: [
                 Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                  Text('${_selectedPeriod.toUpperCase()} Breakdown', style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 14)),
+                  Text('${_selectedPeriod.toUpperCase()} ' + AppTranslations.t('misc.breakdown_label'), style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 14)),
                   Text(textDirection: TextDirection.ltr, '+\$${totalProfit.toStringAsFixed(2)}', style: TextStyle(color: green, fontWeight: FontWeight.bold, fontSize: 13)),
                 ]),
                 Divider(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0)), height: 20),
                 if (breakdown.isEmpty) 
-                  Padding(padding: const EdgeInsets.all(20), child: Text('No data for this period', style: TextStyle(color: Colors.grey, fontSize: 12)))
+                  Padding(padding: const EdgeInsets.all(20), child: Text(AppTranslations.t('misc.no_data_period'), style: TextStyle(color: Colors.grey, fontSize: 12)))
                 else
                   ...breakdown.map((b) {
                     final date = b['date'] ?? '';
@@ -2172,7 +2217,7 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
               children: [
                 Text(AppTranslations.t('card.capital_summary'), style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 15)),
                 Divider(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0)), height: 24),
-                _buildDetailRow('${AppTranslations.t('dash.ref')}erence capital', '\$${refCapital.toStringAsFixed(2)}', (themeNotifier.value == ThemeMode.dark ? Colors.white : Color(0xFF0f172a))),
+                _buildDetailRow(AppTranslations.t('dash.reference_capital'), '\$${refCapital.toStringAsFixed(2)}', (themeNotifier.value == ThemeMode.dark ? Colors.white : Color(0xFF0f172a))),
                 _buildDetailRow(AppTranslations.t('field.total_deposits'), '\$${deposits.toStringAsFixed(2)}', green),
                 _buildDetailRow(AppTranslations.t('field.total_withdrawals'), '\$${withdrawals.toStringAsFixed(2)}', Colors.orange),
                 _buildDetailRow(AppTranslations.t('field.events_count'), '0', (themeNotifier.value == ThemeMode.dark ? Colors.white : Color(0xFF0f172a))),
@@ -2208,9 +2253,9 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
               children: [
                 Text(AppTranslations.t('dash.capital_exposure'), style: TextStyle(color: green, fontWeight: FontWeight.bold, fontSize: 10)),
                 Divider(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0)), height: 20),
-                _buildDetailRow('Exposure %', '${exp.toStringAsFixed(2)}%', exp > 65 ? red : (exp > 50 ? Colors.orange : green)),
+                _buildDetailRow(AppTranslations.t('dash.exposure_pct'), '${exp.toStringAsFixed(2)}%', exp > 65 ? red : (exp > 50 ? Colors.orange : green)),
                 _buildDetailRow(AppTranslations.t('dash.positions_value'), '\$${posValue.toStringAsFixed(2)}', accent),
-                _buildDetailRow('Total Capital', '\$${total.toStringAsFixed(2)}', (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), isBold: true),
+                _buildDetailRow(AppTranslations.t('dash.total_capital_full'), '\$${total.toStringAsFixed(2)}', (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), isBold: true),
               ],
             ),
           ),
@@ -2479,7 +2524,7 @@ class _StatsScreenState extends State<StatsScreen> {
                 children: [
                   Expanded(
                     child: _rawSpots.isEmpty
-                        ? const Center(child: Text('No chart data', style: TextStyle(color: Colors.grey, fontSize: 11)))
+                        ? Center(child: Text(AppTranslations.t('misc.no_chart_data'), style: TextStyle(color: Colors.grey, fontSize: 11)))
                         : LineChart(
                             LineChartData(
                               gridData: FlGridData(
@@ -2718,7 +2763,7 @@ class _PeriodHistoryScreenState extends State<PeriodHistoryScreen> {
       body: _isLoading
           ? Center(child: CircularProgressIndicator(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2))))
           : _history.isEmpty
-              ? const Center(child: Text('No history yet', style: TextStyle(color: Colors.grey)))
+              ? Center(child: Text(AppTranslations.t('misc.no_history'), style: TextStyle(color: Colors.grey)))
               : ListView.builder(
                   padding: const EdgeInsets.all(16),
                   itemCount: _history.length,
@@ -2817,7 +2862,7 @@ class TradeDetailScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: cardBg,
         leading: IconButton(icon: Icon(Icons.arrow_back, color: accent), onPressed: () => Navigator.pop(context)),
-        title: Text('Trade $sym', style: TextStyle(color: accent, fontWeight: FontWeight.bold)),
+        title: Text('${AppTranslations.t('pos.trade_title_prefix')} $sym', style: TextStyle(color: accent, fontWeight: FontWeight.bold)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -2998,7 +3043,7 @@ class MenuScreen extends StatelessWidget {
                   backgroundColor: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF1e293b) : Colors.white),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   title: Text(
-                    'Confirm Logout',
+                    AppTranslations.t('menu.logout_confirm'),
                     style: TextStyle(
                       color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)),
                       fontWeight: FontWeight.bold,
@@ -3008,7 +3053,7 @@ class MenuScreen extends StatelessWidget {
                     TextButton(
                       onPressed: () => Navigator.pop(dialogContext),
                       child: Text(
-                        'No',
+                        AppTranslations.t('misc.no'),
                         style: TextStyle(
                           color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2)),
                           fontSize: 16,
@@ -3021,7 +3066,7 @@ class MenuScreen extends StatelessWidget {
                         Navigator.of(context).popUntil((route) => route.isFirst);
                         onLogout();
                       },
-                      child: const Text('Yes', style: TextStyle(color: Color(0xFFef4444), fontSize: 16)),
+                      child: Text(AppTranslations.t('misc.yes'), style: TextStyle(color: Color(0xFFef4444), fontSize: 16)),
                     ),
                   ],
                 ),
@@ -3381,11 +3426,12 @@ class UserGuideScreen extends StatelessWidget {
 
 class LegalScreen extends StatelessWidget {
   final String title;
+  final String type;  // 'terms' or 'privacy'
   final String lastUpdated;
   final List<Map<String, String>> sections;
   final String? acceptNote;
 
-  const LegalScreen({super.key, required this.title, required this.lastUpdated, required this.sections, this.acceptNote});
+  const LegalScreen({super.key, required this.title, required this.type, required this.lastUpdated, required this.sections, this.acceptNote});
 
   @override
   Widget build(BuildContext context) {
@@ -3412,7 +3458,7 @@ class LegalScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(children: [Icon(title.contains('Terms') ? Icons.gavel : Icons.privacy_tip, color: accent, size: 22), const SizedBox(width: 8), Text(title, style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 16))]),
+                Row(children: [Icon(type == 'terms' ? Icons.gavel : Icons.privacy_tip, color: accent, size: 22), const SizedBox(width: 8), Text(title, style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 16))]),
                 const SizedBox(height: 4),
                 Text(lastUpdated, style: TextStyle(fontSize: 10, color: textMuted, fontStyle: FontStyle.italic)),
                 if (acceptNote != null) ...[
@@ -3462,6 +3508,7 @@ class TermsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return LegalScreen(
       title: AppTranslations.t('legal.terms_title'),
+      type: 'terms',
       lastUpdated: AppTranslations.t('legal.last_updated'),
       acceptNote: AppTranslations.t('legal.accept_note'),
       sections: [
@@ -3472,7 +3519,7 @@ class TermsScreen extends StatelessWidget {
         {'h': AppTranslations.t('legal.terms_s5_h'), 'b': AppTranslations.t('legal.terms_s5_b')},
         {'h': AppTranslations.t('legal.terms_s6_h'), 'b': AppTranslations.t('legal.terms_s6_b')},
         {'h': AppTranslations.t('legal.terms_s7_h'), 'b': AppTranslations.t('legal.terms_s7_b')},
-        {'h': AppTranslations.t('legal.privacy_s8_h'), 'b': AppTranslations.t('legal.terms_s8_b')},
+        {'h': AppTranslations.t('legal.terms_s8_h'), 'b': AppTranslations.t('legal.terms_s8_b')},
       ],
     );
   }
@@ -3484,6 +3531,7 @@ class PrivacyScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return LegalScreen(
       title: AppTranslations.t('legal.privacy_title'),
+      type: 'privacy',
       lastUpdated: AppTranslations.t('legal.last_updated'),
       sections: [
         {'h': AppTranslations.t('legal.privacy_s1_h'), 'b': AppTranslations.t('legal.privacy_s1_b')},
@@ -3613,16 +3661,16 @@ class _DeveloperPanelScreenState extends State<DeveloperPanelScreen> {
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text('${u['username']} (ID: ${u['id']})', style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontWeight: FontWeight.bold, fontSize: 14)),
-                                      Text(isRunning ? 'Bot Running' : 'Bot Stopped', style: TextStyle(color: isRunning ? green : Colors.grey, fontSize: 11)),
+                                      Text(isRunning ? AppTranslations.t('admin.bot_running') : AppTranslations.t('admin.bot_stopped'), style: TextStyle(color: isRunning ? green : Colors.grey, fontSize: 11)),
                                     ],
                                   ),
                                   Text(u['email'] ?? '', style: const TextStyle(color: Colors.grey, fontSize: 11)),
                                   const SizedBox(height: 4),
                                   Row(
                                     children: [
-                                      Text('Balance: \$${(u['balance'] ?? 0.0).toStringAsFixed(2)}', style: TextStyle(color: accent, fontSize: 11)),
+                                      Text('${AppTranslations.t('admin.balance')}: \$${(u['balance'] ?? 0.0).toStringAsFixed(2)}', style: TextStyle(color: accent, fontSize: 11)),
                                       const SizedBox(width: 10),
-                                      Text('Positions: ${u['positions_count'] ?? 0}', style: TextStyle(color: gold, fontSize: 11)),
+                                      Text('${AppTranslations.t('admin.positions')}: ${u['positions_count'] ?? 0}', style: TextStyle(color: gold, fontSize: 11)),
                                     ],
                                   ),
                                 ],
@@ -3664,7 +3712,7 @@ class UserDetailsScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: cardBg,
         leading: IconButton(icon: Icon(Icons.arrow_back, color: accent), onPressed: () => Navigator.pop(context)),
-        title: Text('User Details', style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 18)),
+        title: Text(AppTranslations.t('admin.user_details'), style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 18)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -3689,7 +3737,7 @@ class UserDetailsScreen extends StatelessWidget {
               runSpacing: 10,
               alignment: WrapAlignment.center,
               children: [
-                _actionBtn('Login as User', const Color(0xFF9c27b0), () async {
+                _actionBtn(AppTranslations.t('admin.login_as_user'), const Color(0xFF9c27b0), () async {
                   final prefs = await SharedPreferences.getInstance();
                   final oldToken = prefs.getString('auth_token') ?? '';
                   final res = await http.post(Uri.parse('http://100.77.27.80:8553/api/admin/impersonate/$userId'), headers: {'Authorization': 'Bearer $oldToken'});
@@ -3702,11 +3750,11 @@ class UserDetailsScreen extends StatelessWidget {
                     }
                   }
                 }),
-                _actionBtn('View User Trades', accent, () {}),
-                _actionBtn(isRunning ? 'Force Stop Bot' : 'Force Start Bot', isRunning ? red : green, () {}),
-                _actionBtn(isSuspended ? 'Unsuspend Account' : 'Suspend Account', const Color(0xFFf59e0b), () {}),
-                _actionBtn('Reset Password', const Color(0xFFd32f2f), () {}),
-                _actionBtn('Delete Account', const Color(0xFF7f0000), () {}),
+                _actionBtn(AppTranslations.t('admin.view_user_trades'), accent, () {}),
+                _actionBtn(isRunning ? AppTranslations.t('admin.force_stop_bot') : AppTranslations.t('admin.force_start_bot'), isRunning ? red : green, () {}),
+                _actionBtn(isSuspended ? AppTranslations.t('admin.unsuspend_account') : AppTranslations.t('admin.suspend_account'), const Color(0xFFf59e0b), () {}),
+                _actionBtn(AppTranslations.t('admin.reset_password'), const Color(0xFFd32f2f), () {}),
+                _actionBtn(AppTranslations.t('admin.delete_account'), const Color(0xFF7f0000), () {}),
               ],
             ),
           ],
@@ -3966,7 +4014,7 @@ class _AssetDetailsScreenState extends State<AssetDetailsScreen> {
       appBar: AppBar(
         backgroundColor: cardBg,
         leading: IconButton(icon: Icon(Icons.arrow_back, color: accent), onPressed: () => Navigator.pop(context)),
-        title: Text('Search Results: $symbol', style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 16)),
+        title: Text('${AppTranslations.t('misc.search_results')} $symbol', style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 16)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -4063,7 +4111,7 @@ class _AssetDetailsScreenState extends State<AssetDetailsScreen> {
                   ),
                   const SizedBox(height: 16),
                   _buildRow(AppTranslations.t('field.asset'), symbol),
-                  _buildRow(AppTranslations.t('field.status'), status, valColor: statusColor),
+                  _buildRow(AppTranslations.t('field.status'), status == 'SUSPENDED' ? AppTranslations.t('status.suspended') : (status == 'ACTIVE' ? AppTranslations.t('status.active') : status), valColor: statusColor),
                   _buildRow(AppTranslations.t('field.confidence'), '${_fmtNum(widget.asset['confidence_score'])}/100', valColor: green),
                   _buildRow(AppTranslations.t('field.health'), '${_fmtNum(widget.asset['health_score'])}/100', valColor: green),
                   _buildRow(AppTranslations.t('field.liquidity'), _fmtPrice(widget.asset['liquidity_24h'])),
@@ -4240,7 +4288,7 @@ class _ActiveUniverseScreenState extends State<ActiveUniverseScreen> {
               : ListView(
                   padding: const EdgeInsets.all(16),
                   children: [
-                    Text('${_assets.length} ACTIVE assets', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                    Text('${_assets.length} ' + AppTranslations.t('menu.active_assets_unit'), style: const TextStyle(color: Colors.grey, fontSize: 12)),
                     const SizedBox(height: 10),
                     ..._assets.map((a) {
                       String sym = a['symbol'] ?? '';
@@ -4375,7 +4423,7 @@ class _ExperienceScreenState extends State<ExperienceScreen> {
               : ListView(
                   padding: const EdgeInsets.all(16),
                   children: [
-                    Text('${_exps.length} assets tracked', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                    Text('${_exps.length} ' + AppTranslations.t('misc.assets_tracked_suffix'), style: const TextStyle(color: Colors.grey, fontSize: 12)),
                     const SizedBox(height: 10),
                     ..._exps.map((e) {
                       String sym = e['symbol'] ?? 'UNKNOWN';
@@ -4613,7 +4661,7 @@ class _TradingSettingsScreenState extends State<TradingSettingsScreen> {
         builder: (c) => AlertDialog(
           backgroundColor: cardBg,
           title: Text(AppTranslations.t('bot.stop'), style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : Color(0xFF0f172a)))),
-          content: const Text('Are you sure you want to stop the bot? It will no longer manage your trades.', style: TextStyle(color: Colors.grey)),
+          content: Text(AppTranslations.t('bot.stop_confirm'), style: TextStyle(color: Colors.grey)),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(c, false),
@@ -4621,7 +4669,7 @@ class _TradingSettingsScreenState extends State<TradingSettingsScreen> {
             ),
             TextButton(
               onPressed: () => Navigator.pop(c, true),
-              child: Text('Stop', style: TextStyle(color: red, fontWeight: FontWeight.bold)),
+              child: Text(AppTranslations.t('misc.stop'), style: TextStyle(color: red, fontWeight: FontWeight.bold)),
             ),
           ],
         ),
@@ -4654,12 +4702,12 @@ class _TradingSettingsScreenState extends State<TradingSettingsScreen> {
         builder: (context, setStateDialog) {
           return AlertDialog(
             backgroundColor: cardBg,
-            title: Text('Disconnect Binance', style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))),
+            title: Text(AppTranslations.t('bot.binance_disconnect'), style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Enter your password to confirm disconnection:', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                Text(AppTranslations.t('bot.binance_disconnect_confirm'), style: TextStyle(color: Colors.grey, fontSize: 12)),
                 const SizedBox(height: 10),
                 TextField(
                   controller: pwdController,
@@ -4682,7 +4730,7 @@ class _TradingSettingsScreenState extends State<TradingSettingsScreen> {
             ),
             actions: [
               TextButton(onPressed: () => Navigator.pop(c, false), child: Text(AppTranslations.t('common.cancel'), style: TextStyle(color: Colors.grey))),
-              TextButton(onPressed: () => Navigator.pop(c, true), child: Text('Disconnect', style: TextStyle(color: red, fontWeight: FontWeight.bold))),
+              TextButton(onPressed: () => Navigator.pop(c, true), child: Text(AppTranslations.t('bot.disconnect'), style: TextStyle(color: red, fontWeight: FontWeight.bold))),
             ],
           );
         }
@@ -4761,9 +4809,9 @@ class _TradingSettingsScreenState extends State<TradingSettingsScreen> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      Text('${AppTranslations.t('dash.max')} Open Positions', style: TextStyle(color: accent, fontWeight: FontWeight.bold)),
+                      Text(AppTranslations.t('dash.max_open_positions'), style: TextStyle(color: accent, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 8),
-                      Text('${AppTranslations.t('dash.max')}imum number of positions the bot can open', style: TextStyle(color: Colors.grey, fontSize: 11)),
+                      Text(AppTranslations.t('dash.max_positions_desc'), style: TextStyle(color: Colors.grey, fontSize: 11)),
                       Row(
                         children: [
                           Expanded(
@@ -4800,7 +4848,7 @@ class _TradingSettingsScreenState extends State<TradingSettingsScreen> {
                         child: TextButton.icon(
                           onPressed: _fetchAllData,
                           icon: Icon(Icons.refresh, color: accent, size: 16),
-                          label: Text('${AppTranslations.t('dash.ref')}resh', style: TextStyle(color: accent)),
+                          label: Text(AppTranslations.t('dash.refresh'), style: TextStyle(color: accent)),
                         ),
                       ),
                     ],
@@ -4868,8 +4916,8 @@ class _TradingSettingsScreenState extends State<TradingSettingsScreen> {
                             const SizedBox(height: 8),
                             Text(AppTranslations.t('binance.connected'), style: TextStyle(color: green, fontWeight: FontWeight.bold, fontSize: 15)),
                             Divider(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0)), height: 24),
-                            Text('API Key: $_binanceMasked', style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                            Text('Label: $_binanceLabel', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                            Text('${AppTranslations.t('misc.api_key_label')}: $_binanceMasked', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                            Text('${AppTranslations.t('misc.label_label')}: $_binanceLabel', style: const TextStyle(color: Colors.grey, fontSize: 12)),
                             const SizedBox(height: 16),
                             TextButton.icon(
                               onPressed: _disconnectBinance,
@@ -4882,7 +4930,7 @@ class _TradingSettingsScreenState extends State<TradingSettingsScreen> {
                           children: [
                             Icon(Icons.link_off, color: red, size: 40),
                             const SizedBox(height: 8),
-                            const Text('Binance Not Connected', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+                            Text(AppTranslations.t('bot.binance_not_connected'), style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
                             // هنا يمكن إضافة زر الاتصال لاحقاً
                           ],
                         ),
@@ -5070,7 +5118,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text('⚠️ Warning: You will be logged out from all other devices.', style: TextStyle(color: Colors.orange, fontSize: 10)),
+                  Text(AppTranslations.t('account.warning_logout'), style: TextStyle(color: Colors.orange, fontSize: 10)),
                 ],
               ),
             ),
@@ -5261,7 +5309,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)), borderRadius: BorderRadius.circular(8), border: Border.all(color: languageNotifier.value == 'en' ? accent : borderColor)),
-                    child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text(AppTranslations.t('_meta.name'), style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Color(0xFF00d9ff) : Color(0xFF0891b2)))), if (languageNotifier.value == 'en') Icon(Icons.check_circle, color: accent, size: 18)]),
+                    child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text('English', style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Color(0xFF00d9ff) : Color(0xFF0891b2)))), if (languageNotifier.value == 'en') Icon(Icons.check_circle, color: accent, size: 18)]),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -5313,8 +5361,8 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                   ],
                 ),
                 const SizedBox(height: 8),
-                const Center(child: Text('If the button fails, copy this command and send it to the bot: /start 556', style: TextStyle(color: Colors.grey, fontSize: 9))),
-                Center(child: Text('Copy Command', style: TextStyle(color: accent, fontSize: 10))),
+                Center(child: Text(AppTranslations.t('telegram.command_hint'), style: TextStyle(color: Colors.grey, fontSize: 9))),
+                Center(child: Text(AppTranslations.t('telegram.copy_command'), style: TextStyle(color: accent, fontSize: 10))),
               ],
             ),
           ),
@@ -5341,7 +5389,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
             child: ElevatedButton(
               onPressed: _isSaving ? null : _saveSettings,
               style: ElevatedButton.styleFrom(backgroundColor: accent, foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(vertical: 14)),
-              child: _isSaving ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Save Settings', style: TextStyle(fontWeight: FontWeight.bold)),
+              child: _isSaving ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : Text(AppTranslations.t('settings.save_settings'), style: const TextStyle(fontWeight: FontWeight.bold)),
             ),
           ),
         ],
@@ -5377,12 +5425,12 @@ class _ActiveSessionsScreenState extends State<ActiveSessionsScreen> {
       );
       if (res.statusCode == 200) {
         if (mounted) {
-           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Session revoked'), backgroundColor: Colors.green));
+           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppTranslations.t('account.session_revoked')), backgroundColor: Colors.green));
            Navigator.pop(context);
         }
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to revoke'), backgroundColor: Colors.red));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppTranslations.t('account.revoke_failed')), backgroundColor: Colors.red));
     }
   }
 
@@ -5486,7 +5534,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final data = jsonDecode(res.body);
       if (res.statusCode == 200 || res.statusCode == 201) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Registration successful! Please log in.'), backgroundColor: Colors.green));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppTranslations.t('auth.registration_success')), backgroundColor: Colors.green));
           Navigator.pop(context);
         }
       } else {
@@ -5515,7 +5563,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             children: [
               Icon(Icons.ac_unit, size: 60, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a))),
               const SizedBox(height: 10),
-              Text('CREATE ACCOUNT', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2)))),
+              Text(AppTranslations.t('auth.create_account'), style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2)))),
               const SizedBox(height: 40),
               
               TextField(

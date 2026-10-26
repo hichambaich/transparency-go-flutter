@@ -83,7 +83,10 @@
         "submenu_legal": "Legal",
         "submenu_legal_sub": "Terms and privacy",
         "admin_panel": "Developer Panel",
-        "admin_panel_sub": "Manage all users"
+        "admin_panel_sub": "Manage all users",
+        "logout_confirm": "Confirm Logout",
+        "active_assets": "ACTIVE assets",
+        "active_assets_unit": "ACTIVE assets"
     },
     "settings": {
         "title": "Settings",
@@ -106,7 +109,10 @@
         "tg_command_copied": "✓ Link command copied! Open Telegram and paste it in the bot chat.",
         "tg_instruction": "Follow these steps: Copy the code, open the bot, and paste the code in the chat.",
         "copy_command": "1. Copy Code",
-        "open_bot": "2. Open Bot Chat"
+        "open_bot": "2. Open Bot Chat",
+        "save_settings": "Save Settings",
+        "open_positions": "Open Positions",
+        "max_positions_desc": "Maximum number of positions the bot can open."
     },
     "binance": {
         "page_title": "Connect Binance",
@@ -197,7 +203,17 @@
         "total_value": "Total Value",
         "no_open_positions": "NO OPEN POSITIONS",
         "recent_activity": "RECENT ACTIVITY",
-        "inactive": "Inactive"
+        "inactive": "Inactive",
+        "max_open_positions": "Max Open Positions",
+        "max_positions_desc": "Maximum number of positions the bot can open",
+        "refresh": "Refresh",
+        "reference_capital": "Reference capital",
+        "withdrawals_label": "Withdrawals",
+        "ref_label": "Ref",
+        "exposure_pct": "Exposure %",
+        "total_capital_full": "Total Capital",
+        "cost_efficiency_full": "Cost & Efficiency",
+        "all_time_pnl_range": "All-Time PnL Range"
     },
     "account": {
         "title": "My Account",
@@ -227,7 +243,8 @@
         "revoke": "Log out",
         "revoke_all": "Log out all other devices",
         "revoked_msg": "✓ Logged out",
-        "no_other_sessions": "No other devices connected"
+        "no_other_sessions": "No other devices connected",
+        "warning_logout": "Warning: You will be logged out from all other devices."
     },
     "pos": {
         "pnl": "PNL",
@@ -243,7 +260,8 @@
         "max_reached": "Max reached",
         "hold": "Hold",
         "hours": "hours",
-        "details_24h": "24h Details"
+        "details_24h": "24h Details",
+        "trade_title_prefix": "Trade"
     },
     "support": {
         "title": "Support",
@@ -430,7 +448,18 @@
     "misc": {
         "could_not_load_user": "Could not load user info",
         "trade_not_found": "Trade not found in history.",
-        "not_enough_history": "Not enough history data yet."
+        "not_enough_history": "Not enough history data yet.",
+        "select_period": "Select Period",
+        "yes": "Yes",
+        "no": "No",
+        "search_results": "Search Results:",
+        "days": "days",
+        "trades_unit": "trades",
+        "assets_sorted_suffix": "assets - sorted by net (desc)",
+        "breakdown_label": "Breakdown",
+        "api_key_label": "API Key",
+        "label_label": "Label",
+        "assets_tracked_suffix": "assets tracked"
     },
     "common": {
         "cancel": "Cancel",
@@ -584,6 +613,25 @@
         "delete_confirm_title": "Confirm Deletion",
         "delete_confirm_msg": "Are you sure you want to delete this account? All trades, keys, and data will be permanently erased and cannot be recovered.",
         "deleted_success": "✓ Account and all data deleted successfully.",
-        "enter_pwd_confirm": "Enter your password to confirm"
+        "enter_pwd_confirm": "Enter your password to confirm",
+        "view_user_trades": "View User Trades",
+        "force_stop_bot": "Force Stop Bot",
+        "force_start_bot": "Force Start Bot",
+        "suspend_account": "Suspend Account",
+        "unsuspend_account": "Unsuspend Account",
+        "reset_password": "Reset Password"
+    },
+    "analytics": {
+        "assets_tracked": "assets tracked"
+    },
+    "status": {
+        "suspended": "SUSPENDED",
+        "active": "ACTIVE",
+        "deteriorating": "DETERIORATING",
+        "running": "RUNNING"
+    },
+    "lang": {
+        "english": "English",
+        "arabic": "العربية"
     }
 }

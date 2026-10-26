@@ -83,7 +83,10 @@
         "submenu_legal": "قانوني",
         "submenu_legal_sub": "الشروط والخصوصية",
         "admin_panel": "لوحة المطور",
-        "admin_panel_sub": "إدارة جميع المستخدمين"
+        "admin_panel_sub": "إدارة جميع المستخدمين",
+        "logout_confirm": "تأكيد تسجيل الخروج",
+        "active_assets": "الأصول النشطة",
+        "active_assets_unit": "أصول نشطة"
     },
     "settings": {
         "title": "الإعدادات",
@@ -106,7 +109,10 @@
         "tg_command_copied": "✓ تم نسخ أمر الربط! افتح تلجرام وألصقه في محادثة البوت.",
         "tg_instruction": "اتبع الخطوات: انسخ الأمر، ثم افتح البوت، وألصق الأمر في المحادثة.",
         "copy_command": "1. نسخ الأمر",
-        "open_bot": "2. فتح محادثة البوت"
+        "open_bot": "2. فتح محادثة البوت",
+        "save_settings": "حفظ الإعدادات",
+        "open_positions": "المراكز المفتوحة",
+        "max_positions_desc": "الحد الأقصى لعدد المراكز التي يمكن للبوت فتحها."
     },
     "binance": {
         "page_title": "ربط Binance",
@@ -197,7 +203,17 @@
         "total_value": "القيمة الإجمالية",
         "no_open_positions": "لا توجد مراكز مفتوحة",
         "recent_activity": "النشاط الأخير",
-        "inactive": "غير مفعل"
+        "inactive": "غير مفعل",
+        "max_open_positions": "الحد الأقصى للمراكز المفتوحة",
+        "max_positions_desc": "الحد الأقصى لعدد المراكز التي يمكن للبوت فتحها",
+        "refresh": "تحديث",
+        "reference_capital": "رأس المال المرجعي",
+        "withdrawals_label": "سحوبات",
+        "ref_label": "المرجع",
+        "exposure_pct": "نسبة التعرض",
+        "total_capital_full": "إجمالي رأس المال",
+        "cost_efficiency_full": "التكلفة والكفاءة",
+        "all_time_pnl_range": "نطاق الأرباح الكلي"
     },
     "account": {
         "title": "حسابي",
@@ -227,7 +243,8 @@
         "revoke": "تسجيل الخروج",
         "revoke_all": "تسجيل الخروج من كل الأجهزة الأخرى",
         "revoked_msg": "✓ تم تسجيل الخروج",
-        "no_other_sessions": "لا توجد أجهزة أخرى متصلة"
+        "no_other_sessions": "لا توجد أجهزة أخرى متصلة",
+        "warning_logout": "تحذير: سيتم تسجيل خروجك من جميع الأجهزة الأخرى."
     },
     "pos": {
         "pnl": "الربح",
@@ -243,7 +260,8 @@
         "max_reached": "الحد الأقصى",
         "hold": "مدة الاحتفاظ",
         "hours": "ساعات",
-        "details_24h": "تفاصيل 24 ساعة"
+        "details_24h": "تفاصيل 24 ساعة",
+        "trade_title_prefix": "صفقة"
     },
     "support": {
         "title": "فريق الدعم",
@@ -430,7 +448,18 @@
     "misc": {
         "could_not_load_user": "تعذر تحميل معلومات المستخدم",
         "trade_not_found": "الصفقة غير موجودة في السجل.",
-        "not_enough_history": "لا توجد بيانات تاريخية كافية بعد."
+        "not_enough_history": "لا توجد بيانات تاريخية كافية بعد.",
+        "select_period": "اختر الفترة",
+        "yes": "نعم",
+        "no": "لا",
+        "search_results": "نتائج البحث:",
+        "days": "أيام",
+        "trades_unit": "صفقات",
+        "assets_sorted_suffix": "أصول - مرتبة حسب الصافي (تنازلي)",
+        "breakdown_label": "تفصيل",
+        "api_key_label": "مفتاح API",
+        "label_label": "التسمية",
+        "assets_tracked_suffix": "أصول متتبعة"
     },
     "common": {
         "cancel": "إلغاء",
@@ -565,7 +594,7 @@
         "active_positions": "المراكز المفتوحة",
         "closed_trades": "الصفقات المغلقة",
         "no_trades": "لا توجد صفقات.",
-        "login_as_user": "الدخول كالمستخدم",
+        "login_as_user": "تسجيل الدخول كالمستخدم",
         "exit_impersonation": "العودة للوحة المطور",
         "return_to_admin": "إنهاء وضع الدخول كالمستخدم",
         "sys_admin": "إدارة الناظم (System)",
@@ -580,10 +609,29 @@
         "macro_restarted": "✓ تم مسح المورم لتحديثة",
         "system_logs": "سجلات النظام (Logs)",
         "view_logs": "عطر سجلات الأخطاء",
-        "delete_account": "حذف الحساب نهائياً",
+        "delete_account": "حذف الحساب",
         "delete_confirm_title": "تأكيد الحذف",
         "delete_confirm_msg": "هل أنت متأكد من حذف هذا الحساب؟ سيتم مسح جميع الصفقات، المفاتيح، والبيانات نهائياً ولا يمكن التراجع.",
         "deleted_success": "✓ تم حذف الحساب وبياناته بالكامل.",
-        "enter_pwd_confirm": "أدخل كلمة مرورك للتأكيد"
+        "enter_pwd_confirm": "أدخل كلمة مرورك للتأكيد",
+        "view_user_trades": "عرض صفقات المستخدم",
+        "force_stop_bot": "إيقاف البوت إجبارياً",
+        "force_start_bot": "تشغيل البوت إجبارياً",
+        "suspend_account": "تعليق الحساب",
+        "unsuspend_account": "رفع التعليق",
+        "reset_password": "إعادة تعيين كلمة المرور"
+    },
+    "analytics": {
+        "assets_tracked": "أصول متتبعة"
+    },
+    "status": {
+        "suspended": "معلق",
+        "active": "نشط",
+        "deteriorating": "متدهور",
+        "running": "يعمل"
+    },
+    "lang": {
+        "english": "English",
+        "arabic": "العربية"
     }
 }
