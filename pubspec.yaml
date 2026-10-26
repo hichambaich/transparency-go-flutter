@@ -10,6 +10,8 @@ dependencies:
   url_launcher: ^6.2.5
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   http: ^1.1.0
   shared_preferences: ^2.2.1
   intl: ^0.18.1

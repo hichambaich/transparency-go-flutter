@@ -8,6 +8,7 @@ import 'dart:convert';
 import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -101,6 +102,16 @@ class MyApp extends StatelessWidget {
           builder: (context, currentMode, child) {
             return MaterialApp(
               key: ValueKey(currentLang),
+              locale: Locale(currentLang),
+              localizationsDelegates: const [
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: const [
+                Locale('en'),
+                Locale('ar'),
+              ],
               title: 'SmartWallet',
               debugShowCheckedModeBanner: false,
               themeMode: currentMode,
@@ -543,11 +554,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Image.asset('assets/images/snowflake.png', width: 28, height: 28),
-                      Text('SMARTWALLET', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))),
-                    ],
+                  Directionality(
+                    textDirection: TextDirection.ltr,
+                    child: Row(
+                      children: [
+                        Image.asset('assets/images/snowflake.png', width: 28, height: 28),
+                        Text('SMARTWALLET', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))),
+                      ],
+                    ),
                   ),
                   Row(
                     children: [
