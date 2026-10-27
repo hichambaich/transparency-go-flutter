@@ -468,7 +468,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 children: ['1h', '1d', '1w', '1mo', '1y'].map((p) {
                   final isSel = _currentPeriod == p;
                   return ChoiceChip(
-                    label: Text(p.toUpperCase(), style: TextStyle(color: isSel ? Colors.black : (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))),
+                    label: Text(AppTranslations.t('misc.period_$p'), style: TextStyle(color: isSel ? Colors.black : (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))),
                     selected: isSel, selectedColor: accent, backgroundColor: borderColor,
                     onSelected: (val) {
                       setState(() => _currentPeriod = p);

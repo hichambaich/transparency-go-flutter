@@ -498,10 +498,10 @@
         "confirm": "Confirmer",
         "cancel": "Annuler",
         "period_1h": "1H",
-        "period_1d": "1D",
-        "period_1w": "1W",
-        "period_1mo": "1MO",
-        "period_1y": "1Y",
+        "period_1d": "1J",
+        "period_1w": "1S",
+        "period_1mo": "1M",
+        "period_1y": "1A",
         "loading": "Chargement..."
     },
     "common": {
