@@ -25,13 +25,16 @@ final ValueNotifier<String> languageNotifier = ValueNotifier('en');
 class AppTranslations {
   static Map<String, dynamic> _en = {};
   static Map<String, dynamic> _ar = {};
+  static Map<String, dynamic> _fr = {};
 
   static Future<void> load() async {
     try {
       final enStr = await rootBundle.loadString('assets/translations/en.json');
       final arStr = await rootBundle.loadString('assets/translations/ar.json');
+      final frStr = await rootBundle.loadString('assets/translations/fr.json');
       _en = jsonDecode(enStr);
       _ar = jsonDecode(arStr);
+      _fr = jsonDecode(frStr);
     } catch (e) {
       print("Error loading translations: $e");
     }
@@ -39,7 +42,7 @@ class AppTranslations {
 
   static String t(String key) {
     final lang = languageNotifier.value;
-    final map = lang == 'ar' ? _ar : _en;
+    final map = lang == 'ar' ? _ar : (lang == 'fr' ? _fr : _en);
     final parts = key.split('.');
     dynamic current = map;
     for (final part in parts) {
@@ -65,6 +68,8 @@ class AppTranslations {
       if (rem >= 3 && rem <= 10) return 'few';
       if (rem >= 11 && rem <= 99) return 'many';
       return 'other';
+    } else if (lang == 'fr') {
+      return n == 0 || n == 1 ? 'one' : 'other';
     } else {
       return n == 1 ? 'one' : 'other';
     }
@@ -72,7 +77,7 @@ class AppTranslations {
 
   static String plural(String key, num count) {
     final lang = languageNotifier.value;
-    final map = lang == 'ar' ? _ar : _en;
+    final map = lang == 'ar' ? _ar : (lang == 'fr' ? _fr : _en);
     final parts = key.split('.');
     dynamic current = map;
     for (final part in parts) {
@@ -111,6 +116,7 @@ class MyApp extends StatelessWidget {
               supportedLocales: const [
                 Locale('en'),
                 Locale('ar'),
+                Locale('fr'),
               ],
               title: 'SmartWallet',
               debugShowCheckedModeBanner: false,
@@ -5057,7 +5063,19 @@ class _ExperienceScreenState extends State<ExperienceScreen> {
                           children: [
                             Row(
                               children: [
-                                CircleAvatar(radius: 12, backgroundColor: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)), child: Text(sym.isNotEmpty ? sym[0] : '?', style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontSize: 12, fontWeight: FontWeight.bold))),
+                                CircleAvatar(
+                                  radius: 12,
+                                  backgroundColor: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)),
+                                  child: ClipOval(
+                                    child: Image.network(
+                                      'https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/${sym.split('/')[0].toLowerCase()}.png',
+                                      width: 24, height: 24, fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) => Center(
+                                        child: Text(sym.isNotEmpty ? sym[0] : '?', style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontSize: 12, fontWeight: FontWeight.bold)),
+                                      ),
+                                    ),
+                                  ),
+                                ),
                                 const SizedBox(width: 8),
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -5123,10 +5141,10 @@ class _TechnicalErrorsScreenState extends State<TechnicalErrorsScreen> {
           _isLoading = false;
         });
       } else {
-        setState(() { _errorMsg = 'Failed to load data'; _isLoading = false; });
+        setState(() { _errorMsg = AppTranslations.t('errors.failed_load'); _isLoading = false; });
       }
     } catch (e) {
-      setState(() { _errorMsg = 'Connection error'; _isLoading = false; });
+      setState(() { _errorMsg = AppTranslations.t('errors.connection_error'); _isLoading = false; });
     }
   }
 
@@ -5849,6 +5867,50 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
     );
   }
 
+
+  void _showLanguagePicker(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        final isDark = themeNotifier.value == ThemeMode.dark;
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF101722) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(AppTranslations.t('settings.language'), style: TextStyle(color: isDark ? Colors.white : const Color(0xFF0f172a), fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              _buildLangOption(ctx, 'en', 'English'),
+              _buildLangOption(ctx, 'fr', 'Français'),
+              _buildLangOption(ctx, 'ar', 'العربية'),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildLangOption(BuildContext ctx, String code, String label) {
+    final isSelected = languageNotifier.value == code;
+    final isDark = themeNotifier.value == ThemeMode.dark;
+    return ListTile(
+      onTap: () async {
+        setState(() { languageNotifier.value = code; });
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('app_language', code);
+        if (ctx.mounted) Navigator.pop(ctx);
+      },
+      title: Text(label, style: TextStyle(color: isSelected ? (isDark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2)) : (isDark ? Colors.white : const Color(0xFF0f172a)), fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+      trailing: isSelected ? Icon(Icons.check_circle, color: isDark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2)) : null,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -5909,28 +5971,25 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                 Row(children: [Icon(Icons.language, color: accent, size: 20), SizedBox(width: 8), Text(AppTranslations.t('settings.language'), style: TextStyle(color: accent, fontWeight: FontWeight.bold))]),
                 const SizedBox(height: 10),
                 InkWell(
-                  onTap: () async {
-                    setState(() { languageNotifier.value = 'en'; });
-                    final prefs = await SharedPreferences.getInstance();
-                    await prefs.setString('app_language', 'en');
-                  },
+                  onTap: () => _showLanguagePicker(context),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)), borderRadius: BorderRadius.circular(8), border: Border.all(color: languageNotifier.value == 'en' ? accent : borderColor)),
-                    child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text('English', style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Color(0xFF00d9ff) : Color(0xFF0891b2)))), if (languageNotifier.value == 'en') Icon(Icons.check_circle, color: accent, size: 18)]),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                InkWell(
-                  onTap: () async {
-                    setState(() { languageNotifier.value = 'ar'; });
-                    final prefs = await SharedPreferences.getInstance();
-                    await prefs.setString('app_language', 'ar');
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)), borderRadius: BorderRadius.circular(8), border: Border.all(color: languageNotifier.value == 'ar' ? accent : borderColor)),
-                    child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text('العربية', style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))), if (languageNotifier.value == 'ar') Icon(Icons.check_circle, color: accent, size: 18)]),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    decoration: BoxDecoration(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)), borderRadius: BorderRadius.circular(8), border: Border.all(color: borderColor)),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          languageNotifier.value == 'ar'
+                            ? 'العربية'
+                            : (languageNotifier.value == 'fr' ? 'Français' : 'English'),
+                          style: TextStyle(
+                            color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Icon(Icons.chevron_right, color: accent, size: 20),
+                      ],
+                    ),
                   ),
                 ),
               ],

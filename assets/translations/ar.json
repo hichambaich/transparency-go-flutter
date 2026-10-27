@@ -501,7 +501,8 @@
         "period_1d": "يوم",
         "period_1w": "أسبوع",
         "period_1mo": "شهر",
-        "period_1y": "سنة"
+        "period_1y": "سنة",
+        "loading": "جاري التحميل..."
     },
     "common": {
         "cancel": "إلغاء",
@@ -702,5 +703,10 @@
     },
     "history": {
         "page_title": "سجل"
+    },
+    "errors": {
+        "failed_load": "فشل تحميل البيانات",
+        "connection_error": "خطأ في الاتصال",
+        "no_errors": "لا توجد أخطاء مسجلة"
     }
 }
