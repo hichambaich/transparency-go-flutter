@@ -147,7 +147,7 @@ class MyApp extends StatelessWidget {
                   displayColor: const Color(0xFFe2e8f0),
                 ),
               ),
-              home: const AuthGate(),
+              home: const AuthGateWithSplash(),
             );
           },
         );
@@ -182,6 +182,84 @@ class MyApp extends StatelessWidget {
 //   add languageNotifier listener to reload translations on change.
 
 // ================= AUTH GATE =================
+
+bool _splashShownOnce = false;
+
+// ================= SPLASH SCREEN =================
+class SplashScreen extends StatelessWidget {
+  const SplashScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = themeNotifier.value == ThemeMode.dark;
+    return Scaffold(
+      backgroundColor: isDark ? const Color(0xFF080d14) : const Color(0xFFf8fafc),
+      body: Center(
+        child: Directionality(
+          textDirection: TextDirection.ltr,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset('assets/images/snowflake.png', width: 140, height: 140),
+              const SizedBox(height: 24),
+              Text(
+                'SmartWallet',
+                style: TextStyle(
+                  color: isDark ? Colors.white : const Color(0xFF0f172a),
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'by smart solutions.py',
+                style: TextStyle(
+                  color: isDark ? const Color(0xFF94a3b8) : const Color(0xFF475569),
+                  fontSize: 14,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ================= AUTH GATE WITH SPLASH =================
+class AuthGateWithSplash extends StatefulWidget {
+  const AuthGateWithSplash({super.key});
+  @override
+  State<AuthGateWithSplash> createState() => _AuthGateWithSplashState();
+}
+
+class _AuthGateWithSplashState extends State<AuthGateWithSplash> {
+  late bool _splashDone;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_splashShownOnce) {
+      _splashDone = true;
+    } else {
+      _splashDone = false;
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted) {
+          setState(() => _splashDone = true);
+          _splashShownOnce = true;
+        }
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _splashDone ? const AuthGate() : const SplashScreen();
+  }
+}
+
 class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
   @override
@@ -280,6 +358,15 @@ class _LoginScreenState extends State<LoginScreen> {
               Image.asset('assets/images/snowflake.png', width: 80, height: 80),
               const SizedBox(height: 10),
               Text('SMARTWALLET', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2)))),
+              const SizedBox(height: 4),
+              Text(
+                'by smart solutions.py',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF94a3b8) : const Color(0xFF475569)),
+                  letterSpacing: 0.5,
+                ),
+              ),
               const SizedBox(height: 40),
               TextField(controller: _emailCtrl, decoration: InputDecoration(labelText: AppTranslations.t('support.email'), border: OutlineInputBorder())),
               const SizedBox(height: 16),
