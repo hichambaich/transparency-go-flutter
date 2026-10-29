@@ -93,7 +93,9 @@
             "few": "actifs",
             "many": "actifs",
             "other": "actifs"
-        }
+        },
+        "blocked_assets": "Actifs bloqués",
+        "blocked_assets_sub": "Actifs bloqués par vous ou le développeur"
     },
     "settings": {
         "title": "Paramètres",
@@ -709,5 +711,13 @@
         "failed_load": "Échec du chargement",
         "connection_error": "Erreur de connexion",
         "no_errors": "Aucune erreur enregistrée"
+    },
+    "blocked": {
+        "source_developer": "Bloqué par le développeur",
+        "source_user": "Bloqué par vous",
+        "source_both": "Bloqué par le développeur et vous",
+        "unblock": "Débloquer",
+        "empty": "Aucun actif bloqué",
+        "dev_warning": "Cet actif est bloqué par le développeur en raison du risque de marché."
     }
 }

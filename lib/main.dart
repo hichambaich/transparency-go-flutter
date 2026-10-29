@@ -118,7 +118,7 @@ class MyApp extends StatelessWidget {
                 Locale('ar'),
                 Locale('fr'),
               ],
-              title: 'SmartWallet',
+              title: 'SMARTWALLET',
               debugShowCheckedModeBanner: false,
               themeMode: currentMode,
               builder: (context, child) {
@@ -203,7 +203,7 @@ class SplashScreen extends StatelessWidget {
               Image.asset('assets/images/snowflake.png', width: 140, height: 140),
               const SizedBox(height: 24),
               Text(
-                'SmartWallet',
+                'SMARTWALLET',
                 style: TextStyle(
                   color: isDark ? Colors.white : const Color(0xFF0f172a),
                   fontSize: 32,
@@ -3173,6 +3173,7 @@ class MenuScreen extends StatelessWidget {
           _menuItem(title: AppTranslations.t('menu.submenu_explore'), subtitle: AppTranslations.t('menu.submenu_explore_sub'), icon: Icons.explore, iconColor: Color(0xFFfbbf24), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => SubMenuScreen(title: AppTranslations.t('menu.submenu_explore'), items: [
             SubMenuItem(title: AppTranslations.t('menu.search_asset'), subtitle: AppTranslations.t('menu.search_asset_sub'), icon: Icons.search, iconColor: Color(0xFFfbbf24), route: SearchAssetScreen()),
             SubMenuItem(title: AppTranslations.t('menu.active_universe'), subtitle: AppTranslations.t('menu.active_universe_sub'), icon: Icons.public, iconColor: (themeNotifier.value == ThemeMode.dark ? Color(0xFF00d9ff) : Color(0xFF0891b2)), route: ActiveUniverseScreen()),
+            SubMenuItem(title: AppTranslations.t('menu.blocked_assets'), subtitle: AppTranslations.t('menu.blocked_assets_sub'), icon: Icons.block, iconColor: const Color(0xFFef4444), route: BlockedAssetsScreen()),
           ])))),
           _menuItem(title: AppTranslations.t('menu.submenu_history'), subtitle: AppTranslations.t('menu.submenu_history_sub'), icon: Icons.receipt_long, iconColor: Color(0xFF10b981), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => SubMenuScreen(title: AppTranslations.t('menu.submenu_history'), items: [
             SubMenuItem(title: AppTranslations.t('menu.trade_history'), subtitle: AppTranslations.t('menu.trade_history_sub'), icon: Icons.receipt_long, iconColor: Color(0xFF10b981), route: StatDetailScreen(title: AppTranslations.t('dash.closed_trades'), data: {}, token: '')),
@@ -4898,6 +4899,166 @@ class _AssetDetailsScreenState extends State<AssetDetailsScreen> {
 
 
 // ================= ACTIVE UNIVERSE SCREEN =================
+
+// ================= BLOCKED ASSETS SCREEN =================
+class BlockedAssetsScreen extends StatefulWidget {
+  const BlockedAssetsScreen({super.key});
+  @override
+  State<BlockedAssetsScreen> createState() => _BlockedAssetsScreenState();
+}
+
+class _BlockedAssetsScreenState extends State<BlockedAssetsScreen> {
+  List<dynamic> _assets = [];
+  bool _isLoading = true;
+  String _error = '';
+
+  Color get cardBg => themeNotifier.value == ThemeMode.dark ? const Color(0xFF101722) : Colors.white;
+  Color get borderColor => themeNotifier.value == ThemeMode.dark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0);
+  Color get accent => themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2);
+  final Color green = const Color(0xFF10b981);
+  final Color red = const Color(0xFFef4444);
+  final Color gold = const Color(0xFFf0b90b);
+
+  @override
+  void initState() {
+    super.initState();
+    _fetch();
+  }
+
+  Future<void> _fetch() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token') ?? '';
+      final res = await http.get(
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/blocked_assets'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (res.statusCode == 200) {
+        final d = jsonDecode(res.body);
+        setState(() {
+          _assets = d['blocked_assets'] ?? [];
+          _isLoading = false;
+        });
+      } else {
+        setState(() { _error = 'Failed (${res.statusCode})'; _isLoading = false; });
+      }
+    } catch (e) {
+      setState(() { _error = 'Connection error: $e'; _isLoading = false; });
+    }
+  }
+
+  Future<void> _unblock(String symbol) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token') ?? '';
+      final res = await http.post(
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/asset/block'),
+        headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
+        body: jsonEncode({'symbol': symbol, 'block': false}),
+      );
+      if (res.statusCode == 200 && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppTranslations.t('search.asset_unblocked_success')), backgroundColor: green),
+        );
+        _fetch();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: red),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc),
+      appBar: AppBar(
+        backgroundColor: cardBg,
+        leading: IconButton(icon: Icon(Icons.arrow_back, color: accent), onPressed: () => Navigator.pop(context)),
+        title: Text(AppTranslations.t('menu.blocked_assets'), style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 18)),
+      ),
+      body: _isLoading
+        ? Center(child: CircularProgressIndicator(color: accent))
+        : _error.isNotEmpty
+          ? Center(child: Text(_error, style: const TextStyle(color: Colors.red)))
+          : _assets.isEmpty
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.block, color: Colors.grey, size: 48),
+                    const SizedBox(height: 12),
+                    Text(AppTranslations.t('blocked.empty'), style: const TextStyle(color: Colors.grey, fontSize: 14)),
+                  ],
+                ),
+              )
+            : ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: _assets.length,
+                itemBuilder: (context, i) {
+                  final a = _assets[i];
+                  final sym = a['symbol'] ?? '?';
+                  final source = a['source'] ?? 'user';
+                  Color sourceColor;
+                  IconData sourceIcon;
+                  String sourceText;
+                  if (source == 'developer' || source == 'both') {
+                    sourceColor = red;
+                    sourceIcon = Icons.verified_user;
+                    sourceText = AppTranslations.t('blocked.source_${source}');
+                  } else {
+                    sourceColor = gold;
+                    sourceIcon = Icons.person;
+                    sourceText = AppTranslations.t('blocked.source_user');
+                  }
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(10), border: Border.all(color: borderColor)),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 14,
+                          backgroundColor: themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc),
+                          child: ClipOval(
+                            child: Image.network(
+                              'https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/${sym.toLowerCase()}.png',
+                              width: 28, height: 28, fit: BoxFit.cover,
+                              errorBuilder: (c, e, s) => Center(child: Text(sym.isNotEmpty ? sym[0] : '?', style: TextStyle(color: themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a), fontWeight: FontWeight.bold, fontSize: 12))),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('$sym/USDT', style: TextStyle(color: themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a), fontWeight: FontWeight.bold, fontSize: 14)),
+                              Row(children: [
+                                Icon(sourceIcon, color: sourceColor, size: 11),
+                                const SizedBox(width: 3),
+                                Text(sourceText, style: TextStyle(color: sourceColor, fontSize: 10)),
+                              ]),
+                            ],
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => _unblock(sym),
+                          style: TextButton.styleFrom(foregroundColor: green, padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4)),
+                          child: Text(AppTranslations.t('blocked.unblock'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+    );
+  }
+}
+
 class ActiveUniverseScreen extends StatefulWidget {
   const ActiveUniverseScreen({super.key});
 

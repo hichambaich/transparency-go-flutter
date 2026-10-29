@@ -93,7 +93,9 @@
             "few": "ACTIVE assets",
             "many": "ACTIVE assets",
             "other": "ACTIVE assets"
-        }
+        },
+        "blocked_assets": "Blocked Assets",
+        "blocked_assets_sub": "Assets blocked by you or developer"
     },
     "settings": {
         "title": "Settings",
@@ -708,5 +710,13 @@
         "failed_load": "Failed to load data",
         "connection_error": "Connection error",
         "no_errors": "No errors recorded"
+    },
+    "blocked": {
+        "source_developer": "Blocked by Developer",
+        "source_user": "Blocked by You",
+        "source_both": "Blocked by Developer & You",
+        "unblock": "Unblock",
+        "empty": "No blocked assets",
+        "dev_warning": "This asset is blocked by the developer due to market risk."
     }
 }
