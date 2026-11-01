@@ -36,7 +36,7 @@ class AppTranslations {
       _ar = jsonDecode(arStr);
       _fr = jsonDecode(frStr);
     } catch (e) {
-      print("Error loading translations: $e");
+      debugPrint("Error loading translations: $e");
     }
   }
 
@@ -202,10 +202,10 @@ class SplashScreen extends StatelessWidget {
             children: [
               Image.asset('assets/images/snowflake.png', width: 140, height: 140),
               const SizedBox(height: 24),
-              Text(
+              const Text(
                 'SMARTWALLET',
                 style: TextStyle(
-                  color: isDark ? Colors.white : const Color(0xFF0f172a),
+                  color: Color(0xFF00d9ff),
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.2,
@@ -245,7 +245,7 @@ class _AuthGateWithSplashState extends State<AuthGateWithSplash> {
       _splashDone = true;
     } else {
       _splashDone = false;
-      Future.delayed(const Duration(seconds: 3), () {
+      Future.delayed(const Duration(seconds: 5), () {
         if (mounted) {
           setState(() => _splashDone = true);
           _splashShownOnce = true;
@@ -357,7 +357,7 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               Image.asset('assets/images/snowflake.png', width: 80, height: 80),
               const SizedBox(height: 10),
-              Text('SMARTWALLET', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2)))),
+              const Text('SMARTWALLET', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF00d9ff))),
               const SizedBox(height: 4),
               Text(
                 'by smart solutions.py',
@@ -368,7 +368,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 40),
-              TextField(controller: _emailCtrl, decoration: InputDecoration(labelText: AppTranslations.t('support.email'), border: OutlineInputBorder())),
+              TextField(controller: _emailCtrl, decoration: InputDecoration(labelText: AppTranslations.t('support.email'), border: const OutlineInputBorder())),
               const SizedBox(height: 16),
               TextField(
                 controller: _passCtrl,
@@ -387,7 +387,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   Row(children: [
                     Checkbox(value: _rememberMe, onChanged: (v) => setState(() => _rememberMe = v ?? true), activeColor: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2))),
-                    Text(AppTranslations.t('auth.remember_me'), style: TextStyle(fontSize: 12)),
+                    Text(AppTranslations.t('auth.remember_me'), style: const TextStyle(fontSize: 12)),
                   ]),
                 ],
               ),
@@ -408,7 +408,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const Text("Don't have an account?", style: TextStyle(color: Colors.grey, fontSize: 13)),
                   TextButton(
                     onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const RegisterScreen())),
-                    child: Text(AppTranslations.t('auth.register_link'), style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Color(0xFF00d9ff) : Color(0xFF0891b2)), fontWeight: FontWeight.bold, fontSize: 13)),
+                    child: Text(AppTranslations.t('auth.register_link'), style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2)), fontWeight: FontWeight.bold, fontSize: 13)),
                   ),
                 ],
               ),
@@ -454,7 +454,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     _fetchData();
-    _pollingTimer = Timer.periodic(const Duration(seconds: 3), (_) => _fetchData(isPolling: true));
+    _pollingTimer = Timer.periodic(const Duration(seconds: 5), (_) => _fetchData(isPolling: true));
   }
 
 
@@ -652,7 +652,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     child: Row(
                       children: [
                         Image.asset('assets/images/snowflake.png', width: 28, height: 28),
-                        Text('SMARTWALLET', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))),
+                        const Text('SMARTWALLET', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF00d9ff))),
                       ],
                     ),
                   ),
@@ -675,8 +675,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           child: Row(
                             children: [
                               Icon(Icons.menu, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), size: 13),
-                              SizedBox(width: 3),
-                              Text(AppTranslations.t('menu.title'), style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : Color(0xFF0f172a)), fontWeight: FontWeight.bold, fontSize: 10)),
+                              const SizedBox(width: 3),
+                              Text(AppTranslations.t('menu.title'), style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontWeight: FontWeight.bold, fontSize: 10)),
                             ],
                           ),
                         ),
@@ -705,10 +705,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(AppTranslations.t('dash.exchange_balances'), style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : Color(0xFF0f172a)))),
+                            Text(AppTranslations.t('dash.exchange_balances'), style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))),
                             Row(
                               children: [
-                                Text(AppTranslations.t('dash.performance'), style: TextStyle(fontSize: 10, color: Colors.grey)),
+                                Text(AppTranslations.t('dash.performance'), style: const TextStyle(fontSize: 10, color: Colors.grey)),
                                 const SizedBox(width: 4),
                                 InkWell(
                                   onTap: _showPeriodPicker,
@@ -736,8 +736,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     child: Row(
                                       children: [
                                         Icon(Icons.insights, size: 12, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a))),
-                                        SizedBox(width: 4),
-                                        Text(AppTranslations.t('dash.stats'), style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : Color(0xFF0f172a)))),
+                                        const SizedBox(width: 4),
+                                        Text(AppTranslations.t('dash.stats'), style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))),
                                       ],
                                     ),
                                   ),
@@ -757,9 +757,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   InkWell(
-                                    onTap: () => _openStatDetail(context, AppTranslations.t('stat.capital')),
+                                    onTap: () => _openStatDetail(context, AppTranslations.t('menu.capital_events')),
                                     child: Row(children: [
-                                      Text(AppTranslations.t('dash.total_capital'), style: TextStyle(fontSize: 9, color: Colors.grey)),
+                                      Text(AppTranslations.t('dash.total_capital'), style: const TextStyle(fontSize: 9, color: Colors.grey)),
                                       const SizedBox(width: 6),
                                       Text(textDirection: TextDirection.ltr, 'ROI ${formatPct(roi)}', style: TextStyle(fontSize: 10, color: roi >= 0 ? green : red, fontWeight: FontWeight.bold)),
                                       const SizedBox(width: 2),
@@ -776,12 +776,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       width: 18,
                                       height: 18,
                                       child: Image(
-                                        image: NetworkImage('https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/usdt.png'),
+                                        image: const NetworkImage('https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/usdt.png'),
                                         errorBuilder: (c, o, s) => const Icon(Icons.circle, color: Color(0xFF26A17B), size: 18),
                                       ),
                                     ),
                                       const SizedBox(width: 4),
-                                      Column(
+                                      const Column(
                                         mainAxisAlignment: MainAxisAlignment.center,
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
@@ -825,7 +825,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   SizedBox(
                                     height: 50,
                                     child: _rawSpots.isEmpty
-                                        ? Center(child: Text(AppTranslations.t('misc.loading'), style: TextStyle(color: Colors.grey, fontSize: 10)))
+                                        ? Center(child: Text(AppTranslations.t('misc.loading'), style: const TextStyle(color: Colors.grey, fontSize: 10)))
                                         : Stack(
                                             children: [
                                               Positioned.fill(top: 25, child: CustomPaint(painter: DashedLinePainter(color: Colors.grey.withOpacity(0.4)))),
@@ -880,7 +880,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         const SizedBox(height: 6),
                         // Capital Events
                         InkWell(
-                          onTap: () => _openStatDetail(context, AppTranslations.t('stat.capital')),
+                          onTap: () => _openStatDetail(context, AppTranslations.t('menu.capital_events')),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(vertical: 4),
                             child: Row(
@@ -892,8 +892,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text(AppTranslations.t('dash.capital_events'), style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
-                                      Text(textDirection: TextDirection.ltr, '${AppTranslations.t('dash.deposits')} \$${deposits.toStringAsFixed(2)} | ${AppTranslations.t('dash.withdrawals_label')} \$${withdrawals.toStringAsFixed(2)} | ${AppTranslations.t('dash.ref_label')} \$${refCapital.toStringAsFixed(2)}', style: TextStyle(fontSize: 8, color: Colors.grey)),
+                                      Text(AppTranslations.t('dash.capital_events'), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+                                      Text(textDirection: TextDirection.ltr, '${AppTranslations.t('dash.deposits')} \$${deposits.toStringAsFixed(2)} | ${AppTranslations.t('dash.withdrawals_label')} \$${withdrawals.toStringAsFixed(2)} | ${AppTranslations.t('dash.ref_label')} \$${refCapital.toStringAsFixed(2)}', style: const TextStyle(fontSize: 8, color: Colors.grey)),
                                     ],
                                   ),
                                 ),
@@ -946,7 +946,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     Row(children: [
                                       Icon(Icons.pie_chart_outline, size: 16, color: expColor),
                                       const SizedBox(width: 5),
-                                      Text(AppTranslations.t('dash.capital_exposure'), style: TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold)),
+                                      Text(AppTranslations.t('dash.capital_exposure'), style: const TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold)),
                                     ]),
                                     Row(children: [
                                       Text(textDirection: TextDirection.ltr, '${exposurePct.toStringAsFixed(2)}%', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: expColor)),
@@ -970,7 +970,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 const SizedBox(height: 2),
                                 Align(
                                   alignment: Alignment.centerLeft,
-                                  child: Text(textDirection: TextDirection.ltr, '${AppTranslations.t('dash.positions_value')}: \$${posValue.toStringAsFixed(2)}/\$${totalCapital.toStringAsFixed(2)}', style: TextStyle(fontSize: 9, color: Colors.grey)),
+                                  child: Text(textDirection: TextDirection.ltr, '${AppTranslations.t('dash.positions_value')}: \$${posValue.toStringAsFixed(2)}/\$${totalCapital.toStringAsFixed(2)}', style: const TextStyle(fontSize: 9, color: Colors.grey)),
                                 ),
                               ],
                             ),
@@ -994,7 +994,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                         width: 22, height: 22,
                                         decoration: BoxDecoration(border: Border.all(color: Colors.grey, width: 1), borderRadius: BorderRadius.circular(4)),
                                         child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                                          Text('July', style: TextStyle(fontSize: 5, color: Colors.grey, fontWeight: FontWeight.bold)),
+                                          const Text('July', style: TextStyle(fontSize: 5, color: Colors.grey, fontWeight: FontWeight.bold)),
                                           Text('17', style: TextStyle(fontSize: 8, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontWeight: FontWeight.bold)),
                                         ]),
                                       ),
@@ -1004,12 +1004,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                           mainAxisAlignment: MainAxisAlignment.center,
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            Text(AppTranslations.t('dash.all_time_pnl'), style: TextStyle(fontSize: 8, color: Colors.grey)),
+                                            Text(AppTranslations.t('dash.all_time_pnl'), style: const TextStyle(fontSize: 8, color: Colors.grey)),
                                             const SizedBox(height: 2),
                                             Row(children: [
                                               SizedBox(
                                                 width: 60,
-                                                child: Text('${AppTranslations.t('dash.min')} 0.41%', style: TextStyle(fontSize: 9, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : Color(0xFF0f172a)))),
+                                                child: Text('${AppTranslations.t('dash.min')} 0.41%', style: TextStyle(fontSize: 9, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))),
                                               ),
                                               const SizedBox(width: 6),
                                               Container(
@@ -1022,7 +1022,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                             Row(children: [
                                               SizedBox(
                                                 width: 60,
-                                                child: Text('${AppTranslations.t('dash.max')} 0.92%', style: TextStyle(fontSize: 9, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : Color(0xFF0f172a)))),
+                                                child: Text('${AppTranslations.t('dash.max')} 0.92%', style: TextStyle(fontSize: 9, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))),
                                               ),
                                               const SizedBox(width: 6),
                                               Container(
@@ -1055,12 +1055,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                             Row(children: [
                                               Icon(Icons.savings_outlined, size: 16, color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2))),
                                               const SizedBox(width: 4),
-                                              Text(AppTranslations.t('dash.cost_efficiency'), style: TextStyle(fontSize: 8, color: Colors.grey)),
+                                              Text(AppTranslations.t('dash.cost_efficiency'), style: const TextStyle(fontSize: 8, color: Colors.grey)),
                                             ]),
                                             const SizedBox(height: 4),
-                                            Text('${AppTranslations.t('dash.fees_paid')}: \$1.06', style: TextStyle(fontSize: 9, color: gold)),
+                                            Text('${AppTranslations.t('dash.fees_paid')}: \$${(_data['fees'] ?? 0.0).toStringAsFixed(2)}', style: TextStyle(fontSize: 9, color: gold)),
                                             const SizedBox(height: 1),
-                                            Text('${AppTranslations.t('dash.avg_hour')}: \$0.0141', style: TextStyle(fontSize: 9, color: green)),
+                                            Text('${AppTranslations.t('dash.avg_hour')}: \$${(_data['avg_hour'] ?? 0.0).toStringAsFixed(4)}', style: TextStyle(fontSize: 9, color: green)),
                                           ],
                                         ),
                                       ),
@@ -1108,14 +1108,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Row(children: [
-                        Text(AppTranslations.t('dash.positions'), style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : Color(0xFF0f172a)))),
+                        Text(AppTranslations.t('dash.positions'), style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))),
                         const SizedBox(width: 5),
                         Text('${positions.length}/${_data['max_positions'] ?? 7}', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))),
                       ]),
                       Row(children: [
-                        Icon(Icons.list_alt, size: 13, color: Colors.grey),
-                        SizedBox(width: 3),
-                        Text(textDirection: TextDirection.ltr, '${AppTranslations.t('dash.total_value')}: \$${posValue.toStringAsFixed(2)}', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                        const Icon(Icons.list_alt, size: 13, color: Colors.grey),
+                        const SizedBox(width: 3),
+                        Text(textDirection: TextDirection.ltr, '${AppTranslations.t('dash.total_value')}: \$${posValue.toStringAsFixed(2)}', style: const TextStyle(fontSize: 10, color: Colors.grey)),
                       ]),
                     ],
                   ),
@@ -1123,13 +1123,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                   // ============ POSITIONS LIST ============
                   if (positions.isEmpty)
-                    Center(child: Padding(padding: EdgeInsets.all(20), child: Text(AppTranslations.t('dash.no_open_positions'), style: TextStyle(color: Colors.grey))))
+                    Center(child: Padding(padding: const EdgeInsets.all(20), child: Text(AppTranslations.t('dash.no_open_positions'), style: const TextStyle(color: Colors.grey))))
                   else
                     ...(positions.toList()..sort((a, b) {
                       final valA = (a['value'] ?? 0.0).toDouble();
                       final valB = (b['value'] ?? 0.0).toDouble();
                       return valB.compareTo(valA);
-                    })).map((p) => ExpandablePositionCard(p: p, cardBg: cardBg, borderColor: borderColor, green: green, red: red, accent: accent)).toList(),
+                    })).map((p) => ExpandablePositionCard(p: p, cardBg: cardBg, borderColor: borderColor, green: green, red: red, accent: accent)),
                 ],
               ),
             ),
@@ -1368,6 +1368,7 @@ class _ExpandablePositionCardState extends State<ExpandablePositionCard> {
     showDialog(context: context, barrierDismissible: false, builder: (ctx) => const Center(child: CircularProgressIndicator()));
     try {
       final res = await http.get(Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/binance/24h?symbol=$base'));
+      if (!mounted) return;
       Navigator.pop(context);
       if (res.statusCode == 200) {
         final d = jsonDecode(res.body);
@@ -1414,17 +1415,18 @@ class _ExpandablePositionCardState extends State<ExpandablePositionCard> {
               _dlgRow(AppTranslations.t('pos.high_24h'), '\$${high.toStringAsFixed(4)}'),
               _dlgRow(AppTranslations.t('pos.low_24h'), '\$${low.toStringAsFixed(4)}'),
               _dlgRow(AppTranslations.t('pos.weighted_24h'), '\$${wavg.toStringAsFixed(4)}', color: Colors.grey),
-              _dlgRow(AppTranslations.t('pos.volume_24h'), '\$${vol.toStringAsFixed(0)}', color: Color(0xFFf0b90b)),
+              _dlgRow(AppTranslations.t('pos.volume_24h'), '\$${vol.toStringAsFixed(0)}', color: const Color(0xFFf0b90b)),
             ],
           ),
           actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppTranslations.t('misc.close')))],
         ));
       } else {
-        print('Failed to load 24h data');
+        debugPrint('Failed to load 24h data');
       }
     } catch (e) {
+      if (!mounted) return;
       Navigator.pop(context);
-      print('Error: \$e');
+      debugPrint('Error: \$e');
     }
   }
   
@@ -1441,7 +1443,8 @@ class _ExpandablePositionCardState extends State<ExpandablePositionCard> {
     );
   }
 
-Widget build(BuildContext context) {
+@override
+  Widget build(BuildContext context) {
     final p = widget.p;
     final sym = p['symbol'] ?? 'UNKNOWN';
     final pnl = (p['pnl'] ?? 0.0).toDouble();
@@ -1479,9 +1482,13 @@ Widget build(BuildContext context) {
     final costValue = pnl != 0 ? value / (1 + pnl / 100) : value;
 
     Color dcaBarColor = const Color(0xFF3b82f6);
-    if (dcaPct >= 0.75) dcaBarColor = widget.red;
-    else if (dcaPct >= 0.5) dcaBarColor = Colors.orange;
-    else if (dcaPct >= 0.25) dcaBarColor = const Color(0xFF8b5cf6);
+    if (dcaPct >= 0.75) {
+      dcaBarColor = widget.red;
+    } else if (dcaPct >= 0.5) {
+      dcaBarColor = Colors.orange;
+    } else if (dcaPct >= 0.25) {
+      dcaBarColor = const Color(0xFF8b5cf6);
+    }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -1527,7 +1534,7 @@ Widget build(BuildContext context) {
                   onTap: () async {
                     final url = 'https://www.binance.com/en/trade/${sym.split('/')[0]}_USDT?type=spot';
                     final ok = await openUrl(url);
-                    if (!ok) print('❌ Binance launch failed: $url');
+                    if (!ok) debugPrint('❌ Binance launch failed: $url');
                   },
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -1567,7 +1574,7 @@ Widget build(BuildContext context) {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(AppTranslations.t('pos.pnl'), style: TextStyle(fontSize: 9, color: Colors.grey)),
+                      Text(AppTranslations.t('pos.pnl'), style: const TextStyle(fontSize: 9, color: Colors.grey)),
                       const SizedBox(height: 2),
                       Text(
                         '${pnl >= 0 ? '+' : ''}${pnl.toStringAsFixed(2)}%',
@@ -1580,7 +1587,7 @@ Widget build(BuildContext context) {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(textDirection: TextDirection.ltr, AppTranslations.t('pos.dca'), style: TextStyle(fontSize: 9, color: Colors.grey)),
+                      Text(textDirection: TextDirection.ltr, AppTranslations.t('pos.dca'), style: const TextStyle(fontSize: 9, color: Colors.grey)),
                       const SizedBox(height: 2),
                       Text(textDirection: TextDirection.ltr, '$dcaSteps/20', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))),
                       const SizedBox(height: 4),
@@ -1603,7 +1610,7 @@ Widget build(BuildContext context) {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          Text(AppTranslations.t('pos.cost'), style: TextStyle(fontSize: 10, color: Colors.grey)),
+                          Text(AppTranslations.t('pos.cost'), style: const TextStyle(fontSize: 10, color: Colors.grey)),
                           const SizedBox(width: 6),
                           Text(textDirection: TextDirection.ltr, '\$${costValue.toStringAsFixed(2)}', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))),
                         ],
@@ -1612,7 +1619,7 @@ Widget build(BuildContext context) {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          Text(AppTranslations.t('pos.value'), style: TextStyle(fontSize: 10, color: Colors.grey)),
+                          Text(AppTranslations.t('pos.value'), style: const TextStyle(fontSize: 10, color: Colors.grey)),
                           const SizedBox(width: 6),
                           Text(textDirection: TextDirection.ltr, '\$${value.toStringAsFixed(2)}', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: widget.accent)),
                         ],
@@ -1629,7 +1636,7 @@ Widget build(BuildContext context) {
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             child: Row(
               children: [
-                Text(textDirection: TextDirection.ltr, AppTranslations.t('pos.entry'), style: TextStyle(fontSize: 9, color: Colors.grey)),
+                Text(textDirection: TextDirection.ltr, AppTranslations.t('pos.entry'), style: const TextStyle(fontSize: 9, color: Colors.grey)),
                 const SizedBox(width: 4),
                 Text(textDirection: TextDirection.ltr, _fmtPrice(entry), style: TextStyle(fontSize: 10, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontWeight: FontWeight.bold)),
                 if (openedStr.isNotEmpty) ...[
@@ -1637,7 +1644,7 @@ Widget build(BuildContext context) {
                   Text(openedStr, style: const TextStyle(fontSize: 9, color: Color(0xFF64748b))),
                 ],
                 const Spacer(),
-                Text(textDirection: TextDirection.ltr, AppTranslations.t('pos.price'), style: TextStyle(fontSize: 9, color: Colors.grey)),
+                Text(textDirection: TextDirection.ltr, AppTranslations.t('pos.price'), style: const TextStyle(fontSize: 9, color: Colors.grey)),
                 const SizedBox(width: 4),
                 Text(_fmtPrice(current), style: TextStyle(fontSize: 10, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontWeight: FontWeight.bold)),
               ],
@@ -1656,24 +1663,24 @@ Widget build(BuildContext context) {
                 children: [
                   Row(
                     children: [
-                      Text(AppTranslations.t('pos.next_tp'), style: TextStyle(fontSize: 10, color: Colors.grey)),
+                      Text(AppTranslations.t('pos.next_tp'), style: const TextStyle(fontSize: 10, color: Colors.grey)),
                       const SizedBox(width: 8),
                       Text(textDirection: TextDirection.ltr, '+${grossTp.toStringAsFixed(2)}%  ->  \$${nextTpTarget.toStringAsFixed(4)}', style: TextStyle(fontSize: 10, color: widget.green, fontWeight: FontWeight.bold)),
                       const SizedBox(width: 4),
-                      Text(textDirection: TextDirection.ltr, '(${nextTpDist > 0 ? '+' : ''}${nextTpDist.toStringAsFixed(2)}% ${AppTranslations.t('pos.away')})', style: TextStyle(fontSize: 9, color: Colors.grey)),
+                      Text(textDirection: TextDirection.ltr, '(${nextTpDist > 0 ? '+' : ''}${nextTpDist.toStringAsFixed(2)}% ${AppTranslations.t('pos.away')})', style: const TextStyle(fontSize: 9, color: Colors.grey)),
                     ],
                   ),
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      Text(textDirection: TextDirection.ltr, AppTranslations.t('pos.next_dca'), style: TextStyle(fontSize: 10, color: Colors.grey)),
+                      Text(textDirection: TextDirection.ltr, AppTranslations.t('pos.next_dca'), style: const TextStyle(fontSize: 10, color: Colors.grey)),
                       const SizedBox(width: 8),
                       if (nextDcaTarget != null) ...[
-                        Text(textDirection: TextDirection.ltr, '${nextDcaPctStr}%  ->  \$${nextDcaTarget.toStringAsFixed(4)}', style: TextStyle(fontSize: 10, color: Colors.orange, fontWeight: FontWeight.bold)),
+                        Text(textDirection: TextDirection.ltr, '$nextDcaPctStr%  ->  \$${nextDcaTarget.toStringAsFixed(4)}', style: const TextStyle(fontSize: 10, color: Colors.orange, fontWeight: FontWeight.bold)),
                         const SizedBox(width: 4),
-                        Text(textDirection: TextDirection.ltr, '(${nextDcaDist! > 0 ? '+' : ''}${nextDcaDist.toStringAsFixed(2)}% ${AppTranslations.t('pos.away')})', style: TextStyle(fontSize: 9, color: Colors.grey)),
+                        Text(textDirection: TextDirection.ltr, '(${nextDcaDist! > 0 ? '+' : ''}${nextDcaDist.toStringAsFixed(2)}% ${AppTranslations.t('pos.away')})', style: const TextStyle(fontSize: 9, color: Colors.grey)),
                       ] else
-                        Text(AppTranslations.t('pos.max_reached'), style: TextStyle(fontSize: 10, color: Colors.red, fontWeight: FontWeight.bold)),
+                        Text(AppTranslations.t('pos.max_reached'), style: const TextStyle(fontSize: 10, color: Colors.red, fontWeight: FontWeight.bold)),
                     ],
                   ),
                   const SizedBox(height: 4),
@@ -1685,9 +1692,9 @@ Widget build(BuildContext context) {
                     
                     return Row(
                       children: [
-                        Text(AppTranslations.t('pos.hold'), style: TextStyle(fontSize: 10, color: Colors.grey)),
+                        Text(AppTranslations.t('pos.hold'), style: const TextStyle(fontSize: 10, color: Colors.grey)),
                         const SizedBox(width: 8),
-                        Text(textDirection: TextDirection.ltr, '${holdHours.toStringAsFixed(1)} ${AppTranslations.t('pos.hours')}', style: TextStyle(fontSize: 10, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : Color(0xFF0f172a)), fontWeight: FontWeight.bold)),
+                        Text(textDirection: TextDirection.ltr, '${holdHours.toStringAsFixed(1)} ${AppTranslations.t('pos.hours')}', style: TextStyle(fontSize: 10, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontWeight: FontWeight.bold)),
                       ],
                     );
                   }),
@@ -1891,15 +1898,15 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
     if (widget.title == AppTranslations.t('dash.bnb_fees_reserve')) return _buildBnb();
     if (widget.title == AppTranslations.t('dash.realized_pnl')) return _buildRealized();
     if (widget.title == AppTranslations.t('stat.capital')) return _buildCapitalBreakdown();
-    if (widget.title == AppTranslations.t('menu.capital_events')) return _buildCapitalEvents();
+    if (widget.title == AppTranslations.t('menu.capital_events') || widget.title == AppTranslations.t('dash.capital_events')) return _buildCapitalEvents();
     if (widget.title == AppTranslations.t('dash.capital_exposure')) return _buildCapitalExposure();
     // WARNING: 'Journal' is an internal identifier (routing), not a display string.
     if (widget.title == 'Journal') return _buildJournal();
-    return Center(child: Text(AppTranslations.t('misc.no_data'), style: TextStyle(color: Colors.grey)));
+    return Center(child: Text(AppTranslations.t('misc.no_data'), style: const TextStyle(color: Colors.grey)));
   }
 
   Widget _buildTradesList() {
-    if (_trades.isEmpty) return Center(child: Text(AppTranslations.t('misc.no_trades'), style: TextStyle(color: Colors.grey)));
+    if (_trades.isEmpty) return Center(child: Text(AppTranslations.t('misc.no_trades'), style: const TextStyle(color: Colors.grey)));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1984,7 +1991,7 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
               },
               child: Row(
                 children: [
-                  SizedBox(width: 35, child: Text(AppTranslations.t('dash.min'), style: TextStyle(color: Colors.grey, fontSize: 11))),
+                  SizedBox(width: 35, child: Text(AppTranslations.t('dash.min'), style: const TextStyle(color: Colors.grey, fontSize: 11))),
                   Expanded(
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
@@ -2011,7 +2018,7 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
               },
               child: Row(
                 children: [
-                  SizedBox(width: 35, child: Text(AppTranslations.t('dash.max'), style: TextStyle(color: Colors.grey, fontSize: 11))),
+                  SizedBox(width: 35, child: Text(AppTranslations.t('dash.max'), style: const TextStyle(color: Colors.grey, fontSize: 11))),
                   Expanded(
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
@@ -2053,14 +2060,14 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
               children: [
                 Text(AppTranslations.t('dash.cost_efficiency'), style: TextStyle(color: gold, fontWeight: FontWeight.bold, fontSize: 14)),
                 Divider(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0)), height: 20),
-                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text(textDirection: TextDirection.ltr, AppTranslations.t('dash.fees_paid'), style: TextStyle(color: Colors.grey, fontSize: 13)), Text('\$${fees.toStringAsFixed(2)}', style: TextStyle(color: gold, fontWeight: FontWeight.bold, fontSize: 13))]),
+                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text(textDirection: TextDirection.ltr, AppTranslations.t('dash.fees_paid'), style: const TextStyle(color: Colors.grey, fontSize: 13)), Text('\$${fees.toStringAsFixed(2)}', style: TextStyle(color: gold, fontWeight: FontWeight.bold, fontSize: 13))]),
                 const SizedBox(height: 6),
-                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text(textDirection: TextDirection.ltr, AppTranslations.t('dash.avg_hour'), style: TextStyle(color: Colors.grey, fontSize: 13)), Text('\$${avg.toStringAsFixed(4)}', style: TextStyle(color: green, fontWeight: FontWeight.bold, fontSize: 13))]),
+                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text(textDirection: TextDirection.ltr, AppTranslations.t('dash.avg_hour'), style: const TextStyle(color: Colors.grey, fontSize: 13)), Text('\$${avg.toStringAsFixed(4)}', style: TextStyle(color: green, fontWeight: FontWeight.bold, fontSize: 13))]),
               ],
             ),
           ),
           const SizedBox(height: 16),
-          Align(alignment: Alignment.centerLeft, child: Text('${assets.length} ' + AppTranslations.t('misc.assets_sorted_suffix'), style: const TextStyle(color: Colors.grey, fontSize: 11))),
+          Align(alignment: Alignment.centerLeft, child: Text('${assets.length} ${AppTranslations.t('misc.assets_sorted_suffix')}', style: const TextStyle(color: Colors.grey, fontSize: 11))),
           const SizedBox(height: 8),
           ...assets.map((a) {
             final sym = a['symbol'] ?? '?';
@@ -2092,21 +2099,21 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
                       const SizedBox(width: 8),
                       Text(sym, style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontWeight: FontWeight.bold)),
                       const SizedBox(width: 8),
-                      Text('$trades ' + AppTranslations.plural('misc.trades_unit', trades), style: const TextStyle(color: Colors.grey, fontSize: 10)),
+                      Text('$trades ${AppTranslations.plural('misc.trades_unit', trades)}', style: const TextStyle(color: Colors.grey, fontSize: 10)),
                       const Spacer(),
                       Text(textDirection: TextDirection.ltr, '${net >= 0 ? '+' : ''}\$${net.toStringAsFixed(2)}', style: TextStyle(color: net >= 0 ? green : red, fontWeight: FontWeight.bold)),
                     ],
                   ),
                   const SizedBox(height: 6),
                   Row(children: [
-                    Text(textDirection: TextDirection.ltr, 'Profit ${profit >= 0 ? '+' : ''}\$${profit.toStringAsFixed(2)}', style: TextStyle(color: Colors.grey, fontSize: 10)),
+                    Text(textDirection: TextDirection.ltr, 'Profit ${profit >= 0 ? '+' : ''}\$${profit.toStringAsFixed(2)}', style: const TextStyle(color: Colors.grey, fontSize: 10)),
                     const SizedBox(width: 16),
-                    Text(textDirection: TextDirection.ltr, 'Fees -\$${fee.toStringAsFixed(2)}', style: TextStyle(color: Colors.grey, fontSize: 10)),
+                    Text(textDirection: TextDirection.ltr, 'Fees -\$${fee.toStringAsFixed(2)}', style: const TextStyle(color: Colors.grey, fontSize: 10)),
                   ]),
                 ],
               ),
             );
-          }).toList(),
+          }),
         ],
       ),
     );
@@ -2134,10 +2141,10 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
             Text(AppTranslations.t('dash.bnb_fees_reserve'), style: TextStyle(color: gold, fontWeight: FontWeight.bold, fontSize: 14)),
             Divider(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0)), height: 20),
             _buildDetailRow(AppTranslations.t('field.status'), status == 'RUNNING' ? AppTranslations.t('status.running') : status, status == 'RUNNING' ? green : Colors.orange),
-            _buildDetailRow(AppTranslations.t('admin.balance'), '${balance.toStringAsFixed(8)} BNB', (themeNotifier.value == ThemeMode.dark ? Colors.white : Color(0xFF0f172a))),
-            _buildDetailRow(AppTranslations.t('field.price_hint'), '\$${price.toStringAsFixed(2)}', (themeNotifier.value == ThemeMode.dark ? Colors.white : Color(0xFF0f172a))),
+            _buildDetailRow(AppTranslations.t('admin.balance'), '${balance.toStringAsFixed(8)} BNB', (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a))),
+            _buildDetailRow(AppTranslations.t('field.price_hint'), '\$${price.toStringAsFixed(2)}', (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a))),
             _buildDetailRow(AppTranslations.t('pos.value'), '\$${value.toStringAsFixed(2)}', gold),
-            _buildDetailRow(AppTranslations.t('field.last_check'), timeStr, (themeNotifier.value == ThemeMode.dark ? Colors.white : Color(0xFF0f172a))),
+            _buildDetailRow(AppTranslations.t('field.last_check'), timeStr, (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a))),
           ],
         ),
       ),
@@ -2210,7 +2217,7 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
                 alignment: WrapAlignment.center,
                 children: ['1H', '1D', '1W', '1MO', '1Y'].map((p) {
                   final isSelected = _selectedPeriod.toLowerCase() == p.toLowerCase();
-                  final periodLabel = AppTranslations.t('misc.period_' + p.toLowerCase());
+                  final periodLabel = AppTranslations.t('misc.period_${p.toLowerCase()}');
                   return InkWell(
                     onTap: () {
                       setState(() { _selectedPeriod = p.toLowerCase(); });
@@ -2277,15 +2284,15 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)), borderRadius: BorderRadius.circular(14)),
-                      child: Row(children: [Icon(Icons.sync, size: 11, color: accent), const SizedBox(width: 4), Text(AppTranslations.t('misc.period_' + _selectedPeriod), style: TextStyle(color: accent, fontSize: 11, fontWeight: FontWeight.bold))]),
+                      child: Row(children: [Icon(Icons.sync, size: 11, color: accent), const SizedBox(width: 4), Text(AppTranslations.t('misc.period_$_selectedPeriod'), style: TextStyle(color: accent, fontSize: 11, fontWeight: FontWeight.bold))]),
                     ),
                   ),
                 ]),
                 Divider(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0)), height: 20),
                 _buildDetailRow(AppTranslations.t('field.total_profit'), '\$${totalProfit.toStringAsFixed(4)}', green),
-                _buildDetailRow(AppTranslations.t('field.total_trades'), '$totalTrades', (themeNotifier.value == ThemeMode.dark ? Colors.white : Color(0xFF0f172a))),
+                _buildDetailRow(AppTranslations.t('field.total_trades'), '$totalTrades', (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a))),
                 _buildDetailRow(AppTranslations.t('field.wins'), '$wins', green),
-                _buildDetailRow(AppTranslations.t('field.total_dcas'), '30', (themeNotifier.value == ThemeMode.dark ? Colors.white : Color(0xFF0f172a))),
+                _buildDetailRow(AppTranslations.t('field.total_dcas'), '30', (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a))),
               ],
             ),
           ),
@@ -2296,12 +2303,12 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
             child: Column(
               children: [
                 Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                  Text('${_selectedPeriod.toUpperCase()} ' + AppTranslations.t('misc.breakdown_label'), style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 14)),
+                  Text('${_selectedPeriod.toUpperCase()} ${AppTranslations.t('misc.breakdown_label')}', style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 14)),
                   Text(textDirection: TextDirection.ltr, '+\$${totalProfit.toStringAsFixed(2)}', style: TextStyle(color: green, fontWeight: FontWeight.bold, fontSize: 13)),
                 ]),
                 Divider(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0)), height: 20),
                 if (breakdown.isEmpty) 
-                  Padding(padding: const EdgeInsets.all(20), child: Text(AppTranslations.t('misc.no_data_period'), style: TextStyle(color: Colors.grey, fontSize: 12)))
+                  Padding(padding: const EdgeInsets.all(20), child: Text(AppTranslations.t('misc.no_data_period'), style: const TextStyle(color: Colors.grey, fontSize: 12)))
                 else
                   ...breakdown.map((b) {
                     final date = b['date'] ?? '';
@@ -2313,7 +2320,7 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
                         Text(textDirection: TextDirection.ltr, '${pnl >= 0 ? '+' : ''}\$${pnl.toStringAsFixed(2)}', style: TextStyle(color: pnl >= 0 ? green : red, fontWeight: FontWeight.bold, fontSize: 13)),
                       ]),
                     );
-                  }).toList(),
+                  }),
               ],
             ),
           ),
@@ -2342,11 +2349,11 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
             Divider(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0)), height: 24),
             _buildDetailRow(AppTranslations.t('field.free_usdt'), '\$${freeUsdt.toStringAsFixed(2)}', accent),
             Divider(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0)), height: 16),
-            _buildDetailRow(AppTranslations.t('dash.positions_value'), '\$${posValue.toStringAsFixed(2)}', Color(0xFFa78bfa)),
+            _buildDetailRow(AppTranslations.t('dash.positions_value'), '\$${posValue.toStringAsFixed(2)}', const Color(0xFFa78bfa)),
             Divider(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0)), height: 16),
             _buildDetailRow(AppTranslations.t('field.bnb_reserve'), '\$${bnbValue.toStringAsFixed(2)}', gold),
             Divider(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0)), height: 16),
-            _buildDetailRow(AppTranslations.t('field.total'), '\$${total.toStringAsFixed(2)}', (themeNotifier.value == ThemeMode.dark ? Colors.white : Color(0xFF0f172a)), isBold: true),
+            _buildDetailRow(AppTranslations.t('field.total'), '\$${total.toStringAsFixed(2)}', (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), isBold: true),
           ],
         ),
       ),
@@ -2359,6 +2366,9 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
     final refCapital = (cap['ref_capital'] ?? 0.0).toDouble();
     final deposits = (events['deposits'] ?? 0.0).toDouble();
     final withdrawals = (events['withdrawals'] ?? 0.0).toDouble();
+    final movements = List.from(events['movements'] ?? []);
+    // Flet uses reversed(events) -> newest first
+    movements.sort((a, b) => ((b['timestamp'] ?? 0) as num).compareTo((a['timestamp'] ?? 0) as num));
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -2373,15 +2383,119 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
               children: [
                 Text(AppTranslations.t('card.capital_summary'), style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 15)),
                 Divider(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0)), height: 24),
-                _buildDetailRow(AppTranslations.t('dash.reference_capital'), '\$${refCapital.toStringAsFixed(2)}', (themeNotifier.value == ThemeMode.dark ? Colors.white : Color(0xFF0f172a))),
+                _buildDetailRow(AppTranslations.t('dash.reference_capital'), '\$${refCapital.toStringAsFixed(2)}', (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a))),
                 _buildDetailRow(AppTranslations.t('field.total_deposits'), '\$${deposits.toStringAsFixed(2)}', green),
                 _buildDetailRow(AppTranslations.t('field.total_withdrawals'), '\$${withdrawals.toStringAsFixed(2)}', Colors.orange),
-                _buildDetailRow(AppTranslations.t('field.events_count'), '0', (themeNotifier.value == ThemeMode.dark ? Colors.white : Color(0xFF0f172a))),
+                _buildDetailRow(AppTranslations.t('field.events_count'), '${movements.length}', (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a))),
               ],
             ),
           ),
           const SizedBox(height: 16),
-          Text(AppTranslations.t('empty.no_capital_movements'), style: TextStyle(color: Colors.grey, fontSize: 13)),
+
+          if (movements.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Text(AppTranslations.t('empty.no_capital_movements'), style: const TextStyle(color: Colors.grey, fontSize: 13)),
+            )
+          else
+            ...movements.map((m) {
+              final type = (m['type'] ?? '?').toString();
+              final ts = (m['timestamp'] ?? 0).toDouble();
+              final dt = DateTime.fromMillisecondsSinceEpoch((ts * 1000).toInt());
+              final dateStr = '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}:${dt.second.toString().padLeft(2, '0')}';
+
+              String title = '';
+              Color color = Colors.grey;
+              IconData icon = Icons.help_outline;
+              bool showBa = false;
+
+              if (type == 'DEPOSIT') {
+                final amt = (m['amount'] ?? 0.0).toDouble();
+                title = '${AppTranslations.t('evt.deposit')}  \$${amt.toStringAsFixed(2)}';
+                color = green;
+                icon = Icons.arrow_downward;
+                showBa = true;
+              } else if (type == 'WITHDRAW') {
+                final amt = (m['amount'] ?? 0.0).toDouble();
+                title = '${AppTranslations.t('evt.withdraw')}  \$${amt.toStringAsFixed(2)}';
+                color = Colors.orange;
+                icon = Icons.arrow_upward;
+                showBa = true;
+              } else if (type == 'BNB_TOPUP') {
+                final usd = (m['usdt_spent'] ?? 0.0).toDouble();
+                final bnbAmt = (m['bnb_amount'] ?? 0.0).toDouble();
+                title = '${AppTranslations.t('evt.bnb_topup')}  \$${usd.toStringAsFixed(2)}  (${bnbAmt.toStringAsFixed(6)} BNB)';
+                color = const Color(0xFFa78bfa);
+                icon = Icons.diamond;
+                showBa = false;
+              } else if (type == 'BNB_FEE') {
+                final bnbAmt = (m['bnb_amount'] ?? 0.0).toDouble();
+                title = '${AppTranslations.t('evt.bnb_fee')}  ${bnbAmt.toStringAsFixed(6)} BNB';
+                color = Colors.orange;
+                icon = Icons.diamond;
+                showBa = false;
+              } else {
+                final amt = (m['amount'] ?? 0.0).toDouble();
+                title = '$type  \$${amt.toStringAsFixed(2)}';
+                color = Colors.grey;
+                icon = Icons.help_outline;
+                showBa = false;
+              }
+
+              final before = (m['usdt_before'] ?? m['balance_before'] ?? 0.0).toDouble();
+              final after = (m['usdt_after'] ?? m['balance_after'] ?? 0.0).toDouble();
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(10), border: Border.all(color: borderColor)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 32, height: 32,
+                          decoration: BoxDecoration(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF0f172a) : const Color(0xFFf1f5f9)), borderRadius: BorderRadius.circular(16)),
+                          alignment: Alignment.center,
+                          child: Icon(icon, color: color, size: 18),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(title, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 13)),
+                              Text(dateStr, style: const TextStyle(color: Colors.grey, fontSize: 9)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (showBa) ...[
+                      const SizedBox(height: 8),
+                      Divider(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0)), height: 1),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(AppTranslations.t('field.before'), style: const TextStyle(color: Colors.grey, fontSize: 11)),
+                          Text('\$${before.toStringAsFixed(2)}', style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontSize: 11)),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(AppTranslations.t('field.after'), style: const TextStyle(color: Colors.grey, fontSize: 11)),
+                          Text('\$${after.toStringAsFixed(2)}', style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontSize: 11)),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              );
+            }).toList(),
         ],
       ),
     );
@@ -2498,7 +2612,7 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
                   ],
                 ),
               );
-            }).toList(),
+            }),
         ],
       ),
     );
@@ -2535,13 +2649,17 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
                   children: [
                     Text('${(() {
                       String dt = type;
-                      if (type.contains('BUY')) dt = AppTranslations.t('events.BUY');
-                      else if (type.contains('SELL')) dt = AppTranslations.t('events.SELL');
-                      else if (type.contains('DCA')) dt = AppTranslations.t('events.DCA');
+                      if (type.contains('BUY')) {
+                        dt = AppTranslations.t('events.BUY');
+                      } else if (type.contains('SELL')) {
+                        dt = AppTranslations.t('events.SELL');
+                      } else if (type.contains('DCA')) {
+                        dt = AppTranslations.t('events.DCA');
+                      }
                       return dt;
                     })()} - $time', style: TextStyle(fontSize: 11, color: c, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 4),
-                    Text(msg.replaceAll('step ', AppTranslations.t('pos.step') + ' '), style: TextStyle(fontSize: 12, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))),
+                    Text(msg.replaceAll('step ', '${AppTranslations.t('pos.step')} '), style: TextStyle(fontSize: 12, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))),
                   ],
                 ),
               ),
@@ -2686,7 +2804,7 @@ class _StatsScreenState extends State<StatsScreen> {
                 children: [
                   Expanded(
                     child: _rawSpots.isEmpty
-                        ? Center(child: Text(AppTranslations.t('misc.no_chart_data'), style: TextStyle(color: Colors.grey, fontSize: 11)))
+                        ? Center(child: Text(AppTranslations.t('misc.no_chart_data'), style: const TextStyle(color: Colors.grey, fontSize: 11)))
                         : LineChart(
                             LineChartData(
                               gridData: FlGridData(
@@ -2920,12 +3038,12 @@ class _PeriodHistoryScreenState extends State<PeriodHistoryScreen> {
           icon: Icon(Icons.arrow_back, color: accent),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(AppTranslations.t('history.page_title') + ' ' + widget.title, style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 18)),
+        title: Text('${AppTranslations.t('history.page_title')} ${widget.title}', style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 18)),
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2))))
           : _history.isEmpty
-              ? Center(child: Text(AppTranslations.t('misc.no_history'), style: TextStyle(color: Colors.grey)))
+              ? Center(child: Text(AppTranslations.t('misc.no_history'), style: const TextStyle(color: Colors.grey)))
               : ListView.builder(
                   padding: const EdgeInsets.all(16),
                   itemCount: _history.length,
@@ -3118,7 +3236,7 @@ class TradeDetailScreen extends StatelessWidget {
                       final val = double.tryParse(ev['value']?.toString() ?? '0') ?? 0.0;
                       final stepQty = val > 0 && price > 0 ? val / price : 0.0;
                       return _kv(action, '${stepQty.toStringAsFixed(4)} @ \$${price.toStringAsFixed(2)} = \$${val.toStringAsFixed(2)}');
-                    }).toList(),
+                    }),
                   ],
                 ),
               ),
@@ -3142,7 +3260,7 @@ class MenuScreen extends StatelessWidget {
         backgroundColor: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)),
         elevation: 0,
         leading: IconButton(icon: Icon(Icons.arrow_back, color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2))), onPressed: () => Navigator.pop(context)),
-        title: Text(AppTranslations.t('menu.title'), style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Color(0xFF00d9ff) : Color(0xFF0891b2)), fontWeight: FontWeight.bold, letterSpacing: 1.5, fontSize: 18)),
+        title: Text(AppTranslations.t('menu.title'), style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2)), fontWeight: FontWeight.bold, letterSpacing: 1.5, fontSize: 18)),
       ),
       body: ListView(
         padding: const EdgeInsets.all(14),
@@ -3170,30 +3288,30 @@ class MenuScreen extends StatelessWidget {
               return const SizedBox.shrink();
             },
           ),
-          _menuItem(title: AppTranslations.t('menu.submenu_explore'), subtitle: AppTranslations.t('menu.submenu_explore_sub'), icon: Icons.explore, iconColor: Color(0xFFfbbf24), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => SubMenuScreen(title: AppTranslations.t('menu.submenu_explore'), items: [
-            SubMenuItem(title: AppTranslations.t('menu.search_asset'), subtitle: AppTranslations.t('menu.search_asset_sub'), icon: Icons.search, iconColor: Color(0xFFfbbf24), route: SearchAssetScreen()),
-            SubMenuItem(title: AppTranslations.t('menu.active_universe'), subtitle: AppTranslations.t('menu.active_universe_sub'), icon: Icons.public, iconColor: (themeNotifier.value == ThemeMode.dark ? Color(0xFF00d9ff) : Color(0xFF0891b2)), route: ActiveUniverseScreen()),
-            SubMenuItem(title: AppTranslations.t('menu.blocked_assets'), subtitle: AppTranslations.t('menu.blocked_assets_sub'), icon: Icons.block, iconColor: const Color(0xFFef4444), route: BlockedAssetsScreen()),
+          _menuItem(title: AppTranslations.t('menu.submenu_explore'), subtitle: AppTranslations.t('menu.submenu_explore_sub'), icon: Icons.explore, iconColor: const Color(0xFFfbbf24), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => SubMenuScreen(title: AppTranslations.t('menu.submenu_explore'), items: [
+            SubMenuItem(title: AppTranslations.t('menu.search_asset'), subtitle: AppTranslations.t('menu.search_asset_sub'), icon: Icons.search, iconColor: const Color(0xFFfbbf24), route: const SearchAssetScreen()),
+            SubMenuItem(title: AppTranslations.t('menu.active_universe'), subtitle: AppTranslations.t('menu.active_universe_sub'), icon: Icons.public, iconColor: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2)), route: const ActiveUniverseScreen()),
+            SubMenuItem(title: AppTranslations.t('menu.blocked_assets'), subtitle: AppTranslations.t('menu.blocked_assets_sub'), icon: Icons.block, iconColor: const Color(0xFFef4444), route: const BlockedAssetsScreen()),
           ])))),
-          _menuItem(title: AppTranslations.t('menu.submenu_history'), subtitle: AppTranslations.t('menu.submenu_history_sub'), icon: Icons.receipt_long, iconColor: Color(0xFF10b981), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => SubMenuScreen(title: AppTranslations.t('menu.submenu_history'), items: [
-            SubMenuItem(title: AppTranslations.t('menu.trade_history'), subtitle: AppTranslations.t('menu.trade_history_sub'), icon: Icons.receipt_long, iconColor: Color(0xFF10b981), route: StatDetailScreen(title: AppTranslations.t('dash.closed_trades'), data: {}, token: '')),
-            SubMenuItem(title: AppTranslations.t('menu.capital_events'), subtitle: '${AppTranslations.t('dash.deposits')} and withdrawals log', icon: Icons.account_balance, iconColor: (themeNotifier.value == ThemeMode.dark ? Color(0xFF00d9ff) : Color(0xFF0891b2)), route: StatDetailScreen(title: AppTranslations.t('menu.capital_events'), data: {}, token: '')),
+          _menuItem(title: AppTranslations.t('menu.submenu_history'), subtitle: AppTranslations.t('menu.submenu_history_sub'), icon: Icons.receipt_long, iconColor: const Color(0xFF10b981), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => SubMenuScreen(title: AppTranslations.t('menu.submenu_history'), items: [
+            SubMenuItem(title: AppTranslations.t('menu.trade_history'), subtitle: AppTranslations.t('menu.trade_history_sub'), icon: Icons.receipt_long, iconColor: const Color(0xFF10b981), route: StatDetailScreen(title: AppTranslations.t('dash.closed_trades'), data: const {}, token: '')),
+            SubMenuItem(title: AppTranslations.t('menu.capital_events'), subtitle: AppTranslations.t('menu.capital_events_sub'), icon: Icons.account_balance, iconColor: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2)), route: StatDetailScreen(title: AppTranslations.t('menu.capital_events'), data: const {}, token: '')),
           ])))),
-          _menuItem(title: AppTranslations.t('menu.submenu_analytics'), subtitle: AppTranslations.t('menu.submenu_analytics_sub'), icon: Icons.psychology, iconColor: Color(0xFFa78bfa), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => SubMenuScreen(title: AppTranslations.t('menu.submenu_analytics'), items: [
-            SubMenuItem(title: AppTranslations.t('menu.experience'), subtitle: AppTranslations.t('menu.experience_sub'), icon: Icons.psychology, iconColor: Color(0xFFa78bfa), route: ExperienceScreen()),
-            SubMenuItem(title: AppTranslations.t('menu.errors'), subtitle: AppTranslations.t('menu.errors_sub'), icon: Icons.bug_report, iconColor: Color(0xFFef4444), route: TechnicalErrorsScreen()),
+          _menuItem(title: AppTranslations.t('menu.submenu_analytics'), subtitle: AppTranslations.t('menu.submenu_analytics_sub'), icon: Icons.psychology, iconColor: const Color(0xFFa78bfa), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => SubMenuScreen(title: AppTranslations.t('menu.submenu_analytics'), items: [
+            SubMenuItem(title: AppTranslations.t('menu.experience'), subtitle: AppTranslations.t('menu.experience_sub'), icon: Icons.psychology, iconColor: const Color(0xFFa78bfa), route: const ExperienceScreen()),
+            SubMenuItem(title: AppTranslations.t('menu.errors'), subtitle: AppTranslations.t('menu.errors_sub'), icon: Icons.bug_report, iconColor: const Color(0xFFef4444), route: const TechnicalErrorsScreen()),
           ])))),
-          _menuItem(title: AppTranslations.t('menu.connect_binance_full'), subtitle: AppTranslations.t('menu.connect_binance_full_sub'), icon: Icons.link, iconColor: Color(0xFF38bdf8), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => TradingSettingsScreen()))),
-          _menuItem(title: AppTranslations.t('menu.submenu_account'), subtitle: AppTranslations.t('menu.submenu_account_sub'), icon: Icons.person, iconColor: Color(0xFFa78bfa), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => SubMenuScreen(title: AppTranslations.t('menu.submenu_account'), items: [
-            SubMenuItem(title: AppTranslations.t('menu.submenu_account'), subtitle: AppTranslations.t('account.sub'), icon: Icons.person, iconColor: Color(0xFFa78bfa), route: MyAccountScreen()),
-            SubMenuItem(title: AppTranslations.t('menu.settings'), subtitle: AppTranslations.t('menu.settings_sub'), icon: Icons.settings, iconColor: Color(0xFF94a3b8), route: AppSettingsScreen()),
+          _menuItem(title: AppTranslations.t('menu.connect_binance_full'), subtitle: AppTranslations.t('menu.connect_binance_full_sub'), icon: Icons.link, iconColor: const Color(0xFF38bdf8), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const TradingSettingsScreen()))),
+          _menuItem(title: AppTranslations.t('menu.submenu_account'), subtitle: AppTranslations.t('menu.submenu_account_sub'), icon: Icons.person, iconColor: const Color(0xFFa78bfa), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => SubMenuScreen(title: AppTranslations.t('menu.submenu_account'), items: [
+            SubMenuItem(title: AppTranslations.t('menu.submenu_account'), subtitle: AppTranslations.t('account.sub'), icon: Icons.person, iconColor: const Color(0xFFa78bfa), route: const MyAccountScreen()),
+            SubMenuItem(title: AppTranslations.t('menu.settings'), subtitle: AppTranslations.t('menu.settings_sub'), icon: Icons.settings, iconColor: const Color(0xFF94a3b8), route: const AppSettingsScreen()),
           ])))),
-          _menuItem(title: AppTranslations.t('support.title'), subtitle: AppTranslations.t('support.sub'), icon: Icons.help_outline, iconColor: Color(0xFF38bdf8), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => SupportScreen()))),
-          _menuItem(title: AppTranslations.t('menu.submenu_legal'), subtitle: AppTranslations.t('menu.submenu_legal_sub'), icon: Icons.gavel, iconColor: Color(0xFF38bdf8), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => SubMenuScreen(title: AppTranslations.t('menu.submenu_legal'), items: [
-            SubMenuItem(title: AppTranslations.t('legal.terms_title'), subtitle: AppTranslations.t('legal.terms_sub'), icon: Icons.gavel, iconColor: Color(0xFF38bdf8), route: TermsScreen()),
-            SubMenuItem(title: AppTranslations.t('legal.privacy_title'), subtitle: AppTranslations.t('legal.privacy_sub'), icon: Icons.shield, iconColor: Color(0xFFa78bfa), route: PrivacyScreen()),
+          _menuItem(title: AppTranslations.t('support.title'), subtitle: AppTranslations.t('support.sub'), icon: Icons.help_outline, iconColor: const Color(0xFF38bdf8), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const SupportScreen()))),
+          _menuItem(title: AppTranslations.t('menu.submenu_legal'), subtitle: AppTranslations.t('menu.submenu_legal_sub'), icon: Icons.gavel, iconColor: const Color(0xFF38bdf8), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => SubMenuScreen(title: AppTranslations.t('menu.submenu_legal'), items: [
+            SubMenuItem(title: AppTranslations.t('legal.terms_title'), subtitle: AppTranslations.t('legal.terms_sub'), icon: Icons.gavel, iconColor: const Color(0xFF38bdf8), route: const TermsScreen()),
+            SubMenuItem(title: AppTranslations.t('legal.privacy_title'), subtitle: AppTranslations.t('legal.privacy_sub'), icon: Icons.shield, iconColor: const Color(0xFFa78bfa), route: const PrivacyScreen()),
           ])))),
-          _menuItem(title: AppTranslations.t('menu.admin_panel'), subtitle: AppTranslations.t('menu.admin_panel_sub'), icon: Icons.admin_panel_settings, iconColor: Color(0xFFf59e0b), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const DeveloperPanelScreen()))),
+          _menuItem(title: AppTranslations.t('menu.admin_panel'), subtitle: AppTranslations.t('menu.admin_panel_sub'), icon: Icons.admin_panel_settings, iconColor: const Color(0xFFf59e0b), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const DeveloperPanelScreen()))),
           _menuItem(
             title: AppTranslations.t('menu.logout'), 
             subtitle: AppTranslations.t('menu.logout_sub'), 
@@ -3229,7 +3347,7 @@ class MenuScreen extends StatelessWidget {
                         Navigator.of(context).popUntil((route) => route.isFirst);
                         onLogout();
                       },
-                      child: Text(AppTranslations.t('misc.yes'), style: TextStyle(color: Color(0xFFef4444), fontSize: 16)),
+                      child: Text(AppTranslations.t('misc.yes'), style: const TextStyle(color: Color(0xFFef4444), fontSize: 16)),
                     ),
                   ],
                 ),
@@ -3380,7 +3498,7 @@ class _SupportScreenState extends State<SupportScreen> {
     final borderColor = isDark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0);
     final inputBg = isDark ? const Color(0xFF1a2230) : const Color(0xFFf1f5f9);
 
-    Widget _contactRow(IconData icon, String label, String value, {String? url}) {
+    Widget contactRow(IconData icon, String label, String value, {String? url}) {
       return InkWell(
         onTap: url != null ? () => openUrl(url) : null,
         child: Container(
@@ -3422,15 +3540,15 @@ class _SupportScreenState extends State<SupportScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(children: [Icon(Icons.support_agent, color: accent, size: 22), SizedBox(width: 8), Text(AppTranslations.t('support.contact'), style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 14))]),
+                Row(children: [Icon(Icons.support_agent, color: accent, size: 22), const SizedBox(width: 8), Text(AppTranslations.t('support.contact'), style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 14))]),
                 const SizedBox(height: 12),
-                _contactRow(Icons.email, AppTranslations.t('support.email'), AppTranslations.t('legal.footer_contact'), url: 'mailto:transparancygo@gmail.com'),
+                contactRow(Icons.email, AppTranslations.t('support.email'), AppTranslations.t('legal.footer_contact'), url: 'mailto:transparancygo@gmail.com'),
                 const SizedBox(height: 8),
-                _contactRow(Icons.send, AppTranslations.t('support.telegram'), '@TransparencyGoSupport_bot', url: 'https://t.me/TransparencyGoSupport_bot'),
+                contactRow(Icons.send, AppTranslations.t('support.telegram'), '@TransparencyGoSupport_bot', url: 'https://t.me/TransparencyGoSupport_bot'),
                 const SizedBox(height: 8),
-                _contactRow(Icons.campaign, AppTranslations.t('support.telegram_channel'), '@TransparencyGoChannel', url: 'https://t.me/TransparencyGoChannel'),
+                contactRow(Icons.campaign, AppTranslations.t('support.telegram_channel'), '@TransparencyGoChannel', url: 'https://t.me/TransparencyGoChannel'),
                 const SizedBox(height: 8),
-                _contactRow(Icons.access_time, AppTranslations.t('support.hours'), AppTranslations.t('support.hours_value_short')),
+                contactRow(Icons.access_time, AppTranslations.t('support.hours'), AppTranslations.t('support.hours_value_short')),
               ],
             ),
           ),
@@ -3441,7 +3559,7 @@ class _SupportScreenState extends State<SupportScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(children: [Icon(Icons.mail_outline, color: accent, size: 22), SizedBox(width: 8), Text(AppTranslations.t('support.message'), style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 14))]),
+                Row(children: [Icon(Icons.mail_outline, color: accent, size: 22), const SizedBox(width: 8), Text(AppTranslations.t('support.message'), style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 14))]),
                 const SizedBox(height: 12),
                 TextField(
                   controller: _msgCtrl,
@@ -3464,7 +3582,7 @@ class _SupportScreenState extends State<SupportScreen> {
                     ElevatedButton(
                       onPressed: _isSending ? null : _sendMessage,
                       style: ElevatedButton.styleFrom(backgroundColor: accent, foregroundColor: isDark ? const Color(0xFF0b1120) : Colors.white),
-                      child: _isSending ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : Text(AppTranslations.t('support.send')),
+                      child: _isSending ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : Text(AppTranslations.t('support.send')),
                     ),
                   ],
                 ),
@@ -3478,7 +3596,7 @@ class _SupportScreenState extends State<SupportScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(children: [Icon(Icons.menu_book, color: accent, size: 22), SizedBox(width: 8), Text(AppTranslations.t('guide.title'), style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 14))]),
+                Row(children: [Icon(Icons.menu_book, color: accent, size: 22), const SizedBox(width: 8), Text(AppTranslations.t('guide.title'), style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 14))]),
                 const SizedBox(height: 8),
                 Text(AppTranslations.t('guide.short_desc'), style: TextStyle(fontSize: 11, color: textMuted)),
                 const SizedBox(height: 12),
@@ -3561,7 +3679,7 @@ class UserGuideScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(children: [Icon(Icons.menu_book, color: accent, size: 22), SizedBox(width: 8), Text(AppTranslations.t('guide.title'), style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 16))]),
+                Row(children: [Icon(Icons.menu_book, color: accent, size: 22), const SizedBox(width: 8), Text(AppTranslations.t('guide.title'), style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 16))]),
                 const SizedBox(height: 4),
                 Text(AppTranslations.t('guide.sub'), style: TextStyle(fontSize: 10, color: textMuted, fontStyle: FontStyle.italic)),
               ],
@@ -3856,7 +3974,7 @@ class _SystemAdminCard extends StatelessWidget {
     final isDark = themeNotifier.value == ThemeMode.dark;
     final cardBg = isDark ? const Color(0xFF101722) : Colors.white;
     final accent = isDark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2);
-    final gold = const Color(0xFFf0b90b);
+    const gold = Color(0xFFf0b90b);
 
     return InkWell(
       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const SystemAdminPanelScreen())),
@@ -3870,14 +3988,14 @@ class _SystemAdminCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(Icons.admin_panel_settings, color: gold, size: 32),
+            const Icon(Icons.admin_panel_settings, color: gold, size: 32),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(AppTranslations.t('admin.system_admin_title'),
-                    style: TextStyle(color: gold, fontWeight: FontWeight.bold, fontSize: 16)),
+                    style: const TextStyle(color: gold, fontWeight: FontWeight.bold, fontSize: 16)),
                   const SizedBox(height: 4),
                   Text(AppTranslations.t('admin.system_admin_sub'),
                     style: const TextStyle(color: Colors.grey, fontSize: 11)),
@@ -3949,12 +4067,16 @@ class _SystemAdminPanelScreenState extends State<SystemAdminPanelScreen> {
     try {
       final t = await _token();
       final res = await http.post(Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/admin/system/backup'), headers: {'Authorization': 'Bearer $t'});
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(res.statusCode == 200 ? AppTranslations.t('admin.backup_success') : AppTranslations.t('admin.backup_failed')),
         backgroundColor: res.statusCode == 200 ? green : red));
+      }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppTranslations.t('admin.backup_failed')), backgroundColor: red));
+      }
     } finally {
       setState(() => _isBackupLoading = false);
     }
@@ -3980,8 +4102,10 @@ class _SystemAdminPanelScreenState extends State<SystemAdminPanelScreen> {
     try {
       final t = await _token();
       await http.post(Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/admin/system/restart_macro'), headers: {'Authorization': 'Bearer $t'});
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppTranslations.t('admin.macro_restarted')), backgroundColor: green));
+      }
     } catch (_) {} finally {
       setState(() => _isRestartLoading = false);
     }
@@ -4015,6 +4139,225 @@ class _SystemAdminPanelScreenState extends State<SystemAdminPanelScreen> {
         ),
       );
     } catch (_) {}
+  }
+
+  Future<void> _showBlockAssetDialog() async {
+    final assetController = TextEditingController();
+    final token = await _token();
+    
+    // جلب القائمة الحالية
+    List<dynamic> blockedList = [];
+    try {
+      final res = await http.get(
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/blocked_assets'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (res.statusCode == 200) {
+        blockedList = jsonDecode(res.body)['blocked_assets'] ?? [];
+      }
+    } catch (_) {}
+
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          backgroundColor: cardBg,
+          title: Text("Global Blocked Assets", style: TextStyle(color: accent, fontWeight: FontWeight.bold)),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: assetController,
+                        decoration: const InputDecoration(labelText: "Asset (e.g., TRX)", isDense: true),
+                        textCapitalization: TextCapitalization.characters,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: () async {
+                        final sym = assetController.text.trim().toUpperCase();
+                        if (sym.isEmpty) return;
+                        assetController.clear();
+                        final res = await http.post(
+                          Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/admin/block_asset'),
+                          headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
+                          body: jsonEncode({'asset': sym, 'block': true}),
+                        );
+                        if (res.statusCode == 200) {
+                          setState(() => blockedList.add(sym));
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.purpleAccent),
+                      child: const Text("Block", style: TextStyle(color: Colors.white, fontSize: 12)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Text("Currently Blocked:", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                const SizedBox(height: 8),
+                blockedList.isEmpty 
+                  ? const Text("None", style: TextStyle(color: Colors.grey, fontSize: 12))
+                  : Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: blockedList.map((item) {
+                        // التعامل مع البيانات سواء كانت نص أو كائن
+                        final sym = item is Map ? item['symbol'].toString() : item.toString();
+                        return Chip(
+                          label: Text(sym, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                          backgroundColor: Colors.redAccent.withOpacity(0.1),
+                          side: BorderSide(color: Colors.redAccent.withOpacity(0.5)),
+                          deleteIconColor: Colors.redAccent,
+                          onDeleted: () async {
+                            final res = await http.post(
+                              Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/admin/block_asset'),
+                              headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
+                              body: jsonEncode({'asset': sym, 'block': false}),
+                            );
+                            if (res.statusCode == 200) {
+                              setState(() => blockedList.remove(item));
+                            }
+                          },
+                        );
+                      }).toList(),
+                    ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Close")),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showGlobalSettingsDialog() async {
+    // 1. جلب القيم الحالية من السيرفر
+    String currentSize = "10";
+    String currentPos = "1";
+    String currentMinPos = "0";
+    String currentMin = "10";
+    String currentMax = "100";
+
+    try {
+      final t = await _token();
+      final res = await http.get(
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/admin/global_settings'),
+        headers: {'Authorization': 'Bearer $t'},
+      );
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        currentSize = data['trade_size'].toString();
+        currentPos = data['max_positions'].toString();
+        currentMinPos = (data['min_open_positions'] ?? 0).toString();
+        currentMin = (data['min_trade_size'] ?? 10.0).toString();
+        currentMax = (data['max_trade_size'] ?? 100.0).toString();
+      }
+    } catch (_) {}
+
+    if (!mounted) return;
+
+    // 2. إنشاء الحقول بالقيم المجلوبة
+    final sizeController = TextEditingController(text: currentSize);
+    final posController = TextEditingController(text: currentPos);
+    final minPosController = TextEditingController(text: currentMinPos);
+    final minController = TextEditingController(text: currentMin);
+    final maxController = TextEditingController(text: currentMax);
+
+    // 3. عرض النافذة
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: cardBg,
+        title: Text("Global Trading Settings", style: TextStyle(color: accent, fontWeight: FontWeight.bold)),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(controller: sizeController, decoration: const InputDecoration(labelText: "Default Trade Size (USDT)"), keyboardType: TextInputType.number),
+              const SizedBox(height: 8),
+              TextField(controller: posController, decoration: const InputDecoration(labelText: "Max Open Positions"), keyboardType: TextInputType.number),
+              const SizedBox(height: 8),
+              TextField(controller: minPosController, decoration: const InputDecoration(labelText: "Min Open Positions"), keyboardType: TextInputType.number),
+              const SizedBox(height: 8),
+              TextField(controller: minController, decoration: const InputDecoration(labelText: "Min Trade Size (USDT)"), keyboardType: TextInputType.number),
+              const SizedBox(height: 8),
+              TextField(controller: maxController, decoration: const InputDecoration(labelText: "Max Trade Size (USDT)"), keyboardType: TextInputType.number),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
+          ElevatedButton(
+            onPressed: () async {
+              final messenger = ScaffoldMessenger.of(context);
+              final token = await _token();
+              final res = await http.post(
+                Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/admin/global_settings'),
+                headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
+                body: jsonEncode({
+                  'trade_size': double.tryParse(sizeController.text) ?? 10.0,
+                  'max_positions': int.tryParse(posController.text) ?? 1,
+                  'min_open_positions': int.tryParse(minPosController.text) ?? 0,
+                  'min_trade_size': double.tryParse(minController.text) ?? 10.0,
+                  'max_trade_size': double.tryParse(maxController.text) ?? 100.0
+                }),
+              );
+              if (ctx.mounted) Navigator.pop(ctx);
+              if (res.statusCode == 200) {
+                messenger.showSnackBar(const SnackBar(content: Text('Settings Saved!'), backgroundColor: Colors.green));
+              } else {
+                messenger.showSnackBar(const SnackBar(content: Text('Failed to save settings'), backgroundColor: Colors.red));
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+            child: const Text("Save", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _restartSystem() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: cardBg,
+        title: const Text("Restart System?", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+        content: const Text("This will restart the dashboard, API, and all bots. Are you sure?"),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("Cancel")),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+            child: const Text("Restart", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      final token = await _token();
+      final res = await http.post(
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/admin/restart_system'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (mounted) {
+        if (res.statusCode == 200) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('System is restarting...'), backgroundColor: Colors.orange));
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Failed to restart system'), backgroundColor: Colors.red));
+        }
+      }
+    }
   }
 
   Widget _statRow(String label, String value) {
@@ -4079,6 +4422,31 @@ class _SystemAdminPanelScreenState extends State<SystemAdminPanelScreen> {
                       style: ElevatedButton.styleFrom(backgroundColor: gold, foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(vertical: 12)),
                     )),
                   ]),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: () => _showBlockAssetDialog(),
+                        icon: const Icon(Icons.block, size: 18),
+                        label: const Text("Block Assets", style: TextStyle(fontSize: 12)),
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.purpleAccent, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16)),
+                      ),
+                      ElevatedButton.icon(
+                        onPressed: () => _showGlobalSettingsDialog(),
+                        icon: const Icon(Icons.tune, size: 18),
+                        label: const Text("Global Settings", style: TextStyle(fontSize: 12)),
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16)),
+                      ),
+                      ElevatedButton.icon(
+                        onPressed: () => _restartSystem(),
+                        icon: const Icon(Icons.restart_alt, size: 18),
+                        label: const Text("Restart System", style: TextStyle(fontSize: 12)),
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16)),
+                      ),
+                    ],
+                  ),
                 ]),
               ),
               const SizedBox(height: 16),
@@ -4180,18 +4548,24 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
       );
       if (res.statusCode == 200) {
         setState(() => _isRunning = !_isRunning);
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(_isRunning ? 'Bot Started' : 'Bot Stopped'), backgroundColor: const Color(0xFF10b981)),
         );
+        }
       } else {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Failed'), backgroundColor: Color(0xFFef4444)),
         );
+        }
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e'), backgroundColor: const Color(0xFFef4444)),
       );
+      }
     } finally {
       setState(() => _isBusy = false);
     }
@@ -4217,14 +4591,18 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
       );
       if (res.statusCode == 200) {
         setState(() => _isSuspended = newState);
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(newState ? 'Suspended' : 'Unsuspended'), backgroundColor: const Color(0xFF10b981)),
         );
+        }
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e'), backgroundColor: const Color(0xFFef4444)),
       );
+      }
     } finally {
       setState(() => _isBusy = false);
     }
@@ -4269,9 +4647,11 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
         ));
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e'), backgroundColor: const Color(0xFFef4444)),
       );
+      }
     }
   }
 
@@ -4302,9 +4682,11 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
         Navigator.pop(context);
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e'), backgroundColor: const Color(0xFFef4444)),
       );
+      }
     }
   }
 
@@ -4314,8 +4696,8 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
     final cardBg = isDark ? const Color(0xFF101722) : Colors.white;
     final borderColor = isDark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0);
     final accent = isDark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2);
-    final green = const Color(0xFF10b981);
-    final red = const Color(0xFFef4444);
+    const green = Color(0xFF10b981);
+    const red = Color(0xFFef4444);
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF080d14) : const Color(0xFFf8fafc),
@@ -4433,8 +4815,8 @@ class _AdminUserTradesScreenState extends State<AdminUserTradesScreen> {
     final bg = isDark ? const Color(0xFF080d14) : const Color(0xFFf8fafc);
     final cardBg = isDark ? const Color(0xFF101722) : Colors.white;
     final accent = isDark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2);
-    final green = const Color(0xFF10b981);
-    final red = const Color(0xFFef4444);
+    const green = Color(0xFF10b981);
+    const red = Color(0xFFef4444);
     final border = isDark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0);
 
     return Scaffold(
@@ -4514,6 +4896,7 @@ class _SearchAssetScreenState extends State<SearchAssetScreen> {
           setState(() { _error = 'Asset not found'; _isLoading = false; });
         } else {
           setState(() { _isLoading = false; });
+          if (!mounted) return;
           Navigator.push(context, MaterialPageRoute(builder: (c) => AssetDetailsScreen(
             asset: data['asset'],
             experience: data['experience'],
@@ -4535,7 +4918,7 @@ class _SearchAssetScreenState extends State<SearchAssetScreen> {
       appBar: AppBar(
         backgroundColor: cardBg,
         leading: IconButton(icon: Icon(Icons.arrow_back, color: accent), onPressed: () => Navigator.pop(context)),
-        title: Text(AppTranslations.t('search.button'), style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Color(0xFF00d9ff) : Color(0xFF0891b2)), fontWeight: FontWeight.bold)),
+        title: Text(AppTranslations.t('search.button'), style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2)), fontWeight: FontWeight.bold)),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -4576,7 +4959,7 @@ class _SearchAssetScreenState extends State<SearchAssetScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       ),
-                      child: Text(AppTranslations.t('search.button'), style: TextStyle(fontWeight: FontWeight.bold)),
+                      child: Text(AppTranslations.t('search.button'), style: const TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],
@@ -4843,7 +5226,7 @@ class _AssetDetailsScreenState extends State<AssetDetailsScreen> {
                     _buildRow(AppTranslations.t('field.avg_pnl_trade'), '\$${_fmtNum(widget.experience!['avg_pnl'], decimals: 4)}', valColor: green),
                     _buildRow(AppTranslations.t('field.avg_hold'), '${_fmtNum(widget.experience!['avg_hold_minutes'], decimals: 1)} min'),
                     _buildRow(AppTranslations.t('field.avg_max_dca'), '${_fmtNum(widget.experience!['avg_dca_levels'])} / ${widget.experience!['max_dca_levels'] ?? 0}'),
-                    _buildRow(AppTranslations.t('field.experience_score'), '${_fmtNum(widget.experience!['experience_score'], decimals: 4)}', valColor: Color(0xFFa78bfa)),
+                    _buildRow(AppTranslations.t('field.experience_score'), _fmtNum(widget.experience!['experience_score'], decimals: 4), valColor: const Color(0xFFa78bfa)),
                   ],
                 ),
               ),
@@ -4886,7 +5269,7 @@ class _AssetDetailsScreenState extends State<AssetDetailsScreen> {
                           ],
                         ),
                       );
-                    }).toList(),
+                    }),
                   ],
                 ),
               ),
@@ -4989,7 +5372,7 @@ class _BlockedAssetsScreenState extends State<BlockedAssetsScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.block, color: Colors.grey, size: 48),
+                    const Icon(Icons.block, color: Colors.grey, size: 48),
                     const SizedBox(height: 12),
                     Text(AppTranslations.t('blocked.empty'), style: const TextStyle(color: Colors.grey, fontSize: 14)),
                   ],
@@ -5008,7 +5391,7 @@ class _BlockedAssetsScreenState extends State<BlockedAssetsScreen> {
                   if (source == 'developer' || source == 'both') {
                     sourceColor = red;
                     sourceIcon = Icons.verified_user;
-                    sourceText = AppTranslations.t('blocked.source_${source}');
+                    sourceText = AppTranslations.t('blocked.source_$source');
                   } else {
                     sourceColor = gold;
                     sourceIcon = Icons.person;
@@ -5123,6 +5506,7 @@ class _ActiveUniverseScreenState extends State<ActiveUniverseScreen> {
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         if (data['asset'] != null) {
+          if (!mounted) return;
           Navigator.push(context, MaterialPageRoute(builder: (c) => AssetDetailsScreen(
             asset: data['asset'],
             experience: data['experience'],
@@ -5140,7 +5524,7 @@ class _ActiveUniverseScreenState extends State<ActiveUniverseScreen> {
       appBar: AppBar(
         backgroundColor: cardBg,
         leading: IconButton(icon: Icon(Icons.arrow_back, color: accent), onPressed: () => Navigator.pop(context)),
-        title: Text(AppTranslations.t('menu.active_universe'), style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Color(0xFF00d9ff) : Color(0xFF0891b2)), fontWeight: FontWeight.bold)),
+        title: Text(AppTranslations.t('menu.active_universe'), style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2)), fontWeight: FontWeight.bold)),
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2))))
@@ -5149,7 +5533,7 @@ class _ActiveUniverseScreenState extends State<ActiveUniverseScreen> {
               : ListView(
                   padding: const EdgeInsets.all(16),
                   children: [
-                    Text('${_assets.length} ' + AppTranslations.plural('menu.active_assets_unit', _assets.length), style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                    Text('${_assets.length} ${AppTranslations.plural('menu.active_assets_unit', _assets.length)}', style: const TextStyle(color: Colors.grey, fontSize: 12)),
                     const SizedBox(height: 10),
                     ..._assets.map((a) {
                       String sym = a['symbol'] ?? '';
@@ -5170,7 +5554,23 @@ class _ActiveUniverseScreenState extends State<ActiveUniverseScreen> {
                               CircleAvatar(
                                 radius: 14,
                                 backgroundColor: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)),
-                                child: Text(sym.isNotEmpty ? sym[0] : '?', style: TextStyle(fontSize: 12, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontWeight: FontWeight.bold)),
+                                child: ClipOval(
+                                  child: Image.network(
+                                    'https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/${sym.split('/')[0].trim().toLowerCase()}.png',
+                                    width: 28,
+                                    height: 28,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Center(
+                                        child: Text(
+                                          sym.isNotEmpty ? sym[0] : '?',
+                                          style: TextStyle(fontSize: 12, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontWeight: FontWeight.bold),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
@@ -5178,7 +5578,7 @@ class _ActiveUniverseScreenState extends State<ActiveUniverseScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(sym, style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontWeight: FontWeight.bold, fontSize: 13)),
-                                    Text(textDirection: TextDirection.ltr, 'CS ${conf.toStringAsFixed(2)} · HS ${health.toStringAsFixed(2)}', style: TextStyle(color: Colors.grey, fontSize: 10)),
+                                    Text(textDirection: TextDirection.ltr, 'CS ${conf.toStringAsFixed(2)} · HS ${health.toStringAsFixed(2)}', style: const TextStyle(color: Colors.grey, fontSize: 10)),
                                     Text('Admitted $admitted', style: const TextStyle(color: Color(0xFF475569), fontSize: 9)),
                                   ],
                                 ),
@@ -5187,7 +5587,7 @@ class _ActiveUniverseScreenState extends State<ActiveUniverseScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   Text(textDirection: TextDirection.ltr, priority.toStringAsFixed(2), style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 13)),
-                                  Text(textDirection: TextDirection.ltr, 'exp ${exp.toStringAsFixed(4)}', style: TextStyle(color: Colors.grey, fontSize: 9)),
+                                  Text(textDirection: TextDirection.ltr, 'exp ${exp.toStringAsFixed(4)}', style: const TextStyle(color: Colors.grey, fontSize: 9)),
                                 ],
                               ),
                               const SizedBox(width: 6),
@@ -5196,7 +5596,7 @@ class _ActiveUniverseScreenState extends State<ActiveUniverseScreen> {
                           ),
                         ),
                       );
-                    }).toList(),
+                    }),
                   ],
                 ),
     );
@@ -5275,7 +5675,7 @@ class _ExperienceScreenState extends State<ExperienceScreen> {
       appBar: AppBar(
         backgroundColor: cardBg,
         leading: IconButton(icon: Icon(Icons.arrow_back, color: accent), onPressed: () => Navigator.pop(context)),
-        title: Text(AppTranslations.t('menu.experience'), style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Color(0xFF00d9ff) : Color(0xFF0891b2)), fontWeight: FontWeight.bold)),
+        title: Text(AppTranslations.t('menu.experience'), style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2)), fontWeight: FontWeight.bold)),
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2))))
@@ -5284,7 +5684,7 @@ class _ExperienceScreenState extends State<ExperienceScreen> {
               : ListView(
                   padding: const EdgeInsets.all(16),
                   children: [
-                    Text('${_exps.length} ' + AppTranslations.plural('misc.assets_tracked_suffix', _exps.length), style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                    Text('${_exps.length} ${AppTranslations.plural('misc.assets_tracked_suffix', _exps.length)}', style: const TextStyle(color: Colors.grey, fontSize: 12)),
                     const SizedBox(height: 10),
                     ..._exps.map((e) {
                       String sym = e['symbol'] ?? 'UNKNOWN';
@@ -5329,7 +5729,7 @@ class _ExperienceScreenState extends State<ExperienceScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(sym, style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontWeight: FontWeight.bold, fontSize: 13)),
-                                    Text(textDirection: TextDirection.ltr, 'score ${score.toStringAsFixed(4)}', style: TextStyle(color: Color(0xFFa78bfa), fontSize: 10)),
+                                    Text(textDirection: TextDirection.ltr, 'score ${score.toStringAsFixed(4)}', style: const TextStyle(color: Color(0xFFa78bfa), fontSize: 10)),
                                   ],
                                 ),
                               ],
@@ -5348,7 +5748,7 @@ class _ExperienceScreenState extends State<ExperienceScreen> {
                           ],
                         ),
                       );
-                    }).toList(),
+                    }),
                   ],
                 ),
     );
@@ -5403,7 +5803,7 @@ class _TechnicalErrorsScreenState extends State<TechnicalErrorsScreen> {
       appBar: AppBar(
         backgroundColor: cardBg,
         leading: IconButton(icon: Icon(Icons.arrow_back, color: accent), onPressed: () => Navigator.pop(context)),
-        title: Text(AppTranslations.t('menu.errors'), style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Color(0xFF00d9ff) : Color(0xFF0891b2)), fontWeight: FontWeight.bold)),
+        title: Text(AppTranslations.t('menu.errors'), style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2)), fontWeight: FontWeight.bold)),
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2))))
@@ -5518,8 +5918,11 @@ class _TradingSettingsScreenState extends State<TradingSettingsScreen> {
         headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
         body: jsonEncode({'trade_size_usdt': _tradeSize, 'max_open_positions': _maxPositions}),
       );
-      if (res.statusCode == 200) _showSnack('Settings saved successfully!', isSuccess: true);
-      else _showSnack('Failed to save settings');
+      if (res.statusCode == 200) {
+        _showSnack('Settings saved successfully!', isSuccess: true);
+      } else {
+        _showSnack('Failed to save settings');
+      }
     } catch (e) {
       _showSnack('Connection error');
     }
@@ -5533,12 +5936,12 @@ class _TradingSettingsScreenState extends State<TradingSettingsScreen> {
         context: context,
         builder: (c) => AlertDialog(
           backgroundColor: cardBg,
-          title: Text(AppTranslations.t('bot.stop'), style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : Color(0xFF0f172a)))),
-          content: Text(AppTranslations.t('bot.stop_confirm'), style: TextStyle(color: Colors.grey)),
+          title: Text(AppTranslations.t('bot.stop'), style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))),
+          content: Text(AppTranslations.t('bot.stop_confirm'), style: const TextStyle(color: Colors.grey)),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(c, false),
-              child: Text(AppTranslations.t('common.cancel'), style: TextStyle(color: Colors.grey)),
+              child: Text(AppTranslations.t('common.cancel'), style: const TextStyle(color: Colors.grey)),
             ),
             TextButton(
               onPressed: () => Navigator.pop(c, true),
@@ -5555,8 +5958,11 @@ class _TradingSettingsScreenState extends State<TradingSettingsScreen> {
       final endpoint = _botRunning ? '/api/bot/stop' : '/api/bot/start';
       final res = await http.post(Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000$endpoint'), headers: {'Authorization': 'Bearer $token'});
       if (res.statusCode == 200) {
+        setState(() => _botRunning = !_botRunning); // تحديث فوري للواجهة
         _showSnack(_botRunning ? AppTranslations.t('admin.force_stop_msg') : AppTranslations.t('admin.force_start_msg'), isSuccess: true);
-        _fetchAllData();
+        // تأخير بسيط للسماح للباك إند بإنهاء العملية قبل تحديث البيانات
+        await Future.delayed(const Duration(milliseconds: 1500));
+        if (mounted) _fetchAllData(); // تحديث باقي البيانات في الخلفية
       } else {
         _showSnack('Failed to toggle bot');
       }
@@ -5580,7 +5986,7 @@ class _TradingSettingsScreenState extends State<TradingSettingsScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(AppTranslations.t('bot.binance_disconnect_confirm'), style: TextStyle(color: Colors.grey, fontSize: 12)),
+                Text(AppTranslations.t('bot.binance_disconnect_confirm'), style: const TextStyle(color: Colors.grey, fontSize: 12)),
                 const SizedBox(height: 10),
                 TextField(
                   controller: pwdController,
@@ -5602,7 +6008,7 @@ class _TradingSettingsScreenState extends State<TradingSettingsScreen> {
               ],
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(c, false), child: Text(AppTranslations.t('common.cancel'), style: TextStyle(color: Colors.grey))),
+              TextButton(onPressed: () => Navigator.pop(c, false), child: Text(AppTranslations.t('common.cancel'), style: const TextStyle(color: Colors.grey))),
               TextButton(onPressed: () => Navigator.pop(c, true), child: Text(AppTranslations.t('bot.disconnect'), style: TextStyle(color: red, fontWeight: FontWeight.bold))),
             ],
           );
@@ -5647,7 +6053,7 @@ class _TradingSettingsScreenState extends State<TradingSettingsScreen> {
       appBar: AppBar(
         backgroundColor: cardBg,
         leading: IconButton(icon: Icon(Icons.arrow_back, color: accent), onPressed: () => Navigator.pop(context)),
-        title: Text(AppTranslations.t('menu.connect_binance_full'), style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Color(0xFF00d9ff) : Color(0xFF0891b2)), fontWeight: FontWeight.bold)),
+        title: Text(AppTranslations.t('menu.connect_binance_full'), style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2)), fontWeight: FontWeight.bold)),
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2))))
@@ -5663,7 +6069,7 @@ class _TradingSettingsScreenState extends State<TradingSettingsScreen> {
                     children: [
                       Text(AppTranslations.t('admin.trade_size'), style: TextStyle(color: accent, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 8),
-                      Text(AppTranslations.t('trading.trade_size_desc'), style: TextStyle(color: Colors.grey, fontSize: 11)),
+                      Text(AppTranslations.t('trading.trade_size_desc'), style: const TextStyle(color: Colors.grey, fontSize: 11)),
                       Row(
                         children: [
                           Expanded(
@@ -5684,13 +6090,13 @@ class _TradingSettingsScreenState extends State<TradingSettingsScreen> {
                       const SizedBox(height: 16),
                       Text(AppTranslations.t('dash.max_open_positions'), style: TextStyle(color: accent, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 8),
-                      Text(AppTranslations.t('dash.max_positions_desc'), style: TextStyle(color: Colors.grey, fontSize: 11)),
+                      Text(AppTranslations.t('dash.max_positions_desc'), style: const TextStyle(color: Colors.grey, fontSize: 11)),
                       Row(
                         children: [
                           Expanded(
                             child: Slider(
                               value: _maxPositions,
-                              min: 1, max: 20, divisions: 19,
+                              min: 0, max: 20, divisions: 20,
                               activeColor: accent,
                               onChanged: (v) => setState(() => _maxPositions = v),
                             ),
@@ -5709,11 +6115,36 @@ class _TradingSettingsScreenState extends State<TradingSettingsScreen> {
                           ElevatedButton(
                             onPressed: _isSaving ? null : _saveSettings,
                             style: ElevatedButton.styleFrom(backgroundColor: accent, foregroundColor: Colors.black),
-                            child: _isSaving ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : Text(AppTranslations.t('trading.save'), style: TextStyle(fontWeight: FontWeight.bold)),
+                            child: _isSaving ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : Text(AppTranslations.t('trading.save'), style: const TextStyle(fontWeight: FontWeight.bold)),
                           ),
                           TextButton(
-                            onPressed: () => setState(() { _tradeSize = 10; _maxPositions = 5; }),
-                            child: Text(AppTranslations.t('trading.reset'), style: TextStyle(color: Colors.grey)),
+                            onPressed: () async {
+                              try {
+                                final prefs = await SharedPreferences.getInstance();
+                                final t = prefs.getString('auth_token') ?? '';
+                                if (!context.mounted) return;
+                                if (!mounted) return;
+                                final messenger = ScaffoldMessenger.of(context);
+                                final res = await http.get(
+                                  Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/trading/defaults'),
+                                  headers: {'Authorization': 'Bearer $t'},
+                                );
+                                if (!context.mounted) return;
+                                if (res.statusCode == 200) {
+                                  final data = jsonDecode(res.body);
+                                  setState(() {
+                                    _tradeSize = (data['trade_size_usdt'] ?? 10.0).toDouble();
+                                    _maxPositions = (data['max_open_positions'] ?? 1).toDouble();
+                                  });
+                                  messenger.showSnackBar(
+                                    const SnackBar(content: Text('Reset to Global Defaults'), backgroundColor: Colors.blue)
+                                  );
+                                }
+                              } catch (e) {
+                                debugPrint("Error resetting defaults: $e");
+                              }
+                            },
+                            child: Text(AppTranslations.t('trading.reset'), style: const TextStyle(color: Colors.grey)),
                           ),
                         ],
                       ),
@@ -5754,7 +6185,7 @@ class _TradingSettingsScreenState extends State<TradingSettingsScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(_botRunning ? AppTranslations.t('admin.bot_running') : AppTranslations.t('admin.bot_stopped'), style: TextStyle(color: _botRunning ? green : red, fontWeight: FontWeight.bold, fontSize: 14)),
-                              Text(_botRunning ? AppTranslations.t('bot.working_now') : 'Currently idle', style: TextStyle(color: Colors.grey, fontSize: 11)),
+                              Text(_botRunning ? AppTranslations.t('bot.working_now') : 'Currently idle', style: const TextStyle(color: Colors.grey, fontSize: 11)),
                             ],
                           ),
                         ],
@@ -5770,7 +6201,7 @@ class _TradingSettingsScreenState extends State<TradingSettingsScreen> {
                               foregroundColor: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                             ),
-                            child: Text(_botRunning ? AppTranslations.t('bot.stop') : AppTranslations.t('bot.start'), style: TextStyle(fontWeight: FontWeight.bold)),
+                            child: Text(_botRunning ? AppTranslations.t('bot.stop') : AppTranslations.t('bot.start'), style: const TextStyle(fontWeight: FontWeight.bold)),
                           ),
                         ),
                       ),
@@ -5803,7 +6234,7 @@ class _TradingSettingsScreenState extends State<TradingSettingsScreen> {
                           children: [
                             Icon(Icons.link_off, color: red, size: 40),
                             const SizedBox(height: 8),
-                            Text(AppTranslations.t('bot.binance_not_connected'), style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+                            Text(AppTranslations.t('bot.binance_not_connected'), style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
                             // هنا يمكن إضافة زر الاتصال لاحقاً
                           ],
                         ),
@@ -5823,7 +6254,7 @@ class MyAccountScreen extends StatefulWidget {
 }
 
 class _MyAccountScreenState extends State<MyAccountScreen> {
-  bool _isImpersonating = false;
+  final bool _isImpersonating = false;
   Map<String, dynamic> _account = {};
   List<dynamic> _sessions = [];
   bool _isLoading = true;
@@ -5945,8 +6376,8 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)),
-      appBar: AppBar(backgroundColor: cardBg, leading: IconButton(icon: Icon(Icons.arrow_back, color: accent), onPressed: () => Navigator.pop(context)), title: Text(AppTranslations.t('menu.submenu_account'), style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Color(0xFF00d9ff) : Color(0xFF0891b2)), fontWeight: FontWeight.bold))),
-      body: _isLoading ? Center(child: CircularProgressIndicator(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2)))) : _error.isNotEmpty ? Center(child: Text(_error, style: TextStyle(color: Colors.red))) : SingleChildScrollView(
+      appBar: AppBar(backgroundColor: cardBg, leading: IconButton(icon: Icon(Icons.arrow_back, color: accent), onPressed: () => Navigator.pop(context)), title: Text(AppTranslations.t('menu.submenu_account'), style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2)), fontWeight: FontWeight.bold))),
+      body: _isLoading ? Center(child: CircularProgressIndicator(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2)))) : _error.isNotEmpty ? Center(child: Text(_error, style: const TextStyle(color: Colors.red))) : SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -5958,7 +6389,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(children: [Icon(Icons.person, color: accent, size: 20), SizedBox(width: 8), Text(AppTranslations.t('account.profile'), style: TextStyle(color: accent, fontWeight: FontWeight.bold))]),
+                  Row(children: [Icon(Icons.person, color: accent, size: 20), const SizedBox(width: 8), Text(AppTranslations.t('account.profile'), style: TextStyle(color: accent, fontWeight: FontWeight.bold))]),
                   Divider(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0)), height: 20),
                   _kv(AppTranslations.t('account.username'), _account['username'] ?? 'N/A'),
                   _kv(AppTranslations.t('support.email'), _account['email'] ?? 'N/A'),
@@ -5977,7 +6408,7 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(children: [Icon(Icons.lock, color: accent, size: 20), SizedBox(width: 8), Text(AppTranslations.t('account.change_password'), style: TextStyle(color: accent, fontWeight: FontWeight.bold))]),
+                  Row(children: [Icon(Icons.lock, color: accent, size: 20), const SizedBox(width: 8), Text(AppTranslations.t('account.change_password'), style: TextStyle(color: accent, fontWeight: FontWeight.bold))]),
                   const SizedBox(height: 16),
                   _passField(AppTranslations.t('account.current_password'), _oldPassCtrl, _obscureOld, () => setState(() => _obscureOld = !_obscureOld)),
                   _passField(AppTranslations.t('account.new_password'), _newPassCtrl, _obscureNew, () => setState(() => _obscureNew = !_obscureNew)),
@@ -5988,11 +6419,11 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
                     child: ElevatedButton(
                       onPressed: _isChangingPass ? null : _changePassword,
                       style: ElevatedButton.styleFrom(backgroundColor: accent, foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(vertical: 12)),
-                      child: _isChangingPass ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : Text(AppTranslations.t('account.update_password'), style: TextStyle(fontWeight: FontWeight.bold)),
+                      child: _isChangingPass ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : Text(AppTranslations.t('account.update_password'), style: const TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(AppTranslations.t('account.warning_logout'), style: TextStyle(color: Colors.orange, fontSize: 10)),
+                  Text(AppTranslations.t('account.warning_logout'), style: const TextStyle(color: Colors.orange, fontSize: 10)),
                 ],
               ),
             ),
@@ -6005,14 +6436,14 @@ class _MyAccountScreenState extends State<MyAccountScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(children: [Icon(Icons.devices, color: accent, size: 20), SizedBox(width: 8), Text(AppTranslations.t('account.sessions_title'), style: TextStyle(color: accent, fontWeight: FontWeight.bold))]),
+                  Row(children: [Icon(Icons.devices, color: accent, size: 20), const SizedBox(width: 8), Text(AppTranslations.t('account.sessions_title'), style: TextStyle(color: accent, fontWeight: FontWeight.bold))]),
                   Divider(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0)), height: 20),
-                  Text(AppTranslations.t('account.sessions_sub'), style: TextStyle(color: Colors.grey, fontSize: 11)),
+                  Text(AppTranslations.t('account.sessions_sub'), style: const TextStyle(color: Colors.grey, fontSize: 11)),
                   const SizedBox(height: 10),
                   ElevatedButton(
                     onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (c) => ActiveSessionsScreen(sessions: _sessions))),
                     style: ElevatedButton.styleFrom(backgroundColor: accent, foregroundColor: Colors.black),
-                    child: Text(AppTranslations.t('account.sessions_title'), style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: Text(AppTranslations.t('account.sessions_title'), style: const TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),
@@ -6071,7 +6502,9 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
           _chatIdCtrl.text = d['telegram_chat_id'] ?? '';
         });
       }
-    } catch (e) {}
+    } catch (e) {
+      debugPrint('Failed to load notification settings: $e');
+    }
     setState(() => _isLoading = false);
   }
 
@@ -6091,8 +6524,11 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
           'telegram_chat_id': _chatIdCtrl.text,
         }),
       );
-      if (res.statusCode == 200) _showSnack('Settings saved successfully', isSuccess: true);
-      else _showSnack('Failed to save settings');
+      if (res.statusCode == 200) {
+        _showSnack('Settings saved successfully', isSuccess: true);
+      } else {
+        _showSnack('Failed to save settings');
+      }
     } catch (e) {
       _showSnack('Connection error');
     }
@@ -6107,7 +6543,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
   Widget _switchTile(String title, bool value, Function(bool) onChanged, IconData icon) {
     return SwitchListTile(
       contentPadding: EdgeInsets.zero,
-      title: Row(children: [Icon(icon, color: Colors.blue, size: 20), SizedBox(width: 10), Text(title, style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontSize: 13))]),
+      title: Row(children: [Icon(icon, color: Colors.blue, size: 20), const SizedBox(width: 10), Text(title, style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontSize: 13))]),
       value: value,
       activeColor: accent,
       activeTrackColor: const Color(0xFF1e3a8a),
@@ -6163,7 +6599,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)),
-      appBar: AppBar(backgroundColor: cardBg, leading: IconButton(icon: Icon(Icons.arrow_back, color: accent), onPressed: () => Navigator.pop(context)), title: Text(AppTranslations.t('menu.settings'), style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Color(0xFF00d9ff) : Color(0xFF0891b2)), fontWeight: FontWeight.bold))),
+      appBar: AppBar(backgroundColor: cardBg, leading: IconButton(icon: Icon(Icons.arrow_back, color: accent), onPressed: () => Navigator.pop(context)), title: Text(AppTranslations.t('menu.settings'), style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2)), fontWeight: FontWeight.bold))),
       body: _isLoading ? Center(child: CircularProgressIndicator(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2)))) : ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -6175,7 +6611,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(children: [Icon(Icons.palette_outlined, color: accent, size: 20), SizedBox(width: 8), Text(AppTranslations.t('settings.appearance'), style: TextStyle(color: accent, fontWeight: FontWeight.bold))]),
+                Row(children: [Icon(Icons.palette_outlined, color: accent, size: 20), const SizedBox(width: 8), Text(AppTranslations.t('settings.appearance'), style: TextStyle(color: accent, fontWeight: FontWeight.bold))]),
                 Divider(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0)), height: 20),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -6184,7 +6620,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                       children: [
                         Icon(Icons.dark_mode, color: accent, size: 20),
                         const SizedBox(width: 10),
-                        Text(AppTranslations.t('settings.dark_mode'), style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : Color(0xFF0f172a)), fontWeight: FontWeight.bold, fontSize: 14)),
+                        Text(AppTranslations.t('settings.dark_mode'), style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontWeight: FontWeight.bold, fontSize: 14)),
                       ],
                     ),
                     Switch(
@@ -6216,7 +6652,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(children: [Icon(Icons.language, color: accent, size: 20), SizedBox(width: 8), Text(AppTranslations.t('settings.language'), style: TextStyle(color: accent, fontWeight: FontWeight.bold))]),
+                Row(children: [Icon(Icons.language, color: accent, size: 20), const SizedBox(width: 8), Text(AppTranslations.t('settings.language'), style: TextStyle(color: accent, fontWeight: FontWeight.bold))]),
                 const SizedBox(height: 10),
                 InkWell(
                   onTap: () => _showLanguagePicker(context),
@@ -6250,9 +6686,9 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(children: [Icon(Icons.telegram, color: accent, size: 20), SizedBox(width: 8), Text(AppTranslations.t('support.telegram'), style: TextStyle(color: accent, fontWeight: FontWeight.bold))]),
+                Row(children: [Icon(Icons.telegram, color: accent, size: 20), const SizedBox(width: 8), Text(AppTranslations.t('support.telegram'), style: TextStyle(color: accent, fontWeight: FontWeight.bold))]),
                 const SizedBox(height: 10),
-                Text(AppTranslations.t('settings.telegram_hint'), style: TextStyle(color: Colors.grey, fontSize: 10)),
+                Text(AppTranslations.t('settings.telegram_hint'), style: const TextStyle(color: Colors.grey, fontSize: 10)),
                 const SizedBox(height: 10),
                 TextField(
                   controller: _chatIdCtrl,
@@ -6270,13 +6706,13 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    ElevatedButton(onPressed: () {}, style: ElevatedButton.styleFrom(backgroundColor: Color(0xFF38bdf8), foregroundColor: Colors.black), child: Text(AppTranslations.t('settings.copy_command'))),
+                    ElevatedButton(onPressed: () {}, style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF38bdf8), foregroundColor: Colors.black), child: Text(AppTranslations.t('settings.copy_command'))),
                     const SizedBox(width: 10),
                     ElevatedButton(onPressed: _saveSettings, style: ElevatedButton.styleFrom(backgroundColor: accent, foregroundColor: Colors.black), child: Text(AppTranslations.t('settings.save_chat_id'))),
                   ],
                 ),
                 const SizedBox(height: 8),
-                Center(child: Text(AppTranslations.t('telegram.command_hint'), style: TextStyle(color: Colors.grey, fontSize: 9))),
+                Center(child: Text(AppTranslations.t('telegram.command_hint'), style: const TextStyle(color: Colors.grey, fontSize: 9))),
                 Center(child: Text(AppTranslations.t('telegram.copy_command'), style: TextStyle(color: accent, fontSize: 10))),
               ],
             ),
@@ -6288,7 +6724,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(children: [Icon(Icons.notifications, color: accent, size: 20), SizedBox(width: 8), Text(AppTranslations.t('settings.notifications'), style: TextStyle(color: accent, fontWeight: FontWeight.bold))]),
+                Row(children: [Icon(Icons.notifications, color: accent, size: 20), const SizedBox(width: 8), Text(AppTranslations.t('settings.notifications'), style: TextStyle(color: accent, fontWeight: FontWeight.bold))]),
                 Divider(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0)), height: 20),
                 _switchTile(AppTranslations.t('settings.enable_notifications'), _notifEnabled, (v) => setState(() => _notifEnabled = v), Icons.notifications_active),
                 _switchTile(AppTranslations.t('settings.buy_alerts'), _notifBuy, (v) => setState(() => _notifBuy = v), Icons.trending_up),
@@ -6353,7 +6789,7 @@ class _ActiveSessionsScreenState extends State<ActiveSessionsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)),
-      appBar: AppBar(backgroundColor: cardBg, leading: IconButton(icon: Icon(Icons.arrow_back, color: accent), onPressed: () => Navigator.pop(context)), title: Text(AppTranslations.t('account.sessions_title'), style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Color(0xFF00d9ff) : Color(0xFF0891b2)), fontWeight: FontWeight.bold))),
+      appBar: AppBar(backgroundColor: cardBg, leading: IconButton(icon: Icon(Icons.arrow_back, color: accent), onPressed: () => Navigator.pop(context)), title: Text(AppTranslations.t('account.sessions_title'), style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2)), fontWeight: FontWeight.bold))),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -6373,7 +6809,7 @@ class _ActiveSessionsScreenState extends State<ActiveSessionsScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(isCurrent ? AppTranslations.t('account.current_session') : AppTranslations.t('account.other_session'), style: TextStyle(color: isCurrent ? green : (themeNotifier.value == ThemeMode.dark ? Colors.white : Color(0xFF0f172a)), fontWeight: FontWeight.bold, fontSize: 13)),
+                        Text(isCurrent ? AppTranslations.t('account.current_session') : AppTranslations.t('account.other_session'), style: TextStyle(color: isCurrent ? green : (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontWeight: FontWeight.bold, fontSize: 13)),
                         Text('${DateTime.fromMillisecondsSinceEpoch((s['created_at'] * 1000).toInt())}', style: const TextStyle(color: Colors.grey, fontSize: 10)),
                       ],
                     ),
@@ -6386,7 +6822,7 @@ class _ActiveSessionsScreenState extends State<ActiveSessionsScreen> {
                 ],
               ),
             );
-          }).toList(),
+          }),
           const SizedBox(height: 16),
           Center(
             child: ElevatedButton(
@@ -6468,7 +6904,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       appBar: AppBar(
         backgroundColor: cardBg,
         leading: IconButton(icon: Icon(Icons.arrow_back, color: accent), onPressed: () => Navigator.pop(context)),
-        title: Text(AppTranslations.t('auth.register_link'), style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Color(0xFF00d9ff) : Color(0xFF0891b2)), fontWeight: FontWeight.bold)),
+        title: Text(AppTranslations.t('auth.register_link'), style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2)), fontWeight: FontWeight.bold)),
       ),
       body: Center(
         child: SingleChildScrollView(
