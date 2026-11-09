@@ -15,11 +15,11 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
     await AppTranslations.load();
-  } catch (e) {
-    debugPrint("Translation load failed: $e");
+    final prefs = await SharedPreferences.getInstance();
+    languageNotifier.value = prefs.getString('app_language') ?? 'en';
+  } catch (e, stacktrace) {
+    debugPrint("Startup Error: $e\n$stacktrace");
   }
-  final prefs = await SharedPreferences.getInstance();
-  languageNotifier.value = prefs.getString('app_language') ?? 'en';
   runApp(const MyApp());
 }
 
