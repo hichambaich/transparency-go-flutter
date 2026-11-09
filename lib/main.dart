@@ -13,7 +13,11 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await AppTranslations.load();
+  try {
+    await AppTranslations.load();
+  } catch (e) {
+    debugPrint("Translation load failed: $e");
+  }
   final prefs = await SharedPreferences.getInstance();
   languageNotifier.value = prefs.getString('app_language') ?? 'en';
   runApp(const MyApp());
