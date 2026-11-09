@@ -55,7 +55,7 @@ jobs:
           include ":app"
           EOF
 
-      # 👇 السحر كله هنا: إضافة إذن الإنترنت والسماح بـ HTTP
+      # 👇 إضافة إذن الإنترنت والسماح بـ HTTP
       - name: Fix Android Manifest Permissions
         run: |
           python -c "
@@ -131,6 +131,16 @@ jobs:
           print('DONE: icons + adaptive + background generated')
           INNEREOF
 
+      # 👇 الخطوة الجديدة: زيادة رقم البناء تلقائياً
+      - name: Bump Version Code
+        run: |
+          CURRENT_VERSION=$(grep '^version:' pubspec.yaml | awk '{print $2}')
+          VERSION_NAME=$(echo $CURRENT_VERSION | cut -d'+' -f1)
+          VERSION_CODE=$(echo $CURRENT_VERSION | cut -d'+' -f2)
+          NEW_VERSION_CODE=$((VERSION_CODE + 1))
+          sed -i "s/^version: .*/version: ${VERSION_NAME}+${NEW_VERSION_CODE}/" pubspec.yaml
+          echo "✅ Bumped version to ${VERSION_NAME}+${NEW_VERSION_CODE}"
+
       - name: Configure Android Signing
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -138,9 +148,6 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
         run: bash scripts/setup_signing.sh
-
-      - name: Generate Android Launcher Icons
-        run: bash scripts/generate_android_icons.sh
 
       - name: Install dependencies
         run: flutter pub get
