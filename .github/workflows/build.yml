@@ -131,7 +131,7 @@ jobs:
           print('DONE: icons + adaptive + background generated')
           INNEREOF
 
-      # 👇 الخطوة الجديدة: زيادة رقم البناء تلقائياً
+      # 👇 الخطوة: زيادة رقم البناء تلقائياً
       - name: Bump Version Code
         run: |
           CURRENT_VERSION=$(grep '^version:' pubspec.yaml | awk '{print $2}')
@@ -155,11 +155,15 @@ jobs:
       - name: Clean Build
         run: flutter clean
 
-      - name: Build APK
+      - name: Build Release APK
         run: flutter build apk --release --split-per-abi --verbose
 
-      - name: Build AAB
+      - name: Build Release AAB
         run: flutter build appbundle --release
+
+      # 👇 الخطوة الجديدة لبناء نسخة تجريبية (Debug) لكشف الأخطاء
+      - name: Build Debug APK
+        run: flutter build apk --debug
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
