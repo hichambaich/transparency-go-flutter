@@ -1,5 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/services.dart' show rootBundle, Clipboard, ClipboardData;
 import 'launcher/open_url_stub.dart'
     if (dart.library.io) 'launcher/open_url_io.dart'
     if (dart.library.html) 'launcher/open_url_web.dart';
@@ -36,7 +37,7 @@ class AppTranslations {
       _ar = jsonDecode(arStr);
       _fr = jsonDecode(frStr);
     } catch (e) {
-      debugPrint("Error loading translations: $e");
+      if (kDebugMode) debugPrint("Error loading translations: $e");
     }
   }
 
@@ -668,7 +669,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       const SizedBox(width: 7),
                       InkWell(
-                        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => MenuScreen(onLogout: widget.onLogout))).then((_) => _fetchData()),
+                        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => MenuScreen(onLogout: widget.onLogout, userId: _data['user_id']?.toString() ?? ''))).then((_) => _fetchData()),
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
                           decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(6), border: Border.all(color: borderColor)),
@@ -757,7 +758,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   InkWell(
-                                    onTap: () => _openStatDetail(context, AppTranslations.t('menu.capital_events')),
+                                    onTap: () => _openStatDetail(context, AppTranslations.t('stat.capital')),
                                     child: Row(children: [
                                       Text(AppTranslations.t('dash.total_capital'), style: const TextStyle(fontSize: 9, color: Colors.grey)),
                                       const SizedBox(width: 6),
@@ -1079,7 +1080,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                   // ============ JOURNAL ============
                   InkWell(
-                    onTap: () => _openStatDetail(context, 'Journal'),
+                    onTap: () => _openStatDetail(context, AppTranslations.t('dash.journal')),
                     borderRadius: BorderRadius.circular(8),
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
@@ -1397,8 +1398,8 @@ class _ExpandablePositionCardState extends State<ExpandablePositionCard> {
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) => Center(
                     child: Text(
-                      symbol.isNotEmpty ? symbol[0] : '?',
-                      style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontWeight: FontWeight.bold),
+                      symbol.isNotEmpty ? (symbol.split('/')[0].length > 3 ? symbol.split('/')[0].substring(0, 3) : symbol.split('/')[0]) : '?',
+                      style: const TextStyle(color: Color(0xFF38bdf8), fontSize: 10, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
@@ -1421,12 +1422,12 @@ class _ExpandablePositionCardState extends State<ExpandablePositionCard> {
           actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppTranslations.t('misc.close')))],
         ));
       } else {
-        debugPrint('Failed to load 24h data');
+        if (kDebugMode) debugPrint('Failed to load 24h data');
       }
     } catch (e) {
       if (!mounted) return;
       Navigator.pop(context);
-      debugPrint('Error: \$e');
+      if (kDebugMode) debugPrint('Error: \$e');
     }
   }
   
@@ -1520,8 +1521,8 @@ class _ExpandablePositionCardState extends State<ExpandablePositionCard> {
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) => Center(
                         child: Text(
-                          sym.isNotEmpty ? sym[0] : '?',
-                          style: TextStyle(fontSize: 11, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontWeight: FontWeight.bold),
+                          sym.isNotEmpty ? (sym.split('/')[0].length > 3 ? sym.split('/')[0].substring(0, 3) : sym.split('/')[0]) : '?',
+                          style: const TextStyle(fontSize: 10, color: Color(0xFF38bdf8), fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
@@ -1534,7 +1535,7 @@ class _ExpandablePositionCardState extends State<ExpandablePositionCard> {
                   onTap: () async {
                     final url = 'https://www.binance.com/en/trade/${sym.split('/')[0]}_USDT?type=spot';
                     final ok = await openUrl(url);
-                    if (!ok) debugPrint('❌ Binance launch failed: $url');
+                    if (!ok) if (kDebugMode) debugPrint('❌ Binance launch failed: $url');
                   },
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -1901,7 +1902,7 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
     if (widget.title == AppTranslations.t('menu.capital_events') || widget.title == AppTranslations.t('dash.capital_events')) return _buildCapitalEvents();
     if (widget.title == AppTranslations.t('dash.capital_exposure')) return _buildCapitalExposure();
     // WARNING: 'Journal' is an internal identifier (routing), not a display string.
-    if (widget.title == 'Journal') return _buildJournal();
+    if (widget.title == 'Journal' || widget.title == AppTranslations.t('dash.journal')) return _buildJournal();
     return Center(child: Text(AppTranslations.t('misc.no_data'), style: const TextStyle(color: Colors.grey)));
   }
 
@@ -1946,7 +1947,7 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
                             'https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/${sym.split('/')[0].toLowerCase()}.png',
                             width: 28, height: 28, fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) => Center(
-                              child: Text(sym.isNotEmpty ? sym[0] : '?', style: TextStyle(fontSize: 12, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontWeight: FontWeight.bold)),
+                              child: Text(sym.isNotEmpty ? (sym.split('/')[0].length > 3 ? sym.split('/')[0].substring(0, 3) : sym.split('/')[0]) : '?', style: const TextStyle(fontSize: 10, color: Color(0xFF38bdf8), fontWeight: FontWeight.bold)),
                             ),
                           ),
                         ),
@@ -2091,7 +2092,7 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
                             'https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/${sym.split('/')[0].toLowerCase()}.png',
                             width: 24, height: 24, fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) => Center(
-                              child: Text(sym.isNotEmpty ? sym[0] : '?', style: TextStyle(fontSize: 10, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))),
+                              child: Text(sym.isNotEmpty ? (sym.split('/')[0].length > 3 ? sym.split('/')[0].substring(0, 3) : sym.split('/')[0]) : '?', style: const TextStyle(fontSize: 10, color: Color(0xFF38bdf8))),
                             ),
                           ),
                         ),
@@ -2495,7 +2496,7 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
                   ],
                 ),
               );
-            }).toList(),
+            }),
         ],
       ),
     );
@@ -2523,7 +2524,7 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
               children: [
                 Text(AppTranslations.t('dash.capital_exposure'), style: TextStyle(color: green, fontWeight: FontWeight.bold, fontSize: 10)),
                 Divider(color: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0)), height: 20),
-                _buildDetailRow(AppTranslations.t('dash.exposure_pct'), '${exp.toStringAsFixed(2)}%', exp > 65 ? red : (exp > 50 ? Colors.orange : green)),
+                _buildDetailRow(AppTranslations.t('dash.exposure_pct'), '${exp.toStringAsFixed(2)}%', exp >= 65 ? red : (exp >= 50 ? Colors.orange : green)),
                 _buildDetailRow(AppTranslations.t('dash.positions_value'), '\$${posValue.toStringAsFixed(2)}', accent),
                 _buildDetailRow(AppTranslations.t('dash.total_capital_full'), '\$${total.toStringAsFixed(2)}', (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), isBold: true),
               ],
@@ -2579,7 +2580,7 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
                               'https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/${sym.split('/')[0].toLowerCase()}.png',
                               width: 24, height: 24, fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) => Center(
-                                child: Text(sym.isNotEmpty ? sym[0] : '?', style: TextStyle(fontSize: 10, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontWeight: FontWeight.bold)),
+                                child: Text(sym.isNotEmpty ? (sym.split('/')[0].length > 3 ? sym.split('/')[0].substring(0, 3) : sym.split('/')[0]) : '?', style: const TextStyle(fontSize: 10, color: Color(0xFF38bdf8), fontWeight: FontWeight.bold)),
                               ),
                             ),
                           ),
@@ -2620,7 +2621,7 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
 
   Widget _buildJournal() {
     final List journal = widget.data['journal'] ?? [];
-    if (journal.isEmpty) return const Center(child: Text('Journal is empty', style: TextStyle(color: Colors.grey)));
+    if (journal.isEmpty) return Center(child: Text(AppTranslations.t('journal.empty'), style: const TextStyle(color: Colors.grey)));
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: journal.length,
@@ -2629,6 +2630,14 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
         final type = j['type'] ?? 'INFO';
         final msg = j['message'] ?? '';
         final time = j['time'] ?? '';
+        
+        String displayMsg = msg;
+        if (displayMsg.startsWith('DEPOSIT ')) {
+          displayMsg = displayMsg.replaceFirst('DEPOSIT ', '${AppTranslations.t('evt.deposit')} ');
+        } else if (displayMsg.startsWith('WITHDRAW ')) {
+          displayMsg = displayMsg.replaceFirst('WITHDRAW ', '${AppTranslations.t('evt.withdraw')} ');
+        }
+        displayMsg = displayMsg.replaceAll('step ', '${AppTranslations.t('pos.step')} ');
         Color c = Colors.grey;
         IconData icon = Icons.info_outline;
         if (type.contains('BUY')) { c = green; icon = Icons.arrow_downward; }
@@ -2655,11 +2664,15 @@ class _StatDetailScreenState extends State<StatDetailScreen> {
                         dt = AppTranslations.t('events.SELL');
                       } else if (type.contains('DCA')) {
                         dt = AppTranslations.t('events.DCA');
+                      } else if (type.contains('DEPOSIT')) {
+                        dt = AppTranslations.t('evt.deposit');
+                      } else if (type.contains('WITHDRAW')) {
+                        dt = AppTranslations.t('evt.withdraw');
                       }
                       return dt;
                     })()} - $time', style: TextStyle(fontSize: 11, color: c, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 4),
-                    Text(msg.replaceAll('step ', '${AppTranslations.t('pos.step')} '), style: TextStyle(fontSize: 12, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))),
+                    Text(displayMsg, style: TextStyle(fontSize: 12, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))),
                   ],
                 ),
               ),
@@ -3164,7 +3177,7 @@ class TradeDetailScreen extends StatelessWidget {
                           'https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/${sym.split('/')[0].toLowerCase()}.png',
                           width: 24, height: 24, fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) => Center(
-                            child: Text(sym.isNotEmpty ? sym[0] : '?', style: TextStyle(fontSize: 12, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))),
+                            child: Text(sym.isNotEmpty ? (sym.split('/')[0].length > 3 ? sym.split('/')[0].substring(0, 3) : sym.split('/')[0]) : '?', style: const TextStyle(fontSize: 10, color: Color(0xFF38bdf8))),
                           ),
                         ),
                       ),
@@ -3250,7 +3263,8 @@ class TradeDetailScreen extends StatelessWidget {
 
 class MenuScreen extends StatelessWidget {
   final VoidCallback onLogout;
-  const MenuScreen({super.key, required this.onLogout});
+  final String userId;
+  const MenuScreen({super.key, required this.onLogout, required this.userId});
 
   @override
   Widget build(BuildContext context) {
@@ -3291,6 +3305,7 @@ class MenuScreen extends StatelessWidget {
           _menuItem(title: AppTranslations.t('menu.submenu_explore'), subtitle: AppTranslations.t('menu.submenu_explore_sub'), icon: Icons.explore, iconColor: const Color(0xFFfbbf24), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => SubMenuScreen(title: AppTranslations.t('menu.submenu_explore'), items: [
             SubMenuItem(title: AppTranslations.t('menu.search_asset'), subtitle: AppTranslations.t('menu.search_asset_sub'), icon: Icons.search, iconColor: const Color(0xFFfbbf24), route: const SearchAssetScreen()),
             SubMenuItem(title: AppTranslations.t('menu.active_universe'), subtitle: AppTranslations.t('menu.active_universe_sub'), icon: Icons.public, iconColor: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2)), route: const ActiveUniverseScreen()),
+            SubMenuItem(title: AppTranslations.t('permanent.menu_title'), subtitle: AppTranslations.t('permanent.menu_sub'), icon: Icons.push_pin, iconColor: const Color(0xFFa78bfa), route: const PermanentAssetsScreen()),
             SubMenuItem(title: AppTranslations.t('menu.blocked_assets'), subtitle: AppTranslations.t('menu.blocked_assets_sub'), icon: Icons.block, iconColor: const Color(0xFFef4444), route: const BlockedAssetsScreen()),
           ])))),
           _menuItem(title: AppTranslations.t('menu.submenu_history'), subtitle: AppTranslations.t('menu.submenu_history_sub'), icon: Icons.receipt_long, iconColor: const Color(0xFF10b981), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => SubMenuScreen(title: AppTranslations.t('menu.submenu_history'), items: [
@@ -3307,11 +3322,19 @@ class MenuScreen extends StatelessWidget {
             SubMenuItem(title: AppTranslations.t('menu.settings'), subtitle: AppTranslations.t('menu.settings_sub'), icon: Icons.settings, iconColor: const Color(0xFF94a3b8), route: const AppSettingsScreen()),
           ])))),
           _menuItem(title: AppTranslations.t('support.title'), subtitle: AppTranslations.t('support.sub'), icon: Icons.help_outline, iconColor: const Color(0xFF38bdf8), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const SupportScreen()))),
+          _menuItem(
+            title: AppTranslations.t('subscription.title'),
+            subtitle: AppTranslations.t('subscription.menu_sub'),
+            icon: Icons.workspace_premium,
+            iconColor: const Color(0xFFfbbf24),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const SubscriptionScreen())),
+          ),
           _menuItem(title: AppTranslations.t('menu.submenu_legal'), subtitle: AppTranslations.t('menu.submenu_legal_sub'), icon: Icons.gavel, iconColor: const Color(0xFF38bdf8), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => SubMenuScreen(title: AppTranslations.t('menu.submenu_legal'), items: [
             SubMenuItem(title: AppTranslations.t('legal.terms_title'), subtitle: AppTranslations.t('legal.terms_sub'), icon: Icons.gavel, iconColor: const Color(0xFF38bdf8), route: const TermsScreen()),
             SubMenuItem(title: AppTranslations.t('legal.privacy_title'), subtitle: AppTranslations.t('legal.privacy_sub'), icon: Icons.shield, iconColor: const Color(0xFFa78bfa), route: const PrivacyScreen()),
           ])))),
-          _menuItem(title: AppTranslations.t('menu.admin_panel'), subtitle: AppTranslations.t('menu.admin_panel_sub'), icon: Icons.admin_panel_settings, iconColor: const Color(0xFFf59e0b), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const DeveloperPanelScreen()))),
+          if (userId == '556')
+            _menuItem(title: AppTranslations.t('menu.admin_panel'), subtitle: AppTranslations.t('menu.admin_panel_sub'), icon: Icons.admin_panel_settings, iconColor: const Color(0xFFf59e0b), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const DeveloperPanelScreen()))),
           _menuItem(
             title: AppTranslations.t('menu.logout'), 
             subtitle: AppTranslations.t('menu.logout_sub'), 
@@ -3894,9 +3917,80 @@ class _DeveloperPanelScreenState extends State<DeveloperPanelScreen> {
     }
   }
 
+    void _showAdminMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: cardBg,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (c) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Icon(Icons.admin_panel_settings, color: gold, size: 24),
+                  const SizedBox(width: 8),
+                  Text(AppTranslations.t('admin.tools_title'), style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontWeight: FontWeight.bold, fontSize: 16)),
+                ],
+              ),
+            ),
+            Divider(color: borderColor, height: 1),
+            ListTile(
+              leading: Icon(Icons.payments, color: green),
+              title: Text(AppTranslations.t('admin.payment_approvals'), style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontWeight: FontWeight.bold)),
+              subtitle: Text(AppTranslations.t('admin.payment_approvals_sub'), style: const TextStyle(fontSize: 12)),
+              onTap: () {
+                Navigator.pop(c);
+                Navigator.push(context, MaterialPageRoute(builder: (c) => const PendingPaymentsScreen())).then((_) => _fetchUsers());
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.public, color: Color(0xFFa78bfa)),
+              title: Text(AppTranslations.t('global.title'), style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontWeight: FontWeight.bold)),
+              subtitle: Text(AppTranslations.t('global.menu_sub'), style: const TextStyle(fontSize: 12)),
+              onTap: () {
+                Navigator.pop(c);
+                Navigator.push(context, MaterialPageRoute(builder: (c) => const GlobalPermanentAssetsScreen()));
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.account_balance_wallet, color: accent),
+              title: Text(AppTranslations.t('admin.wallet_settings'), style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontWeight: FontWeight.bold)),
+              subtitle: Text(AppTranslations.t('admin.wallet_settings_sub'), style: const TextStyle(fontSize: 12)),
+              onTap: () {
+                Navigator.pop(c);
+                Navigator.push(context, MaterialPageRoute(builder: (c) => const WalletSettingsScreen()));
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.refresh, color: accent),
+              title: Text(AppTranslations.t('admin.refresh_users'), style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)))),
+              onTap: () {
+                Navigator.pop(c);
+                _fetchUsers();
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
+Widget build(BuildContext context) {
+    return Scaffold(floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _showAdminMenu(context),
+        backgroundColor: gold,
+        foregroundColor: Colors.black,
+        icon: const Icon(Icons.admin_panel_settings),
+        label: Text(AppTranslations.t('admin.tools_title'), style: const TextStyle(fontWeight: FontWeight.bold)),
+      ),
+      
       backgroundColor: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)),
       appBar: AppBar(
         backgroundColor: cardBg,
@@ -3924,6 +4018,7 @@ class _DeveloperPanelScreenState extends State<DeveloperPanelScreen> {
                           isRunning: isRunning,
                           balance: (u['balance'] ?? 0.0).toDouble(),
                           positions: u['positions'] ?? u['positions_count'] ?? 0,
+                          isExempt: u['is_exempt'] == true,
                         ))).then((_) => _fetchUsers());
                       },
                       child: Container(
@@ -4478,8 +4573,9 @@ class UserDetailsScreen extends StatefulWidget {
   final bool isRunning;
   final double balance;
   final int positions;
+  final bool isExempt;
 
-  const UserDetailsScreen({super.key, required this.userId, required this.username, required this.email, required this.isSuspended, required this.isRunning, required this.balance, required this.positions});
+  const UserDetailsScreen({super.key, required this.userId, required this.username, required this.email, required this.isSuspended, required this.isRunning, required this.balance, required this.positions, this.isExempt = false});
 
   @override
   State<UserDetailsScreen> createState() => _UserDetailsScreenState();
@@ -4488,6 +4584,7 @@ class UserDetailsScreen extends StatefulWidget {
 class _UserDetailsScreenState extends State<UserDetailsScreen> {
   late bool _isRunning;
   late bool _isSuspended;
+  late bool _isExempt;
   bool _isBusy = false;
 
   @override
@@ -4495,6 +4592,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
     super.initState();
     _isRunning = widget.isRunning;
     _isSuspended = widget.isSuspended;
+    _isExempt = widget.isExempt;
   }
 
   Future<String?> _getToken() async {
@@ -4608,7 +4706,54 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
     }
   }
 
-  Future<void> _showResetPasswordDialog() async {
+    Future<void> _toggleExempt() async {
+    if (_isBusy) return;
+    final confirmed = await _confirmAction(
+      _isExempt ? 'Remove Exemption?' : 'Exempt from Subscription?',
+      _isExempt
+          ? '${widget.username} will be required to have a paid subscription to trade. Continue?'
+          : '${widget.username} will be able to trade without a subscription. Continue?',
+    );
+    if (!confirmed) return;
+    setState(() => _isBusy = true);
+    try {
+      final token = await _getToken();
+      final newState = !_isExempt;
+      final res = await http.post(
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/admin/user/${widget.userId}/exempt'),
+        headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
+        body: jsonEncode({'is_exempt': newState}),
+      );
+      if (res.statusCode == 200) {
+        setState(() => _isExempt = newState);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(newState ? 'User exempted from subscription' : 'Exemption removed'),
+              backgroundColor: const Color(0xFF10b981),
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          final d = jsonDecode(res.body);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(d['detail'] ?? 'Failed'), backgroundColor: const Color(0xFFef4444)),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: const Color(0xFFef4444)),
+        );
+      }
+    } finally {
+      setState(() => _isBusy = false);
+    }
+  }
+
+Future<void> _showResetPasswordDialog() async {
     final controller = TextEditingController();
     final confirmed = await showDialog<bool>(
       context: context,
@@ -4746,6 +4891,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
                   Navigator.push(context, MaterialPageRoute(builder: (c) => AdminUserTradesScreen(userId: widget.userId, username: widget.username)));
                 }),
                 _actionBtn(_isRunning ? AppTranslations.t('admin.force_stop_bot') : AppTranslations.t('admin.force_start_bot'), _isRunning ? red : green, _isBusy ? () {} : _toggleBot),
+                _actionBtn(_isExempt ? AppTranslations.t('admin.remove_exempt') : AppTranslations.t('admin.exempt_from_sub'), _isExempt ? const Color(0xFF10b981) : const Color(0xFF00d9ff), _isBusy ? () {} : _toggleExempt),
                 _actionBtn(_isSuspended ? AppTranslations.t('admin.unsuspend_account') : AppTranslations.t('admin.suspend_account'), const Color(0xFFf59e0b), _isBusy ? () {} : _toggleSuspend),
                 _actionBtn(AppTranslations.t('admin.reset_password'), const Color(0xFFd32f2f), _showResetPasswordDialog),
                 _actionBtn(AppTranslations.t('admin.delete_account'), const Color(0xFF7f0000), _confirmDelete),
@@ -5122,7 +5268,7 @@ class _AssetDetailsScreenState extends State<AssetDetailsScreen> {
                             'https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/${symbol.split('/')[0].toLowerCase()}.png',
                             width: 36, height: 36, fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) => Center(
-                              child: Text(symbol.isNotEmpty ? symbol[0] : '?', style: TextStyle(fontSize: 14, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontWeight: FontWeight.bold)),
+                              child: Text(symbol.isNotEmpty ? (symbol.split('/')[0].length > 3 ? symbol.split('/')[0].substring(0, 3) : symbol.split('/')[0]) : '?', style: const TextStyle(fontSize: 10, color: Color(0xFF38bdf8), fontWeight: FontWeight.bold)),
                             ),
                           ),
                         ),
@@ -5410,7 +5556,7 @@ class _BlockedAssetsScreenState extends State<BlockedAssetsScreen> {
                             child: Image.network(
                               'https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/${sym.toLowerCase()}.png',
                               width: 28, height: 28, fit: BoxFit.cover,
-                              errorBuilder: (c, e, s) => Center(child: Text(sym.isNotEmpty ? sym[0] : '?', style: TextStyle(color: themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a), fontWeight: FontWeight.bold, fontSize: 12))),
+                              errorBuilder: (c, e, s) => Center(child: Text(sym.isNotEmpty ? (sym.split('/')[0].length > 3 ? sym.split('/')[0].substring(0, 3) : sym.split('/')[0]) : '?', style: const TextStyle(color: Color(0xFF38bdf8), fontWeight: FontWeight.bold, fontSize: 10))),
                             ),
                           ),
                         ),
@@ -5563,8 +5709,8 @@ class _ActiveUniverseScreenState extends State<ActiveUniverseScreen> {
                                     errorBuilder: (context, error, stackTrace) {
                                       return Center(
                                         child: Text(
-                                          sym.isNotEmpty ? sym[0] : '?',
-                                          style: TextStyle(fontSize: 12, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontWeight: FontWeight.bold),
+                                          sym.isNotEmpty ? (sym.split('/')[0].length > 3 ? sym.split('/')[0].substring(0, 3) : sym.split('/')[0]) : '?',
+                                          style: const TextStyle(fontSize: 10, color: Color(0xFF38bdf8), fontWeight: FontWeight.bold),
                                           textAlign: TextAlign.center,
                                         ),
                                       );
@@ -5719,7 +5865,7 @@ class _ExperienceScreenState extends State<ExperienceScreen> {
                                       'https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/${sym.split('/')[0].toLowerCase()}.png',
                                       width: 24, height: 24, fit: BoxFit.cover,
                                       errorBuilder: (context, error, stackTrace) => Center(
-                                        child: Text(sym.isNotEmpty ? sym[0] : '?', style: TextStyle(color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a)), fontSize: 12, fontWeight: FontWeight.bold)),
+                                        child: Text(sym.isNotEmpty ? (sym.split('/')[0].length > 3 ? sym.split('/')[0].substring(0, 3) : sym.split('/')[0]) : '?', style: const TextStyle(color: Color(0xFF38bdf8), fontSize: 10, fontWeight: FontWeight.bold)),
                                       ),
                                     ),
                                   ),
@@ -5852,6 +5998,12 @@ class _TradingSettingsScreenState extends State<TradingSettingsScreen> {
   bool _binanceConnected = false;
   String _binanceLabel = '';
   String _binanceMasked = '';
+  
+  // Form Controllers for Binance Connect
+  final _apiKeyCtrl = TextEditingController();
+  final _apiSecretCtrl = TextEditingController();
+  final _labelCtrl = TextEditingController(text: 'Default');
+  bool _isConnecting = false;
 
   Color get cardBg => themeNotifier.value == ThemeMode.dark ? const Color(0xFF101722) : Colors.white;
   Color get borderColor => themeNotifier.value == ThemeMode.dark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0);
@@ -5907,6 +6059,36 @@ class _TradingSettingsScreenState extends State<TradingSettingsScreen> {
       setState(() => _isLoading = false);
       _showSnack('Connection error');
     }
+  }
+
+  Future<void> _connectBinance() async {
+    if (_apiKeyCtrl.text.isEmpty || _apiSecretCtrl.text.isEmpty) {
+      _showSnack('Please fill all fields');
+      return;
+    }
+    setState(() => _isConnecting = true);
+    try {
+      final token = await _getToken();
+      final res = await http.post(
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/binance/connect'),
+        headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'api_key': _apiKeyCtrl.text.trim(),
+          'secret': _apiSecretCtrl.text.trim(),
+          'label': _labelCtrl.text.trim(),
+        }),
+      );
+      if (res.statusCode == 200) {
+        _showSnack('Binance Connected Successfully!', isSuccess: true);
+        _fetchAllData(); // Refresh page
+      } else {
+        final data = jsonDecode(res.body);
+        _showSnack(data['detail'] ?? 'Failed to connect');
+      }
+    } catch (e) {
+      _showSnack('Connection error');
+    }
+    setState(() => _isConnecting = false);
   }
 
   Future<void> _saveSettings() async {
@@ -6060,6 +6242,93 @@ class _TradingSettingsScreenState extends State<TradingSettingsScreen> {
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
+                if (!_binanceConnected) ...[
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(color: const Color(0xFF2c1d00), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.orange)),
+                    child: const Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.warning_amber_rounded, color: Colors.orange),
+                            SizedBox(width: 8),
+                            Text("Connect Binance First", style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold, fontSize: 15)),
+                          ],
+                        ),
+                        SizedBox(height: 8),
+                        Text("You need to connect your Binance account before configuring trading settings", textAlign: TextAlign.center, style: TextStyle(color: Colors.grey, fontSize: 11)),
+                      ],
+                    ),
+                  ),
+                  // --- Connect Form ---
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: borderColor)),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.link, color: accent, size: 24),
+                            const SizedBox(width: 8),
+                            Text("Connect Binance Account", style: TextStyle(color: accent, fontSize: 14, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        const Text("Enter API keys from your Binance account. Required permissions: Spot Trading + Read.", textAlign: TextAlign.center, style: TextStyle(color: Colors.grey, fontSize: 10)),
+                        const SizedBox(height: 16),
+                        TextField(
+                          controller: _apiKeyCtrl,
+                          style: TextStyle(fontSize: 12, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a))),
+                          decoration: InputDecoration(
+                            labelText: "API Key",
+                            labelStyle: const TextStyle(fontSize: 11),
+                            filled: true,
+                            fillColor: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: _apiSecretCtrl,
+                          obscureText: true,
+                          style: TextStyle(fontSize: 12, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a))),
+                          decoration: InputDecoration(
+                            labelText: "Secret Key",
+                            labelStyle: const TextStyle(fontSize: 11),
+                            filled: true,
+                            fillColor: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: _labelCtrl,
+                          style: TextStyle(fontSize: 12, color: (themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a))),
+                          decoration: InputDecoration(
+                            labelText: "Label",
+                            labelStyle: const TextStyle(fontSize: 11),
+                            filled: true,
+                            fillColor: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _isConnecting ? null : _connectBinance,
+                            style: ElevatedButton.styleFrom(backgroundColor: accent, foregroundColor: Colors.black),
+                            child: _isConnecting ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Connect Account', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ] else ...[
                 // Settings Card
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -6141,7 +6410,7 @@ class _TradingSettingsScreenState extends State<TradingSettingsScreen> {
                                   );
                                 }
                               } catch (e) {
-                                debugPrint("Error resetting defaults: $e");
+                                if (kDebugMode) debugPrint("Error resetting defaults: $e");
                               }
                             },
                             child: Text(AppTranslations.t('trading.reset'), style: const TextStyle(color: Colors.grey)),
@@ -6208,6 +6477,8 @@ class _TradingSettingsScreenState extends State<TradingSettingsScreen> {
                     ],
                   ),
                 ),
+
+                ], // End of if (_binanceConnected)
 
                 // Binance Status
                 Container(
@@ -6503,7 +6774,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
         });
       }
     } catch (e) {
-      debugPrint('Failed to load notification settings: $e');
+      if (kDebugMode) debugPrint('Failed to load notification settings: $e');
     }
     setState(() => _isLoading = false);
   }
@@ -6885,8 +7156,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final data = jsonDecode(res.body);
       if (res.statusCode == 200 || res.statusCode == 201) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppTranslations.t('auth.registration_success')), backgroundColor: Colors.green));
-          Navigator.pop(context);
+          Navigator.pushReplacement(context, MaterialPageRoute(
+            builder: (c) => OtpVerificationScreen(email: _emailCtrl.text.trim()),
+          ));
         }
       } else {
         setState(() => _error = data['detail'] ?? AppTranslations.t('auth.err_register_failed'));
@@ -6999,3 +7271,2098 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 }
+
+
+// ==========================================
+// OTP VERIFICATION SCREEN (Added by Audit)
+// ==========================================
+class OtpVerificationScreen extends StatefulWidget {
+  final String email;
+  const OtpVerificationScreen({super.key, required this.email});
+
+  @override
+  State<OtpVerificationScreen> createState() => _OtpVerificationScreenState();
+}
+
+class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
+  final TextEditingController _otpCtrl = TextEditingController();
+  bool _isLoading = false;
+  String _error = '';
+
+  Future<void> _verifyOtp() async {
+    if (_otpCtrl.text.isEmpty) {
+      setState(() => _error = 'Please enter the OTP');
+      return;
+    }
+    setState(() { _isLoading = true; _error = ''; });
+
+    try {
+      final res = await http.post(
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/verify_otp'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email': widget.email,
+          'otp': _otpCtrl.text.trim(),
+        }),
+      );
+
+      if (res.statusCode == 200) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Email verified successfully! You can login now.'), backgroundColor: Colors.green));
+          Navigator.pop(context);
+        }
+      } else {
+        final data = jsonDecode(res.body);
+        setState(() => _error = data['detail'] ?? 'Invalid OTP');
+      }
+    } catch (e) {
+      setState(() => _error = 'Connection error');
+    }
+    setState(() => _isLoading = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // ألوان ثابتة لتطابق التصميم الداكن
+    const Color bgColor = Color(0xFF0B1120);
+    const Color textColor = Colors.white;
+    const Color accent = Color(0xFF00d9ff);
+    const Color cardBg = Color(0xFF1e293b);
+
+    return Scaffold(
+      backgroundColor: bgColor,
+      appBar: AppBar(
+        backgroundColor: bgColor,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: textColor),
+        title: const Text('Verify Email', style: TextStyle(color: textColor)),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.mark_email_read, size: 80, color: accent),
+            const SizedBox(height: 24),
+            Text(
+              'We sent a verification code to\n${widget.email}',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 16, color: textColor),
+            ),
+            const SizedBox(height: 32),
+            TextField(
+              controller: _otpCtrl,
+              keyboardType: TextInputType.number,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 24, letterSpacing: 8, color: textColor),
+              decoration: InputDecoration(
+                hintText: 'Enter OTP',
+                hintStyle: const TextStyle(color: Colors.grey, letterSpacing: 1, fontSize: 16),
+                filled: true,
+                fillColor: cardBg,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+            if (_error.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Text(_error, style: const TextStyle(color: Colors.red)),
+            ],
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: _isLoading ? null : _verifyOtp,
+                style: ElevatedButton.styleFrom(backgroundColor: accent),
+                child: _isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text('Verify', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+// ============================================================
+// SUBSCRIPTION SCREEN (Phase 5A — read-only)
+// ============================================================
+class SubscriptionScreen extends StatefulWidget {
+  const SubscriptionScreen({super.key});
+
+  @override
+  State<SubscriptionScreen> createState() => _SubscriptionScreenState();
+}
+
+class _SubscriptionScreenState extends State<SubscriptionScreen> {
+  Map<String, dynamic> _info = {};
+  bool _isLoading = true;
+  String _error = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchSubscription();
+  }
+
+  Future<void> _fetchSubscription() async {
+    setState(() { _isLoading = true; _error = ''; });
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token') ?? '';
+      final res = await http.get(
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/subscription/my'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (res.statusCode == 200) {
+        setState(() {
+          _info = jsonDecode(res.body) ?? {};
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _error = 'Failed to load subscription (HTTP ${res.statusCode})';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _error = 'Connection error';
+        _isLoading = false;
+      });
+    }
+  }
+
+  Color _statusColor(String status) {
+    switch (status) {
+      case 'active':
+      case 'trial':
+        return const Color(0xFF10b981);
+      case 'grace':
+        return const Color(0xFFf59e0b);
+      case 'exempt':
+        return const Color(0xFFa78bfa);
+      case 'expired':
+      case 'cancelled':
+        return const Color(0xFFef4444);
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _statusLabel(String status) {
+    switch (status) {
+      case 'active': return AppTranslations.t('subscription.status_active');
+      case 'trial': return AppTranslations.t('subscription.status_trial');
+      case 'grace': return AppTranslations.t('subscription.status_grace');
+      case 'expired': return AppTranslations.t('subscription.status_expired');
+      case 'cancelled': return AppTranslations.t('subscription.status_cancelled');
+      case 'exempt': return AppTranslations.t('subscription.status_exempt');
+      default: return AppTranslations.t('subscription.status_none');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = themeNotifier.value == ThemeMode.dark;
+    final bgColor = isDark ? const Color(0xFF080d14) : const Color(0xFFf8fafc);
+    final cardBg = isDark ? const Color(0xFF101722) : Colors.white;
+    final borderColor = isDark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0);
+    final textColor = isDark ? Colors.white : const Color(0xFF0f172a);
+    final accent = isDark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2);
+
+    return Scaffold(
+      backgroundColor: bgColor,
+      appBar: AppBar(
+        backgroundColor: cardBg,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: accent),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          AppTranslations.t('subscription.title'),
+          style: TextStyle(color: accent, fontWeight: FontWeight.bold),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.refresh, color: accent),
+            onPressed: _fetchSubscription,
+          ),
+        ],
+      ),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator(color: accent))
+          : _error.isNotEmpty
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                        const SizedBox(height: 12),
+                        Text(_error, style: TextStyle(color: textColor), textAlign: TextAlign.center),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: _fetchSubscription,
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: cardBg,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: borderColor),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(
+                            _info['has_subscription'] == true
+                                ? Icons.workspace_premium
+                                : Icons.card_membership,
+                            size: 56,
+                            color: _statusColor(_info['status']?.toString() ?? 'none'),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            _statusLabel(_info['status']?.toString() ?? 'none'),
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: _statusColor(_info['status']?.toString() ?? 'none'),
+                            ),
+                          ),
+                          if (_info['plan_name'] != null) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              '${AppTranslations.t('subscription.plan_prefix')}: ${_info['plan_name']}',
+                              style: TextStyle(fontSize: 14, color: textColor),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    if (_info['has_subscription'] == true) ...[
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: cardBg,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: borderColor),
+                        ),
+                        child: Column(
+                          children: [
+                            _kvRow(AppTranslations.t('subscription.days_remaining'), _info['is_exempt'] == true ? AppTranslations.t('subscription.unlimited') : '${_info['days_left'] ?? 0}', textColor, accent),
+                            Divider(color: borderColor, height: 24),
+                            _kvRow(
+                              AppTranslations.t('subscription.can_open_trades'),
+                              _info['can_buy'] == true ? AppTranslations.t('common.yes') : AppTranslations.t('common.no'),
+                              textColor,
+                              _info['can_buy'] == true ? const Color(0xFF10b981) : const Color(0xFFef4444),
+                            ),
+                            if (_info['expires_at'] != null) ...[
+                              Divider(color: borderColor, height: 24),
+                              _kvRow(AppTranslations.t('subscription.expires_at'), _formatExpiry(_info['expires_at']), textColor, textColor),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                    if (_info['has_subscription'] != true ||
+                        _info['status'] == 'expired' ||
+                        _info['status'] == 'grace' ||
+                        _info['status'] == 'cancelled')
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: cardBg,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: accent, width: 2),
+                        ),
+                        child: Column(
+                          children: [
+                            Icon(Icons.workspace_premium, color: accent, size: 36),
+                            const SizedBox(height: 12),
+                            Text(
+                              AppTranslations.t('subscription.subscribe_monthly'),
+                              style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 16),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              AppTranslations.t('subscription.subscribe_monthly_desc'),
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: textColor.withOpacity(0.7), fontSize: 12),
+                            ),
+                            const SizedBox(height: 16),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: () async {
+                                  final result = await Navigator.push<bool>(
+                                    context,
+                                    MaterialPageRoute(builder: (c) => const PaymentScreen()),
+                                  );
+                                  if (result == true) {
+                                    _fetchSubscription();
+                                  }
+                                },
+                                icon: const Icon(Icons.payment),
+                                label: Text(AppTranslations.t('subscription.subscribe_now'), style: const TextStyle(fontWeight: FontWeight.bold)),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: accent,
+                                  foregroundColor: Colors.black,
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+    );
+  }
+
+  Widget _kvRow(String label, String value, Color labelColor, Color valueColor) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: TextStyle(color: labelColor.withOpacity(0.7), fontSize: 13)),
+        Text(value, style: TextStyle(color: valueColor, fontWeight: FontWeight.bold, fontSize: 14)),
+      ],
+    );
+  }
+
+  String _formatExpiry(dynamic ts) {
+    if (ts == null) return 'N/A';
+    final d = DateTime.fromMillisecondsSinceEpoch((double.parse(ts.toString()) * 1000).toInt());
+    return '${d.day}/${d.month}/${d.year}';
+  }
+}
+
+
+// ============================================================
+// PAYMENT SCREEN (Phase 5B)
+// ============================================================
+class PaymentScreen extends StatefulWidget {
+  const PaymentScreen({super.key});
+
+  @override
+  State<PaymentScreen> createState() => _PaymentScreenState();
+}
+
+class _PaymentScreenState extends State<PaymentScreen> {
+  Map<String, dynamic> _wallet = {};
+  List<dynamic> _plans = [];
+  Map<String, dynamic>? _selectedPlan;
+  final _txHashCtrl = TextEditingController();
+  final _noteCtrl = TextEditingController();
+  bool _isLoading = true;
+  bool _isSubmitting = false;
+  String _error = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchData();
+  }
+
+  @override
+  void dispose() {
+    _txHashCtrl.dispose();
+    _noteCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _fetchData() async {
+    setState(() { _isLoading = true; _error = ''; });
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token') ?? '';
+      final headers = {'Authorization': 'Bearer $token'};
+
+      final resWallet = await http.get(
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/subscription/wallet'),
+        headers: headers,
+      );
+      final resPlans = await http.get(
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/subscription/plans'),
+        headers: headers,
+      );
+
+      if (resWallet.statusCode == 200 && resPlans.statusCode == 200) {
+        final walletData = jsonDecode(resWallet.body);
+        final plansData = jsonDecode(resPlans.body);
+
+        // فلترة الخطط المدفوعة فقط
+        final allPlans = (plansData['plans'] as List? ?? []);
+        final paidPlans = allPlans
+            .where((p) => ((p['price_usdt'] ?? 0) as num) > 0)
+            .toList();
+
+        setState(() {
+          _wallet = Map<String, dynamic>.from(walletData['wallet'] ?? {});
+          _plans = paidPlans;
+          if (_plans.isNotEmpty) {
+            _selectedPlan = Map<String, dynamic>.from(_plans[0]);
+          }
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _error = 'Failed to load payment info (wallet: ${resWallet.statusCode}, plans: ${resPlans.statusCode})';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _error = 'Connection error: $e';
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _copyAddress() async {
+    final addr = _wallet['address']?.toString() ?? '';
+    if (addr.isEmpty) return;
+    await Clipboard.setData(ClipboardData(text: addr));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Address copied'), backgroundColor: Colors.green),
+    );
+  }
+
+  Future<void> _submit() async {
+    if (_selectedPlan == null) {
+      setState(() => _error = 'Please select a plan');
+      return;
+    }
+    if (_txHashCtrl.text.trim().isEmpty) {
+      setState(() => _error = 'Please enter Transaction Hash');
+      return;
+    }
+
+    setState(() { _isSubmitting = true; _error = ''; });
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token') ?? '';
+
+      final res = await http.post(
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/subscription/request'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'plan_id': _selectedPlan!['id'],
+          'tx_hash': _txHashCtrl.text.trim(),
+          'user_note': _noteCtrl.text.trim(),
+          'method': 'binance_pay',
+        }),
+      );
+
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        if (!mounted) return;
+        Navigator.pop(context, true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Payment request submitted. Awaiting admin review.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        final data = jsonDecode(res.body);
+        setState(() {
+          _error = data['detail'] ?? 'Failed to submit payment';
+          _isSubmitting = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _error = 'Connection error: $e';
+        _isSubmitting = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = themeNotifier.value == ThemeMode.dark;
+    final bgColor = isDark ? const Color(0xFF080d14) : const Color(0xFFf8fafc);
+    final cardBg = isDark ? const Color(0xFF101722) : Colors.white;
+    final borderColor = isDark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0);
+    final textColor = isDark ? Colors.white : const Color(0xFF0f172a);
+    final accent = isDark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2);
+
+    return Scaffold(
+      backgroundColor: bgColor,
+      appBar: AppBar(
+        backgroundColor: cardBg,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: accent),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(AppTranslations.t('payment.title'), style: TextStyle(color: accent, fontWeight: FontWeight.bold)),
+      ),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator(color: accent))
+          : ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                // Plan selection
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: cardBg,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: borderColor),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(AppTranslations.t('payment.select_plan'), style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 15)),
+                      const SizedBox(height: 12),
+                      ..._plans.map((p) {
+                        final isSelected = _selectedPlan?['id'] == p['id'];
+                        return GestureDetector(
+                          onTap: () => setState(() => _selectedPlan = Map<String, dynamic>.from(p)),
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: isSelected ? accent.withOpacity(0.1) : Colors.transparent,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: isSelected ? accent : borderColor,
+                                width: isSelected ? 2 : 1,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                                  color: accent,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(p['name']?.toString() ?? '', style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 14)),
+                                      Text('${p['duration_days']} ${AppTranslations.t('payment.days_suffix')}', style: TextStyle(color: textColor.withOpacity(0.6), fontSize: 11)),
+                                    ],
+                                  ),
+                                ),
+                                Text('\$${(p['price_usdt'] as num).toStringAsFixed(2)}', style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 15)),
+                              ],
+                            ),
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Wallet
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: cardBg,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: borderColor),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.account_balance_wallet, color: accent, size: 20),
+                          const SizedBox(width: 8),
+                          Text(AppTranslations.t('payment.send_payment_to'), style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 14)),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF080d14) : const Color(0xFFf8fafc),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: borderColor),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: SelectableText(
+                                _wallet['address']?.toString() ?? 'N/A',
+                                style: TextStyle(color: textColor, fontFamily: 'monospace', fontSize: 12),
+                              ),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.copy, color: accent, size: 18),
+                              onPressed: _copyAddress,
+                              tooltip: 'Copy',
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '${AppTranslations.t('payment.network_label')} (${_wallet['currency'] ?? 'USDT'})',
+                        style: TextStyle(color: textColor.withOpacity(0.6), fontSize: 11),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // TX Hash
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: cardBg,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: borderColor),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(AppTranslations.t('payment.paste_tx_hash'), style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 14)),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _txHashCtrl,
+                        style: TextStyle(color: textColor),
+                        decoration: InputDecoration(
+                          hintText: AppTranslations.t('payment.tx_hash_hint'),
+                          hintStyle: TextStyle(color: textColor.withOpacity(0.4)),
+                          filled: true,
+                          fillColor: isDark ? const Color(0xFF080d14) : const Color(0xFFf8fafc),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _noteCtrl,
+                        style: TextStyle(color: textColor),
+                        maxLines: 2,
+                        decoration: InputDecoration(
+                          hintText: AppTranslations.t('payment.note_hint'),
+                          hintStyle: TextStyle(color: textColor.withOpacity(0.4)),
+                          filled: true,
+                          fillColor: isDark ? const Color(0xFF080d14) : const Color(0xFFf8fafc),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                if (_error.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.red),
+                    ),
+                    child: Text(_error, style: const TextStyle(color: Colors.red, fontSize: 12)),
+                  ),
+                ],
+
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _isSubmitting ? null : _submit,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: accent,
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    child: _isSubmitting
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                        : Text(AppTranslations.t('payment.submit_request'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  ),
+                ),
+                const SizedBox(height: 24),
+              ],
+            ),
+    );
+  }
+}
+
+
+// ============================================================
+// PENDING PAYMENTS SCREEN (Phase 5C)
+// ============================================================
+class PendingPaymentsScreen extends StatefulWidget {
+  const PendingPaymentsScreen({super.key});
+  @override
+  State<PendingPaymentsScreen> createState() => _PendingPaymentsScreenState();
+}
+
+class _PendingPaymentsScreenState extends State<PendingPaymentsScreen> {
+  List<dynamic> _payments = [];
+  bool _isLoading = true;
+  String _error = '';
+
+  Color get cardBg => themeNotifier.value == ThemeMode.dark ? const Color(0xFF101722) : Colors.white;
+  Color get borderColor => themeNotifier.value == ThemeMode.dark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0);
+  Color get accent => themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2);
+  Color get textColor => themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a);
+  final Color green = const Color(0xFF10b981);
+  final Color red = const Color(0xFFef4444);
+
+  @override
+  void initState() {
+    super.initState();
+    _fetch();
+  }
+
+  Future<void> _fetch() async {
+    setState(() { _isLoading = true; _error = ''; });
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token') ?? '';
+      final res = await http.get(
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/admin/payments/pending'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (res.statusCode == 200) {
+        setState(() { _payments = jsonDecode(res.body)['payments'] ?? []; _isLoading = false; });
+      } else {
+        setState(() { _error = 'Failed: ${res.statusCode}'; _isLoading = false; });
+      }
+    } catch (e) {
+      setState(() { _error = 'Error: $e'; _isLoading = false; });
+    }
+  }
+
+  Future<void> _verify(int paymentId, String username) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: const Text('Verify Payment?'),
+        content: Text('Activate subscription for $username?\n\nOnly do this after confirming the payment in Binance.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(c, true),
+            style: ElevatedButton.styleFrom(backgroundColor: green),
+            child: const Text('Verify & Activate', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+    await _action('verify', paymentId, '');
+  }
+
+  Future<void> _reject(int paymentId, String username) async {
+    final ctrl = TextEditingController();
+    final reason = await showDialog<String>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text('Reject Payment from $username?'),
+        content: TextField(
+          controller: ctrl,
+          decoration: const InputDecoration(labelText: 'Reason (required)', hintText: 'e.g., Wrong amount'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(c), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () {
+              if (ctrl.text.trim().isEmpty) return;
+              Navigator.pop(c, ctrl.text.trim());
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: red),
+            child: const Text('Reject', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (reason == null || reason.isEmpty) return;
+    await _action('reject', paymentId, reason);
+  }
+
+  Future<void> _action(String action, int paymentId, String reason) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token') ?? '';
+      final res = await http.post(
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/admin/payments/$action'),
+        headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
+        body: jsonEncode({'payment_id': paymentId, 'reason': reason}),
+      );
+      if (!mounted) return;
+      if (res.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Payment $action successful'), backgroundColor: green),
+        );
+        _fetch();
+      } else {
+        final d = jsonDecode(res.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(d['detail'] ?? 'Failed'), backgroundColor: red),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: red));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)),
+      appBar: AppBar(
+        backgroundColor: cardBg,
+        elevation: 0,
+        leading: IconButton(icon: Icon(Icons.arrow_back, color: accent), onPressed: () => Navigator.pop(context)),
+        title: Text(AppTranslations.t('admin.pending_title'), style: TextStyle(color: accent, fontWeight: FontWeight.bold)),
+        actions: [
+          IconButton(icon: Icon(Icons.refresh, color: accent), onPressed: _fetch),
+        ],
+      ),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator(color: accent))
+          : _error.isNotEmpty
+              ? Center(child: Text(_error, style: const TextStyle(color: Colors.red)))
+              : _payments.isEmpty
+                  ? Center(child: Text(AppTranslations.t('admin.no_pending'), style: TextStyle(color: textColor.withOpacity(0.6))))
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _payments.length,
+                      itemBuilder: (c, i) {
+                        final p = _payments[i];
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: cardBg,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: borderColor),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(Icons.payment, color: accent, size: 20),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      '${p['username']} (ID: ${p['user_id']})',
+                                      style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 14),
+                                    ),
+                                  ),
+                                  Text('\$${p['amount_usdt']}', style: TextStyle(color: green, fontWeight: FontWeight.bold)),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              _row(AppTranslations.t('admin.plan_label'), p['plan_name']?.toString() ?? '?'),
+                              _row(AppTranslations.t('admin.method_label'), p['method']?.toString() ?? '?'),
+                              _row(AppTranslations.t('admin.tx_hash_label'), p['tx_hash']?.toString() ?? '(none)'),
+                              if (p['user_note'] != null && p['user_note'].toString().isNotEmpty)
+                                _row(AppTranslations.t('admin.user_note_label'), p['user_note'].toString()),
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: ElevatedButton.icon(
+                                      onPressed: () => _verify(p['id'], p['username']?.toString() ?? '?'),
+                                      icon: const Icon(Icons.check, size: 18),
+                                      label: Text(AppTranslations.t('admin.verify')),
+                                      style: ElevatedButton.styleFrom(backgroundColor: green, foregroundColor: Colors.white),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: ElevatedButton.icon(
+                                      onPressed: () => _reject(p['id'], p['username']?.toString() ?? '?'),
+                                      icon: const Icon(Icons.close, size: 18),
+                                      label: Text(AppTranslations.t('admin.reject')),
+                                      style: ElevatedButton.styleFrom(backgroundColor: red, foregroundColor: Colors.white),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+    );
+  }
+
+  Widget _row(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          Text('$label: ', style: TextStyle(color: textColor.withOpacity(0.6), fontSize: 11)),
+          Expanded(
+            child: Text(value, style: TextStyle(color: textColor, fontSize: 11), overflow: TextOverflow.ellipsis),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ============================================================
+// WALLET SETTINGS SCREEN (Phase 5C)
+// ============================================================
+class WalletSettingsScreen extends StatefulWidget {
+  const WalletSettingsScreen({super.key});
+  @override
+  State<WalletSettingsScreen> createState() => _WalletSettingsScreenState();
+}
+
+class _WalletSettingsScreenState extends State<WalletSettingsScreen> {
+  Map<String, dynamic> _wallet = {};
+  final _addrCtrl = TextEditingController();
+  bool _isLoading = true;
+  bool _isSaving = false;
+  String _error = '';
+
+  Color get cardBg => themeNotifier.value == ThemeMode.dark ? const Color(0xFF101722) : Colors.white;
+  Color get borderColor => themeNotifier.value == ThemeMode.dark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0);
+  Color get accent => themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2);
+  Color get textColor => themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a);
+  final Color green = const Color(0xFF10b981);
+
+  @override
+  void initState() {
+    super.initState();
+    _fetch();
+  }
+
+  @override
+  void dispose() {
+    _addrCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _fetch() async {
+    setState(() { _isLoading = true; _error = ''; });
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token') ?? '';
+      final res = await http.get(
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/subscription/wallet'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      if (res.statusCode == 200) {
+        final w = jsonDecode(res.body)['wallet'] ?? {};
+        setState(() {
+          _wallet = Map<String, dynamic>.from(w);
+          _addrCtrl.text = _wallet['address']?.toString() ?? '';
+          _isLoading = false;
+        });
+      } else {
+        setState(() { _error = 'Failed: ${res.statusCode}'; _isLoading = false; });
+      }
+    } catch (e) {
+      setState(() { _error = 'Error: $e'; _isLoading = false; });
+    }
+  }
+
+  Future<void> _save() async {
+    if (_addrCtrl.text.trim().isEmpty) {
+      setState(() => _error = 'Address cannot be empty');
+      return;
+    }
+    if (_addrCtrl.text.toUpperCase().startsWith('PLACEHOLDER')) {
+      setState(() => _error = 'Please enter a real Binance Pay ID');
+      return;
+    }
+
+    setState(() { _isSaving = true; _error = ''; });
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token') ?? '';
+      final res = await http.post(
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/admin/wallet/update'),
+        headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
+        body: jsonEncode({'wallet_id': _wallet['id'], 'new_address': _addrCtrl.text.trim()}),
+      );
+      if (res.statusCode == 200) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: const Text('Wallet updated successfully'), backgroundColor: green),
+        );
+        Navigator.pop(context);
+      } else {
+        final d = jsonDecode(res.body);
+        setState(() { _error = d['detail'] ?? 'Failed'; _isSaving = false; });
+      }
+    } catch (e) {
+      setState(() { _error = 'Error: $e'; _isSaving = false; });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)),
+      appBar: AppBar(
+        backgroundColor: cardBg,
+        elevation: 0,
+        leading: IconButton(icon: Icon(Icons.arrow_back, color: accent), onPressed: () => Navigator.pop(context)),
+        title: Text(AppTranslations.t('admin.wallet_settings'), style: TextStyle(color: accent, fontWeight: FontWeight.bold)),
+      ),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator(color: accent))
+          : Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: cardBg,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: borderColor),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.account_balance_wallet, color: accent, size: 20),
+                            const SizedBox(width: 8),
+                            Text(AppTranslations.t('admin.binance_pay_id'), style: TextStyle(color: accent, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: _addrCtrl,
+                          style: TextStyle(color: textColor),
+                          decoration: InputDecoration(
+                            hintText: AppTranslations.t('admin.wallet_hint'),
+                            hintStyle: TextStyle(color: textColor.withOpacity(0.4)),
+                            filled: true,
+                            fillColor: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          AppTranslations.t('admin.wallet_desc'),
+                          style: TextStyle(color: textColor.withOpacity(0.6), fontSize: 11),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (_error.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.red),
+                      ),
+                      child: Text(_error, style: const TextStyle(color: Colors.red, fontSize: 12)),
+                    ),
+                  ],
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _isSaving ? null : _save,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: accent,
+                        foregroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: _isSaving
+                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                          : Text(AppTranslations.t('admin.save_address'), style: const TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+    );
+  }
+}
+
+
+// ============================================================
+// PERMANENT ASSETS SCREEN (Phase B)
+// ============================================================
+class PermanentAssetsScreen extends StatefulWidget {
+  const PermanentAssetsScreen({super.key});
+
+  @override
+  State<PermanentAssetsScreen> createState() => _PermanentAssetsScreenState();
+}
+
+class _PermanentAssetsScreenState extends State<PermanentAssetsScreen> {
+  List<dynamic> _assets = [];
+  List<dynamic> _removed = [];
+  bool _isLoading = true;
+  bool _isBusy = false;
+  String _error = '';
+
+  final _symbolCtrl = TextEditingController();
+  final _reasonCtrl = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _fetch();
+  }
+
+  @override
+  void dispose() {
+    _symbolCtrl.dispose();
+    _reasonCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<String> _token() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('auth_token') ?? '';
+  }
+
+  Future<void> _fetch() async {
+    setState(() { _isLoading = true; _error = ''; });
+    try {
+      final t = await _token();
+      final res = await http.get(
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/permanent_assets'),
+        headers: {'Authorization': 'Bearer $t'},
+      );
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        setState(() {
+          _assets = data['assets'] ?? [];
+          _removed = data['removed'] ?? [];
+          _isLoading = false;
+        });
+      } else {
+        setState(() { _error = 'HTTP ${res.statusCode}'; _isLoading = false; });
+      }
+    } catch (e) {
+      setState(() { _error = 'Connection error'; _isLoading = false; });
+    }
+  }
+
+  Future<void> _add() async {
+    String sym = _symbolCtrl.text.trim().toUpperCase();
+    final reason = _reasonCtrl.text.trim();
+    if (sym.isEmpty || reason.isEmpty) {
+      _snack(AppTranslations.t('permanent.symbol_reason_required'), error: true);
+      return;
+    }
+    // Accept bare symbols like BTC, ETH, BNB → auto-append /USDT
+    if (!sym.contains('/')) {
+      if (sym.endsWith('USDT') && sym.length > 4) {
+        // User typed BTCUSDT (Binance style) → BTC/USDT
+        sym = '${sym.substring(0, sym.length - 4)}/USDT';
+      } else {
+        // User typed BTC → BTC/USDT
+        sym = '$sym/USDT';
+      }
+    }
+    setState(() => _isBusy = true);
+    try {
+      final t = await _token();
+      final res = await http.post(
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/permanent_assets/add'),
+        headers: {'Authorization': 'Bearer $t', 'Content-Type': 'application/json'},
+        body: jsonEncode({'symbol': sym, 'reason': reason}),
+      );
+      if (res.statusCode == 200) {
+        _symbolCtrl.clear();
+        _reasonCtrl.clear();
+        _snack('$sym ${AppTranslations.t('permanent.added_success')}');
+        _fetch();
+      } else {
+        final d = jsonDecode(res.body);
+        _snack(d['detail'] ?? 'Failed to add', error: true);
+      }
+    } catch (e) {
+      _snack(AppTranslations.t('permanent.connection_error'), error: true);
+    } finally {
+      setState(() => _isBusy = false);
+    }
+  }
+
+  Future<void> _remove(String symbol) async {
+    final reasonCtrl = TextEditingController();
+    final reason = await showDialog<String>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text(AppTranslations.t('permanent.remove_title').replaceAll('{symbol}', symbol)),
+        content: TextField(
+          controller: reasonCtrl,
+          decoration: InputDecoration(
+            labelText: AppTranslations.t('global.reason_required'),
+            hintText: AppTranslations.t('permanent.remove_reason_hint'),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(c), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () {
+              if (reasonCtrl.text.trim().isEmpty) return;
+              Navigator.pop(c, reasonCtrl.text.trim());
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFef4444)),
+            child: const Text('Remove', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (reason == null || reason.isEmpty) return;
+
+    setState(() => _isBusy = true);
+    try {
+      final t = await _token();
+      final res = await http.post(
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/permanent_assets/remove'),
+        headers: {'Authorization': 'Bearer $t', 'Content-Type': 'application/json'},
+        body: jsonEncode({'symbol': symbol, 'reason': reason}),
+      );
+      if (res.statusCode == 200) {
+        _snack('$symbol removed');
+        _fetch();
+      } else {
+        final d = jsonDecode(res.body);
+        _snack(d['detail'] ?? 'Failed to remove', error: true);
+      }
+    } catch (e) {
+      _snack(AppTranslations.t('permanent.connection_error'), error: true);
+    } finally {
+      setState(() => _isBusy = false);
+    }
+  }
+
+  void _snack(String msg, {bool error = false}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: error ? const Color(0xFFef4444) : const Color(0xFF10b981),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = themeNotifier.value == ThemeMode.dark;
+    final bgColor = isDark ? const Color(0xFF080d14) : const Color(0xFFf8fafc);
+    final cardBg = isDark ? const Color(0xFF101722) : Colors.white;
+    final borderColor = isDark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0);
+    final textColor = isDark ? Colors.white : const Color(0xFF0f172a);
+    final accent = isDark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2);
+    const muted = Colors.grey;
+
+    return Scaffold(
+      backgroundColor: bgColor,
+      appBar: AppBar(
+        backgroundColor: cardBg,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: accent),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(AppTranslations.t('permanent.title'), style: const TextStyle(fontWeight: FontWeight.bold)),
+        titleTextStyle: TextStyle(color: accent, fontSize: 18, fontWeight: FontWeight.bold),
+        actions: [
+          IconButton(icon: Icon(Icons.refresh, color: accent), onPressed: _fetch),
+        ],
+      ),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator(color: accent))
+          : _error.isNotEmpty
+              ? Center(child: Text(_error, style: const TextStyle(color: Colors.red)))
+              : ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    // ===== Add form =====
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: cardBg,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: borderColor),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.add_circle_outline, color: accent, size: 20),
+                              const SizedBox(width: 8),
+                              Text(AppTranslations.t('permanent.add_asset'), style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 15)),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller: _symbolCtrl,
+                            style: TextStyle(color: textColor),
+                            textCapitalization: TextCapitalization.characters,
+                            decoration: InputDecoration(
+                              labelText: AppTranslations.t('permanent.symbol'),
+                              hintText: AppTranslations.t('permanent.symbol_hint'),
+                              labelStyle: const TextStyle(color: muted),
+                              hintStyle: TextStyle(color: textColor.withOpacity(0.3)),
+                              filled: true,
+                              fillColor: isDark ? const Color(0xFF080d14) : const Color(0xFFf8fafc),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          TextField(
+                            controller: _reasonCtrl,
+                            style: TextStyle(color: textColor),
+                            maxLines: 2,
+                            decoration: InputDecoration(
+                              labelText: AppTranslations.t('permanent.reason'),
+                              hintText: AppTranslations.t('permanent.reason_hint'),
+                              labelStyle: const TextStyle(color: muted),
+                              hintStyle: TextStyle(color: textColor.withOpacity(0.3)),
+                              filled: true,
+                              fillColor: isDark ? const Color(0xFF080d14) : const Color(0xFFf8fafc),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: _isBusy ? null : _add,
+                              icon: const Icon(Icons.add),
+                              label: Text(AppTranslations.t('permanent.add_button'), style: const TextStyle(fontWeight: FontWeight.bold)),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: accent,
+                                foregroundColor: Colors.black,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // ===== Current assets =====
+                    Text(
+                      '${AppTranslations.t('permanent.your_assets')} (${_assets.length})',
+                      style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                    const SizedBox(height: 8),
+                    if (_assets.isEmpty)
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: borderColor)),
+                        child: Text(AppTranslations.t('permanent.no_assets'), style: const TextStyle(color: muted, fontSize: 13), textAlign: TextAlign.center),
+                      )
+                    else
+                      ..._assets.map((a) {
+                        final sym = a['symbol']?.toString() ?? '?';
+                        final by = a['added_by']?.toString() ?? '?';
+                        final reason = a['reason']?.toString() ?? '';
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: cardBg,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: borderColor),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(Icons.push_pin, color: accent, size: 18),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(sym, style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 14)),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete_outline, color: Color(0xFFef4444), size: 20),
+                                    onPressed: _isBusy ? null : () => _remove(sym),
+                                    tooltip: 'Remove',
+                                  ),
+                                ],
+                              ),
+                              Text('${AppTranslations.t('permanent.added_by')}: $by', style: const TextStyle(color: muted, fontSize: 11)),
+                              if (reason.isNotEmpty) ...[
+                                const SizedBox(height: 4),
+                                Text('${AppTranslations.t('permanent.reason_label')}: $reason', style: TextStyle(color: textColor.withOpacity(0.7), fontSize: 11)),
+                              ],
+                            ],
+                          ),
+                        );
+                      }),
+
+                    // ===== Removed (history) =====
+                    if (_removed.isNotEmpty) ...[
+                      const SizedBox(height: 20),
+                      Text(
+                        '${AppTranslations.t('permanent.recently_removed')} (${_removed.length})',
+                        style: const TextStyle(color: muted, fontWeight: FontWeight.bold, fontSize: 13),
+                      ),
+                      const SizedBox(height: 8),
+                      ..._removed.reversed.map((a) {
+                        final sym = a['symbol']?.toString() ?? '?';
+                        final by = a['removed_by']?.toString() ?? '?';
+                        final reason = a['removal_reason']?.toString() ?? '';
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 6),
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: cardBg.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: borderColor.withOpacity(0.5)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(sym, style: const TextStyle(color: muted, fontWeight: FontWeight.bold, fontSize: 12, decoration: TextDecoration.lineThrough)),
+                              Text('${AppTranslations.t('permanent.removed_by')}: $by', style: const TextStyle(color: muted, fontSize: 10)),
+                              if (reason.isNotEmpty)
+                                Text('Reason: $reason', style: const TextStyle(color: muted, fontSize: 10)),
+                            ],
+                          ),
+                        );
+                      }),
+                    ],
+                  ],
+                ),
+    );
+  }
+}
+
+
+// ============================================================
+// ADMIN PERMANENT ASSETS SCREEN (Phase 6C)
+// ============================================================
+class AdminPermanentAssetsScreen extends StatefulWidget {
+  final int userId;
+  final String username;
+  const AdminPermanentAssetsScreen({super.key, required this.userId, required this.username});
+  @override
+  State<AdminPermanentAssetsScreen> createState() => _AdminPermanentAssetsScreenState();
+}
+
+class _AdminPermanentAssetsScreenState extends State<AdminPermanentAssetsScreen> {
+  List<dynamic> _assets = [];
+  List<dynamic> _removed = [];
+  bool _isLoading = true;
+  bool _isBusy = false;
+  String _error = '';
+
+  final _symbolCtrl = TextEditingController();
+  final _reasonCtrl = TextEditingController();
+
+  Color get cardBg => themeNotifier.value == ThemeMode.dark ? const Color(0xFF101722) : Colors.white;
+  Color get borderColor => themeNotifier.value == ThemeMode.dark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0);
+  Color get accent => themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2);
+  Color get textColor => themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a);
+  final Color muted = Colors.grey;
+  final Color red = const Color(0xFFef4444);
+  final Color green = const Color(0xFF10b981);
+
+  @override
+  void initState() {
+    super.initState();
+    _fetch();
+  }
+
+  @override
+  void dispose() {
+    _symbolCtrl.dispose();
+    _reasonCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<String> _token() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('auth_token') ?? '';
+  }
+
+  Future<void> _fetch() async {
+    setState(() { _isLoading = true; _error = ''; });
+    try {
+      final t = await _token();
+      final res = await http.get(
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/admin/user/${widget.userId}/permanent_assets'),
+        headers: {'Authorization': 'Bearer $t'},
+      );
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        setState(() {
+          _assets = data['assets'] ?? [];
+          _removed = data['removed'] ?? [];
+          _isLoading = false;
+        });
+      } else {
+        setState(() { _error = 'HTTP ${res.statusCode}'; _isLoading = false; });
+      }
+    } catch (e) {
+      setState(() { _error = 'Connection error'; _isLoading = false; });
+    }
+  }
+
+  Future<void> _add() async {
+    String sym = _symbolCtrl.text.trim().toUpperCase();
+    final reason = _reasonCtrl.text.trim();
+    if (sym.isEmpty || reason.isEmpty) {
+      _snack(AppTranslations.t('permanent.symbol_reason_required'), error: true);
+      return;
+    }
+    if (!sym.contains('/')) {
+      sym = sym.endsWith('USDT') && sym.length > 4
+          ? '${sym.substring(0, sym.length - 4)}/USDT'
+          : '$sym/USDT';
+    }
+    setState(() => _isBusy = true);
+    try {
+      final t = await _token();
+      final res = await http.post(
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/admin/user/${widget.userId}/permanent_assets/add'),
+        headers: {'Authorization': 'Bearer $t', 'Content-Type': 'application/json'},
+        body: jsonEncode({'symbol': sym, 'reason': reason}),
+      );
+      if (res.statusCode == 200) {
+        _symbolCtrl.clear();
+        _reasonCtrl.clear();
+        _snack('$sym added to user ${widget.username}');
+        _fetch();
+      } else {
+        final d = jsonDecode(res.body);
+        _snack(d['detail'] ?? 'Failed', error: true);
+      }
+    } catch (e) {
+      _snack(AppTranslations.t('permanent.connection_error'), error: true);
+    } finally {
+      setState(() => _isBusy = false);
+    }
+  }
+
+  Future<void> _remove(String symbol) async {
+    final reasonCtrl = TextEditingController();
+    final reason = await showDialog<String>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text('Remove $symbol?'),
+        content: TextField(
+          controller: reasonCtrl,
+          decoration: const InputDecoration(
+            labelText: 'Reason (required)',
+            hintText: 'Admin justification',
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(c), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () {
+              if (reasonCtrl.text.trim().isEmpty) return;
+              Navigator.pop(c, reasonCtrl.text.trim());
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: red),
+            child: const Text('Remove', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (reason == null || reason.isEmpty) return;
+
+    setState(() => _isBusy = true);
+    try {
+      final t = await _token();
+      final res = await http.post(
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/admin/user/${widget.userId}/permanent_assets/remove'),
+        headers: {'Authorization': 'Bearer $t', 'Content-Type': 'application/json'},
+        body: jsonEncode({'symbol': symbol, 'reason': reason}),
+      );
+      if (res.statusCode == 200) {
+        _snack('$symbol removed');
+        _fetch();
+      } else {
+        final d = jsonDecode(res.body);
+        _snack(d['detail'] ?? 'Failed', error: true);
+      }
+    } catch (e) {
+      _snack(AppTranslations.t('permanent.connection_error'), error: true);
+    } finally {
+      setState(() => _isBusy = false);
+    }
+  }
+
+  void _snack(String msg, {bool error = false}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), backgroundColor: error ? red : green),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)),
+      appBar: AppBar(
+        backgroundColor: cardBg,
+        elevation: 0,
+        leading: IconButton(icon: Icon(Icons.arrow_back, color: accent), onPressed: () => Navigator.pop(context)),
+        title: Text('Permanent Assets — ${widget.username}', style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 16)),
+        actions: [IconButton(icon: Icon(Icons.refresh, color: accent), onPressed: _fetch)],
+      ),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator(color: accent))
+          : _error.isNotEmpty
+              ? Center(child: Text(_error, style: const TextStyle(color: Colors.red)))
+              : ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: borderColor)),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(children: [
+                            Icon(Icons.add_circle_outline, color: accent, size: 20),
+                            const SizedBox(width: 8),
+                            Text('Add for ${widget.username}', style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 14)),
+                          ]),
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller: _symbolCtrl,
+                            style: TextStyle(color: textColor),
+                            textCapitalization: TextCapitalization.characters,
+                            decoration: InputDecoration(
+                              labelText: 'Symbol',
+                              hintText: 'BTC (or BTC/USDT)',
+                              labelStyle: TextStyle(color: muted),
+                              hintStyle: TextStyle(color: textColor.withOpacity(0.3)),
+                              filled: true,
+                              fillColor: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          TextField(
+                            controller: _reasonCtrl,
+                            style: TextStyle(color: textColor),
+                            maxLines: 2,
+                            decoration: InputDecoration(
+                              labelText: 'Reason',
+                              hintText: 'Admin justification (e.g. user requested)',
+                              labelStyle: TextStyle(color: muted),
+                              hintStyle: TextStyle(color: textColor.withOpacity(0.3)),
+                              filled: true,
+                              fillColor: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: _isBusy ? null : _add,
+                              icon: const Icon(Icons.add),
+                              label: const Text('Add', style: TextStyle(fontWeight: FontWeight.bold)),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: accent,
+                                foregroundColor: Colors.black,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text('Current Assets (${_assets.length})', style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 14)),
+                    const SizedBox(height: 8),
+                    if (_assets.isEmpty)
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: borderColor)),
+                        child: Text(AppTranslations.t('permanent.no_assets'), style: TextStyle(color: muted, fontSize: 13), textAlign: TextAlign.center),
+                      )
+                    else
+                      ..._assets.map((a) {
+                        final sym = a['symbol']?.toString() ?? '?';
+                        final by = a['added_by']?.toString() ?? '?';
+                        final reason = a['reason']?.toString() ?? '';
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(10), border: Border.all(color: borderColor)),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(children: [
+                                Icon(Icons.push_pin, color: accent, size: 18),
+                                const SizedBox(width: 8),
+                                Expanded(child: Text(sym, style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 14))),
+                                IconButton(
+                                  icon: Icon(Icons.delete_outline, color: red, size: 20),
+                                  onPressed: _isBusy ? null : () => _remove(sym),
+                                  tooltip: 'Remove',
+                                ),
+                              ]),
+                              Text('${AppTranslations.t('permanent.added_by')}: $by', style: TextStyle(color: muted, fontSize: 11)),
+                              if (reason.isNotEmpty) ...[
+                                const SizedBox(height: 4),
+                                Text('${AppTranslations.t('permanent.reason_label')}: $reason', style: TextStyle(color: textColor.withOpacity(0.7), fontSize: 11)),
+                              ],
+                            ],
+                          ),
+                        );
+                      }),
+                    if (_removed.isNotEmpty) ...[
+                      const SizedBox(height: 20),
+                      Text('Recently Removed (${_removed.length})', style: TextStyle(color: muted, fontWeight: FontWeight.bold, fontSize: 13)),
+                      const SizedBox(height: 8),
+                      ..._removed.reversed.map((a) {
+                        final sym = a['symbol']?.toString() ?? '?';
+                        final by = a['removed_by']?.toString() ?? '?';
+                        final reason = a['removal_reason']?.toString() ?? '';
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 6),
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(color: cardBg.withOpacity(0.5), borderRadius: BorderRadius.circular(8), border: Border.all(color: borderColor.withOpacity(0.5))),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(sym, style: TextStyle(color: muted, fontWeight: FontWeight.bold, fontSize: 12, decoration: TextDecoration.lineThrough)),
+                              Text('${AppTranslations.t('permanent.removed_by')}: $by', style: TextStyle(color: muted, fontSize: 10)),
+                              if (reason.isNotEmpty) Text('${AppTranslations.t('permanent.removal_reason')}: $reason', style: TextStyle(color: muted, fontSize: 10)),
+                            ],
+                          ),
+                        );
+                      }),
+                    ],
+                  ],
+                ),
+    );
+  }
+}
+
+
+// ============================================================
+// GLOBAL PERMANENT ASSETS (Admin)
+// ============================================================
+class GlobalPermanentAssetsScreen extends StatefulWidget {
+  const GlobalPermanentAssetsScreen({super.key});
+  @override
+  State<GlobalPermanentAssetsScreen> createState() => _GlobalPermanentAssetsScreenState();
+}
+
+class _GlobalPermanentAssetsScreenState extends State<GlobalPermanentAssetsScreen> {
+  List<dynamic> _assets = [];
+  bool _isLoading = true;
+  bool _isBusy = false;
+  String _error = '';
+  final _symbolCtrl = TextEditingController();
+  final _reasonCtrl = TextEditingController();
+
+  Color get cardBg => themeNotifier.value == ThemeMode.dark ? const Color(0xFF101722) : Colors.white;
+  Color get borderColor => themeNotifier.value == ThemeMode.dark ? const Color(0xFF202d42) : const Color(0xFFe2e8f0);
+  Color get accent => themeNotifier.value == ThemeMode.dark ? const Color(0xFF00d9ff) : const Color(0xFF0891b2);
+  Color get textColor => themeNotifier.value == ThemeMode.dark ? Colors.white : const Color(0xFF0f172a);
+  final Color muted = Colors.grey;
+  final Color red = const Color(0xFFef4444);
+  final Color green = const Color(0xFF10b981);
+  final Color violet = const Color(0xFFa78bfa);
+
+  @override
+  void initState() {
+    super.initState();
+    _fetch();
+  }
+
+  @override
+  void dispose() {
+    _symbolCtrl.dispose();
+    _reasonCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<String> _token() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('auth_token') ?? '';
+  }
+
+  Future<void> _fetch() async {
+    setState(() { _isLoading = true; _error = ''; });
+    try {
+      final t = await _token();
+      final res = await http.get(
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/admin/global_permanent_assets'),
+        headers: {'Authorization': 'Bearer $t'},
+      );
+      if (res.statusCode == 200) {
+        setState(() {
+          _assets = jsonDecode(res.body)['assets'] ?? [];
+          _isLoading = false;
+        });
+      } else {
+        setState(() { _error = 'HTTP ${res.statusCode}'; _isLoading = false; });
+      }
+    } catch (e) {
+      setState(() { _error = 'Connection error'; _isLoading = false; });
+    }
+  }
+
+  Future<void> _add() async {
+    String sym = _symbolCtrl.text.trim().toUpperCase();
+    final reason = _reasonCtrl.text.trim();
+    if (sym.isEmpty || reason.isEmpty) {
+      _snack(AppTranslations.t('permanent.symbol_reason_required'), error: true);
+      return;
+    }
+    if (!sym.contains('/')) {
+      sym = sym.endsWith('USDT') && sym.length > 4
+          ? '${sym.substring(0, sym.length - 4)}/USDT'
+          : '$sym/USDT';
+    }
+    setState(() => _isBusy = true);
+    try {
+      final t = await _token();
+      final res = await http.post(
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/admin/global_permanent_assets/add'),
+        headers: {'Authorization': 'Bearer $t', 'Content-Type': 'application/json'},
+        body: jsonEncode({'symbol': sym, 'reason': reason}),
+      );
+      if (res.statusCode == 200) {
+        _symbolCtrl.clear();
+        _reasonCtrl.clear();
+        _snack('$sym ${AppTranslations.t('global.nominated_success')}');
+        _fetch();
+      } else {
+        _snack(jsonDecode(res.body)['detail'] ?? 'Failed', error: true);
+      }
+    } catch (e) {
+      _snack(AppTranslations.t('permanent.connection_error'), error: true);
+    } finally {
+      setState(() => _isBusy = false);
+    }
+  }
+
+  Future<void> _remove(String symbol) async {
+    final rc = TextEditingController();
+    final reason = await showDialog<String>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text(AppTranslations.t('global.remove_title').replaceAll('{symbol}', symbol)),
+        content: TextField(
+          controller: rc,
+          decoration: InputDecoration(labelText: AppTranslations.t('global.reason_required')),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(c), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () {
+              if (rc.text.trim().isEmpty) return;
+              Navigator.pop(c, rc.text.trim());
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: red),
+            child: const Text('Remove', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (reason == null || reason.isEmpty) return;
+
+    setState(() => _isBusy = true);
+    try {
+      final t = await _token();
+      final res = await http.post(
+        Uri.parse('https://ubuntu-4gb-hel1-2.tail7f4de4.ts.net:10000/api/admin/global_permanent_assets/remove'),
+        headers: {'Authorization': 'Bearer $t', 'Content-Type': 'application/json'},
+        body: jsonEncode({'symbol': symbol, 'reason': reason}),
+      );
+      if (res.statusCode == 200) {
+        _snack('$symbol removed from global nominations');
+        _fetch();
+      } else {
+        _snack(jsonDecode(res.body)['detail'] ?? 'Failed', error: true);
+      }
+    } catch (e) {
+      _snack(AppTranslations.t('permanent.connection_error'), error: true);
+    } finally {
+      setState(() => _isBusy = false);
+    }
+  }
+
+  void _snack(String msg, {bool error = false}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), backgroundColor: error ? red : green),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)),
+      appBar: AppBar(
+        backgroundColor: cardBg,
+        elevation: 0,
+        leading: IconButton(icon: Icon(Icons.arrow_back, color: accent), onPressed: () => Navigator.pop(context)),
+        title: Text(AppTranslations.t('global.title'), style: TextStyle(color: accent, fontWeight: FontWeight.bold)),
+        titleTextStyle: TextStyle(color: accent, fontSize: 18, fontWeight: FontWeight.bold),
+        actions: [IconButton(icon: Icon(Icons.refresh, color: accent), onPressed: _fetch)],
+      ),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator(color: accent))
+          : _error.isNotEmpty
+              ? Center(child: Text(_error, style: const TextStyle(color: Colors.red)))
+              : ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: violet.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: violet),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.info_outline, color: violet, size: 18),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              AppTranslations.t('global.info'),
+                              style: TextStyle(color: textColor, fontSize: 12),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: borderColor)),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(children: [
+                            Icon(Icons.add_circle_outline, color: violet, size: 20),
+                            const SizedBox(width: 8),
+                            Text(AppTranslations.t('global.nominate_asset'), style: TextStyle(color: violet, fontWeight: FontWeight.bold, fontSize: 14)),
+                          ]),
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller: _symbolCtrl,
+                            style: TextStyle(color: textColor),
+                            textCapitalization: TextCapitalization.characters,
+                            decoration: InputDecoration(
+                              labelText: 'Symbol',
+                              hintText: 'BTC (or BTC/USDT)',
+                              labelStyle: TextStyle(color: muted),
+                              filled: true,
+                              fillColor: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          TextField(
+                            controller: _reasonCtrl,
+                            style: TextStyle(color: textColor),
+                            maxLines: 2,
+                            decoration: InputDecoration(
+                              labelText: AppTranslations.t('permanent.reason'),
+                              hintText: AppTranslations.t('global.nominate_hint'),
+                              labelStyle: TextStyle(color: muted),
+                              filled: true,
+                              fillColor: (themeNotifier.value == ThemeMode.dark ? const Color(0xFF080d14) : const Color(0xFFf8fafc)),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: _isBusy ? null : _add,
+                              icon: const Icon(Icons.add),
+                              label: Text(AppTranslations.t('global.nominate_button'), style: const TextStyle(fontWeight: FontWeight.bold)),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: violet,
+                                foregroundColor: Colors.black,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text('${AppTranslations.t('global.currently_nominated')} (${_assets.length})', style: TextStyle(color: violet, fontWeight: FontWeight.bold, fontSize: 14)),
+                    const SizedBox(height: 8),
+                    if (_assets.isEmpty)
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: borderColor)),
+                        child: Text(AppTranslations.t('global.no_nominations'), style: TextStyle(color: muted, fontSize: 13), textAlign: TextAlign.center),
+                      )
+                    else
+                      ..._assets.map((a) {
+                        final sym = a['symbol']?.toString() ?? '?';
+                        final by = a['added_by']?.toString() ?? '?';
+                        final reason = a['reason']?.toString() ?? '';
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(10), border: Border.all(color: borderColor)),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(children: [
+                                Icon(Icons.public, color: violet, size: 18),
+                                const SizedBox(width: 8),
+                                Expanded(child: Text(sym, style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 14))),
+                                IconButton(
+                                  icon: Icon(Icons.delete_outline, color: red, size: 20),
+                                  onPressed: _isBusy ? null : () => _remove(sym),
+                                  tooltip: 'Remove',
+                                ),
+                              ]),
+                              Text('${AppTranslations.t('global.nominated_by')}: $by', style: TextStyle(color: muted, fontSize: 11)),
+                              if (reason.isNotEmpty) ...[
+                                const SizedBox(height: 4),
+                                Text('${AppTranslations.t('permanent.reason_label')}: $reason', style: TextStyle(color: textColor.withOpacity(0.7), fontSize: 11)),
+                              ],
+                            ],
+                          ),
+                        );
+                      }),
+                  ],
+                ),
+    );
+  }
+}
+

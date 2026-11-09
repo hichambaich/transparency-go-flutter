@@ -9,7 +9,7 @@ Future<bool> openUrl(String url) async {
     html.window.open(url, '_blank');
     return true;
   } catch (e) {
-    debugPrint('openUrl (web) error: $e');
+    if (kDebugMode) debugPrint('openUrl (web) error: $e');
     return false;
   }
 }

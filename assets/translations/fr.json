@@ -422,8 +422,8 @@
     "block_asset_hint": "Cet actif est autorisé au trading. Vous pouvez le bloquer pour empêcher le bot de le gérer."
   },
   "evt": {
-    "deposit": "DEPOSIT",
-    "withdraw": "WITHDRAW",
+    "deposit": "DÉPÔT",
+    "withdraw": "RETRAIT",
     "bnb_topup": "BNB TOPUP",
     "bnb_fee": "BNB FEE"
   },
@@ -512,7 +512,9 @@
     "cancel": "Annuler",
     "confirm": "Confirmer",
     "yes": "Oui",
-    "no": "No"
+    "no": "Non",
+    "retry": "Réessayer",
+    "save": "Enregistrer"
   },
   "stat": {
     "capital": "Capital",
@@ -685,7 +687,28 @@
     "macro_restart_confirm": "Redémarrer le moteur Macro ?",
     "macro_restart_msg": "Cela redémarrera le macro updater. Continuer ?",
     "logs_title": "Journaux d'erreurs",
-    "no_logs": "Aucun journal disponible"
+    "no_logs": "Aucun journal disponible",
+    "tools_title": "Outils Admin",
+    "payment_approvals": "Approbation des paiements",
+    "payment_approvals_sub": "Vérifier ou rejeter les paiements en attente",
+    "wallet_settings": "Paramètres du portefeuille",
+    "wallet_settings_sub": "Mettre à jour l'ID Binance Pay",
+    "refresh_users": "Actualiser les utilisateurs",
+    "pending_title": "Paiements en attente",
+    "no_pending": "Aucun paiement en attente",
+    "verify": "Vérifier",
+    "reject": "Rejeter",
+    "plan_label": "Plan",
+    "method_label": "Méthode",
+    "tx_hash_label": "TX Hash",
+    "user_note_label": "Note utilisateur",
+    "binance_pay_id": "ID Binance Pay",
+    "wallet_hint": "Entrez votre ID Binance Pay",
+    "wallet_desc": "C'est l'adresse que les utilisateurs verront lors du paiement.",
+    "save_address": "Enregistrer l'adresse",
+    "wallet_updated": "Portefeuille mis à jour avec succès",
+    "exempt_from_sub": "Exempter de l'abonnement",
+    "remove_exempt": "Retirer l'exemption"
   },
   "analytics": {
     "assets_tracked": "actifs suivis"
@@ -702,8 +725,8 @@
     "arabic": "العربية"
   },
   "events": {
-    "BUY": "BUY",
-    "SELL": "SELL",
+    "BUY": "ACHAT",
+    "SELL": "VENTE",
     "DCA": "DCA"
   },
   "history": {
@@ -721,5 +744,81 @@
     "unblock": "Débloquer",
     "empty": "Aucun actif bloqué",
     "dev_warning": "Cet actif est bloqué par le développeur en raison du risque de marché."
+  },
+  "subscription": {
+    "title": "Abonnement",
+    "status_active": "Actif",
+    "status_trial": "Essai gratuit",
+    "status_grace": "Période de grâce",
+    "status_expired": "Expiré",
+    "status_cancelled": "Annulé",
+    "status_exempt": "Exempté admin",
+    "status_none": "Aucun abonnement",
+    "plan_prefix": "Plan",
+    "days_remaining": "Jours restants",
+    "unlimited": "Illimité",
+    "can_open_trades": "Peut ouvrir de nouveaux trades",
+    "expires_at": "Expire le",
+    "subscribe_monthly": "S'abonner au plan mensuel",
+    "subscribe_monthly_desc": "30 jours de trading automatisé illimité",
+    "subscribe_now": "S'abonner maintenant",
+    "menu_sub": "Gérer votre plan"
+  },
+  "payment": {
+    "title": "Paiement",
+    "select_plan": "Choisir le plan",
+    "days_suffix": "jours",
+    "send_payment_to": "Envoyer le paiement à",
+    "network_label": "Réseau : Binance Pay",
+    "paste_tx_hash": "Après l'envoi, collez le TX Hash",
+    "tx_hash_hint": "Hash de transaction / Binance Order ID",
+    "note_hint": "Note optionnelle (ex: \"envoyé depuis l'app Binance\")",
+    "submit_request": "Soumettre la demande de paiement",
+    "address_copied": "Adresse copiée",
+    "submitted": "Demande de paiement soumise. En attente de validation admin."
+  },
+  "permanent": {
+    "menu_title": "Actifs Permanents",
+    "menu_sub": "Votre liste personnelle",
+    "title": "Actifs Permanents",
+    "add_asset": "Ajouter un actif",
+    "symbol": "Symbole",
+    "symbol_hint": "BTC (ou BTC/USDT)",
+    "reason": "Raison",
+    "reason_hint": "Pourquoi ajouter cet actif ?",
+    "add_button": "Ajouter à la liste permanente",
+    "your_assets": "Vos actifs permanents",
+    "no_assets": "Aucun actif permanent pour l'instant",
+    "added_by": "Ajouté par",
+    "reason_label": "Raison",
+    "recently_removed": "Récemment retirés",
+    "removed_by": "Retiré par",
+    "removal_reason": "Raison",
+    "remove_title": "Retirer {symbol} ?",
+    "remove_reason_hint": "ex: trop volatil",
+    "symbol_reason_required": "Symbole et raison requis",
+    "symbol_format_error": "Le symbole doit être comme BTC/USDT",
+    "added_success": "ajouté à votre liste permanente",
+    "removed_success": "retiré",
+    "connection_error": "Erreur de connexion"
+  },
+  "global": {
+    "title": "Nominations Globales",
+    "menu_sub": "Recommander des actifs à tous les utilisateurs",
+    "info": "Ces actifs sont ajoutés automatiquement pour tous les utilisateurs. Chacun peut les retirer individuellement s'il le souhaite.",
+    "nominate_asset": "Nommer un actif",
+    "nominate_hint": "Pourquoi nommer cet actif ?",
+    "nominate_button": "Nommer pour tous les utilisateurs",
+    "currently_nominated": "Actuellement nommés",
+    "no_nominations": "Aucune nomination globale pour l'instant",
+    "nominated_by": "Nommé par",
+    "reason": "Raison",
+    "remove_title": "Retirer {symbol} de tous les utilisateurs ?",
+    "reason_required": "Raison (requis)",
+    "nominated_success": "nommé pour tous les utilisateurs",
+    "removed_success": "retiré des nominations globales"
+  },
+  "journal": {
+    "empty": "Le journal est vide"
   }
 }
